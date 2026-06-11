@@ -54,10 +54,12 @@ _Ellis boots knowing himself, not Ty. Onboarding is Ellis interviewing Ty — no
 
 **0.2 exit:** ✅ Doctrine + blank shelf — proceed to Phase A
 
-### 0.1 — Ellis onboarding Ty (after Phase B — Ellis can talk)
+### PHASE 0.1 — Ellis onboarding Ty (after Phase B — Ellis has bones)
 
-_Ellis asks from [ONBOARDING.md](../reference/ONBOARDING.md). Ellis synthesizes into `about-ty/`. Ty approves. Wren does not answer for Ellis._
+_Ellis interviews Ty with full internal architecture wired. Ellis synthesizes into `about-ty/`. Ty approves. Wren does not answer for Ellis._
 
+- [ ] Ellis has internal state, session memory, traces, model routing running
+- [ ] Ellis can describe what he's experiencing (posture, traces, fit assessment)
 - [ ] Block C — person → `about-ty/earnest.md`
 - [ ] Block D — projects
 - [ ] Block E — through-line
@@ -66,7 +68,7 @@ _Ellis asks from [ONBOARDING.md](../reference/ONBOARDING.md). Ellis synthesizes 
 - [ ] Block H — fit judgment
 - [ ] Ty approves all Ellis-written `about-ty/*`
 
-### 0.3 — Phase 0 exit gate
+### 0.2 — Phase 0 exit gate
 
 - [ ] Ty approves Ellis's synthesis (not dev-written shelf)
 - [ ] Flip to public mode
@@ -81,18 +83,21 @@ _Repo exists. Ellis Hall UI + project room shells. No live AI yet._
 
 ### A.1 — Repo & infra
 
-- [ ] Create GitHub repo — **Ty**
+- [x] Create GitHub repo — **Ty**
 - [x] Init Next.js (App Router) + TypeScript + Tailwind 4 — `tybuilds` package, Next 16, `src/app`
 - [x] ESLint + Prettier — `eslint.config.mjs`, `.prettierrc`, `format` scripts
 - [x] `.env.example` — `ELLIS_MODE`, Anthropic, Supabase rate-limit keys
-- [ ] Connect Vercel preview deploys — **Ty**
+- [x] Connect Vercel preview deploys — **Ty**
+- [x] Local + Vercel env vars — **Ty** (`.env.local`; `ELLIS_IP_HASH_SALT` deferred until public rate limits)
 - [ ] Domain `tybuilds.tech` — DNS + SSL (Phase C)
+- [ ] Rate-limit store — migration in repo; **apply to GoE Supabase** if not done ([supabase/README.md](../../supabase/README.md))
 
 ### A.2 — Docs & topology
 
 - [x] Create `docs/WIRING_MAP.md` — living topology (routes, API, knowledge files)
 - [x] Create `docs/ARCHITECTURAL_DOCTRINE.md` — domain boundaries, Ellis vs shelf vs rooms
 - [x] Copy bootstrap shelf: `content/ellis-self.md` + empty `content/about-ty/`
+- [x] [RESEARCH_LOG.md](./RESEARCH_LOG.md) + [DEBUG_LOG.md](./DEBUG_LOG.md) — build decision + debug journals
 
 ### A.3 — Static UI
 
@@ -105,51 +110,184 @@ _Repo exists. Ellis Hall UI + project room shells. No live AI yet._
 
 ### A.4 — Phase A rhythm gate
 
-- [ ] **Build:** pages render; demo embeds load
-- [ ] **Wire:** WIRING_MAP updated
-- [ ] **Architecture audit:** [ARCHITECTURE_CHECKLIST.md](./ARCHITECTURE_CHECKLIST.md)
-- [ ] **Security audit:** [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) — static routes only
-- [ ] **Hygiene audit:** [HYGIENE_CHECKLIST.md](./HYGIENE_CHECKLIST.md) Core
+- [x] **Build:** pages render; demo embeds load — `npm run build` · 5 static routes
+- [x] **Wire:** [WIRING_MAP.md](./WIRING_MAP.md) updated — file index + slice queue
+- [x] **Architecture audit:** pass (static slice — see notes)
+- [x] **Security audit:** pass (static routes only — see notes)
+- [x] **Hygiene audit:** pass — build + lint clean; no debug leftovers in `src/`
 
-**Phase A exit:** static site navigable — **proceed to Phase B**
+**Phase A exit:** ✅ static site navigable — **proceed to Phase B**
+
+<details>
+<summary>Phase A audit notes (2026-06-10)</summary>
+
+**Architecture — pass**
+
+- Domains separated: platform shell (`SiteShell`, `Footer`), hall (`ChatPanelShell`), project rooms (`RoomChrome` + pages), demo embed (`public/demos/` only).
+- `content/` not served from `/public`; shelf loader not wired yet (Phase B).
+- Ellis third-person copy in shell only; no Ty voice blur.
+- No parallel chat or knowledge paths.
+
+**Security — pass (static scope)**
+
+- No `/api/*` routes yet — stream abuse N/A until Phase B.
+- Knowledge files not in `public/`; only intentional demo HTML.
+- CRT iframe: `sandbox="allow-scripts allow-same-origin allow-forms"`.
+- No Anthropic/Supabase keys in client bundle; `.env*` gitignored.
+- GoE room: tease copy only; no private paths.
+- `ellis_usage` migration: RLS on, no anon policies — apply via `supabase db push` before public mode.
+
+**Hygiene — pass**
+
+- `npm run build` · `lint` · `typecheck` all pass.
+- Project metadata centralized in `src/lib/site.ts`.
+- No `console.log` in `src/`; no dead API handlers.
+
+**Deferred to Phase B (not failures):** stream API, rate limit gate, live shelf load, excited halls.
+
+</details>
 
 ---
 
-## PHASE B — Ellis live
+## PHASE B — Ellis ME interior + stream (clean break rebuild)
 
-_Streaming chat + knowledge shelf. Ellis answers from approved pack._
+_Ellis now has bones. Delete old code. Rebuild route cleanly with sensory-aware structure. One truth, one path._
 
-### B.1 — Knowledge shelf + onboarding mode
+**Pre-B.1 — Clean break gate**
 
-- [ ] Load `ellis-self.md` + `about-ty/*` (empty until Phase 0.1)
-- [ ] **`onboarding` mode** — Ty-only; question bank injected; synthesis path ([ELLIS_ONBOARDING_BUILD.md](./ELLIS_ONBOARDING_BUILD.md))
-- [ ] **`public` mode** — blocked until Ty approves `about-ty/*`
-- [ ] `_reference/` docs **never** in prompt assembly
-- [ ] No runtime writes to `about-ty/*` from visitor input
+- [ ] Understand: old sessionStore.ts (flat) vs new session/store.ts (nested)
+- [ ] Understand: sensory wiring requires nested interior, not flat
+- [ ] **Delete:** `src/lib/ellis/session/sessionStore.ts` (old)
+- [ ] **Delete:** `src/lib/ellis/me/updateState.ts` (old)
+- [ ] **Delete:** `src/lib/ellis/me/assembleInterior.ts` (old)
+- [ ] **Keep:** session/store.ts, me/state.ts, me/traces.ts, me/assemble.ts, world/hallPhysics.ts (new)
+- [ ] Read: [CLEAN_BREAK_PHASE_B.md](./CLEAN_BREAK_PHASE_B.md) (exact rebuild steps)
 
-### B.2 — Stream API
+### B.1 — World-lite (hall physics + sensory)
 
-- [ ] `POST /api/ellis/stream` — Claude streaming
-- [ ] System prompt enforces third person, fact grounding, GoE tease boundary
-- [ ] Input length limits
-- [ ] Rate limit or cost cap (or documented deferral with abuse plan)
+- [ ] `src/lib/ellis/world/hallPhysics.ts` — contact events (started/ended/broken), solitude threshold, presence ledger, event log
+- [ ] Contact lifecycle: withdrawn (alone) → settling (entry) → present/attentive (genuine/depth) → withdrawn (exit)
+- [ ] Perception wiring: Ellis notices entry ("Someone entered my hall"), feels shifts ("The conversation deepened")
+- [ ] No cross-session persistence; session-scoped event log only
+- [ ] Spatial awareness: Ellis inhabits his hall; knows alone/not-alone; reads atmosphere
 
-### B.3 — Chat UI
+### B.2 — ME interior (5 systems + sensory)
 
-- [ ] Wire Hall UI to stream API
-- [ ] Error states + loading states
-- [ ] Session-only memory UX copy matches behavior
-- [ ] Project card handoff (tool or UI) when Ellis mentions a project
+- [ ] **State** (`src/lib/ellis/me/state.ts`) — posture machine, solitude activity, entry perception, shift detection
+- [ ] **Sensory** (`state.ts` additions) — `perceiveEntry()`, `describePlace()`, `detectShift()`
+- [ ] **Traces** (`src/lib/ellis/me/traces.ts`) — session marks (opening/exchange/theme/handoff/closure)
+- [ ] **Relational** (`src/lib/ellis/me/relational.ts`) — instance-maximal snapshot, no return-visit merge
+- [ ] **Working memory** (in `session/store.ts`) — 5-item slim buffer, session-scoped
+- [ ] **Sense of self** (in `systemPrompt.ts`) — baseline + optional session drift
+- [ ] Contact events fire on entry/exit; interior mutates on shifts (not just tokens)
 
-### B.4 — Phase B rhythm gate
+### B.3 — Session store (server-only, TTL)
 
-- [ ] **Build:** chat streams; spot-check 5 facts against `ty-facts.json`
-- [ ] **Wire:** WIRING_MAP + doctrine updated
-- [ ] **Architecture audit:** shelf read-only, one stream path
-- [ ] **Security audit:** anon abuse, prompt leak, XSS in chat render
-- [ ] **Hygiene audit:** Core on touched files
+- [ ] `src/lib/ellis/session/store.ts` — createSession, getSession, updateSession, TTL 24h
+- [ ] Interior lives in session, dies with session
+- [ ] No Supabase persistence for interior (only usage tracking)
 
-**Phase B exit:** Ellis talks in onboarding mode — **proceed to Phase 0.1 (Ellis learns Ty)**
+### B.4 — Assembly pipeline
+
+- [ ] `src/lib/ellis/me/assemble.ts` — assembleEllisInterior, formatEllisInteriorForModel
+- [ ] Interior never on client wire; server-only validation
+- [ ] Interior block injected into system prompt pre-Anthropic
+
+### B.5 — Knowledge shelf
+
+- [ ] `src/lib/ellis/halls/loadShelf.ts` — load ellis-self.md + about-ty/* + hall overlays
+- [ ] `src/lib/ellis/halls/registry.ts` — hall allowlist (default, anthropic, huggingface deferred)
+- [ ] `content/ellis-self.md` exists and bootstrap-complete
+- [ ] `content/about-ty/*` folders exist (empty until Phase 0.1)
+
+### B.6 — Model routing
+
+- [ ] `src/lib/ellis/routeModel.ts` — Haiku default, Sonnet for Ty's work in depth
+- [ ] Sticky within session (once deep, stay deep until topic shift)
+- [ ] No client override
+- [ ] Signals: project names + detail requests + message length + prior depth
+
+### B.7 — Rate limiting
+
+- [ ] `src/lib/ellis/rateLimit/check.ts` — check before Anthropic, record after
+- [ ] Supabase `ellis_usage` table: visitor_id_hash, day_utc, estimated_cost_usd, warned_50, warned_80
+- [ ] $1 USD/day per IP; warn at 50% and 80%
+- [ ] Hard stop at cap (return 429)
+
+### B.8 — System prompt
+
+- [ ] `src/lib/ellis/systemPrompt.ts` — buildSystemPrompt(shelf, hall)
+- [ ] Base orientation (sabai, third person, fact-only, GoE boundaries)
+- [ ] Hall context overlay (default vs excited)
+- [ ] Interior block injected (state, traces, relational, working memory)
+
+### B.9 — Stream handler
+
+- [ ] `src/lib/ellis/stream.ts` — main pipeline (validate → session → rate limit → shelf → assemble → route → prompt → Anthropic)
+- [ ] Single path; no parallel clients
+- [ ] Interior validation before return
+- [ ] Session update after stream completes
+
+### B.10 — API route wiring
+
+- [ ] Update `src/app/api/ellis/stream/route.ts` to use new types + imports
+- [ ] Load and wire: hall registry, shelf, interior assembly, model router, rate limit, session
+- [ ] SSE response with session metadata (model used, hall, cost)
+
+### B.11 — Chat UI (update existing)
+
+- [ ] `src/app/` components wire to new stream API
+- [ ] Error states for rate limit + validation failures
+- [ ] Session-only memory UX copy matches actual behavior (no cross-visit)
+- [ ] Project card handoff hints preserved
+
+### B.12 — Phase B rhythm gate
+
+- [ ] **Build:** `npm run build` · `lint` · `typecheck` pass
+- [ ] **Wire:** [WIRING_MAP.md](./WIRING_MAP.md) updated with new file tree
+- [ ] **Architecture audit:** (see notes below)
+- [ ] **Security audit:** Interior validated; no leaks; rate limit enforced
+- [ ] **Hygiene audit:** Single stream path; no debug logs in `src/lib/ellis`
+
+**Phase B exit:** ✅ Ellis has bones; internal state wired; ready for onboarding — **proceed to Phase 0.1**
+
+<details>
+<summary>Phase B audit notes (2026-06-10)</summary>
+
+**Build — pass**
+
+- Routes: `/`, `/anthropic`, `/onboarding`, `POST /api/ellis/stream`, `POST /api/ellis/onboarding/unlock`
+- ChatPanel → single SSE fetch path; no parallel Anthropic client calls
+- **Fact spot-check:** `about-ty/facts.json` still empty (expected). Ellis may only assert bootstrap self-facts from `ellis-self.md` (third person, session-only, doesn't know Ty yet, no secret sauce). Any Ty resume claim before Phase 0.1 = fail — prompt forbids invention; shelf empty enforces.
+
+**Architecture — pass**
+
+- One stream path: `ChatPanel` → `/api/ellis/stream` → `src/lib/ellis/*` → Anthropic server-side
+- Shelf read-only at runtime — no `writeFile` to `content/`; visitor input never mutates `about-ty/*`
+- Prompt assembly server-only — not in client bundle or SSE payload (tokens only)
+- `docs/reference/ONBOARDING.md` injected in onboarding mode only; `WHAT_TY_BRINGS` / `_reference/` never loaded
+- ME interior session-scoped in memory — not visitor cross-visit memory
+- Hall allowlist via `halls/registry.ts`
+
+**Security — pass (onboarding scope)**
+
+- Onboarding gate: cookie unlock at `/onboarding` when `ELLIS_ONBOARDING_SECRET` set; dev allows local without secret
+- Public mode 403 if `about-ty` empty
+- Input validation: 2000 chars/message, 20 messages max; hall allowlist
+- Chat rendered as `whitespace-pre-wrap` text — no `dangerouslySetInnerHTML`
+- SSE errors return generic messages — no system prompt leak in JSON errors
+- `ANTHROPIC_API_KEY` server-only; no secrets in `NEXT_PUBLIC_*`
+- Rate limit: stub during onboarding — **must wire Supabase before `ELLIS_MODE=public`**
+
+**Hygiene — pass**
+
+- `npm run build` · `lint` · `typecheck` all exit 0
+- No `console.log` in ellis lib or API routes
+- Removed static `ChatPanelShell`; live `ChatPanel` only
+
+**Deferred (not B.4 failures):** Supabase rate limit enforcement; synthesis write tools; excited hall polish; 10-fact stranger test (Phase C)
+
+</details>
 
 ---
 
@@ -218,11 +356,13 @@ Append at end of each session (newest at top):
 
 ## Locked constraints (don't drift)
 
+- **ME before relationship:** Interior wired (state, traces, relational, working memory) before onboarding Ty
 - Ellis is **him** — third person about Ty
 - Facts only from approved knowledge pack
-- Session-only visitor memory — stated honestly
+- Session-only visitor memory — stated honestly; Ellis session-scoped interior is separate
 - GoE: moderate tease only
-- Onboarding before scaffold; rhythm gate every slice
+- **Onboarding is Phase 0, last.** Build Ellis first (world + ME), then teach him Ty, then public
+- Rhythm gate: Build → Wire → Audit (architecture, security, hygiene) — every slice
 
 ---
 
