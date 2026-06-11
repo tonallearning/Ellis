@@ -19,7 +19,7 @@ This repo is the Next.js app behind tybuilds.tech. Ellis boots knowing **himself
 
 ## Status
 
-Active build. Phase A scaffold and hall UI are in place; Ellis chat, knowledge shelf, and public deploy are Phase B/C.
+Active build. **Phase A complete** — Phase B (Ellis stream + onboarding mode) next.
 
 Architecture and build docs live in [`docs/`](./docs/). Maintainer notes: [`PROJECT_MEMORY.md`](./PROJECT_MEMORY.md).
 
@@ -44,7 +44,10 @@ Open [http://localhost:3000](http://localhost:3000).
 | `NEXT_PUBLIC_SITE_URL` | Yes | e.g. `http://localhost:3000` |
 | `ELLIS_MODE` | Yes | `onboarding` (Ty-only) or `public` |
 | `ANTHROPIC_API_KEY` | Phase B | Server-only; never `NEXT_PUBLIC_` |
-| `NEXT_PUBLIC_SUPABASE_*` | Phase B | Rate limiting, not Ellis memory |
+| `NEXT_PUBLIC_SUPABASE_*` | Public mode | GoE project API keys — `ellis_usage` only ([supabase/README.md](./supabase/README.md)) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Public mode | Server-only; never expose to client |
+| `ELLIS_DAILY_BUDGET_USD` | Optional | Default `1` — per IP per UTC day |
+| `ELLIS_IP_HASH_SALT` | Public mode | Salt for IP hashing in rate limiter |
 | `ELLIS_ONBOARDING_SECRET` | Optional | Gate onboarding route in preview/prod |
 
 See [`.env.example`](./.env.example) for the full list.
@@ -69,6 +72,8 @@ Next.js 16 · App Router · TypeScript · Tailwind CSS 4 · Vercel · Supabase (
 | --- | ------- |
 | [ARCHITECTURAL_DOCTRINE.md](./docs/building/ARCHITECTURAL_DOCTRINE.md) | Why Ellis exists |
 | [BUILD_CHECKLIST.md](./docs/building/BUILD_CHECKLIST.md) | Implementation order |
+| [RESEARCH_LOG.md](./docs/building/RESEARCH_LOG.md) | Decisions, rationale, design impact |
+| [DEBUG_LOG.md](./docs/building/DEBUG_LOG.md) | Build incidents and smoke checks |
 | [ELLIS_ME_BUILD.md](./docs/building/ELLIS_ME_BUILD.md) | Ellis mind + chat spec |
 | [STYLE.md](./docs/building/STYLE.md) | Visual system |
 
@@ -77,7 +82,7 @@ Next.js 16 · App Router · TypeScript · Tailwind CSS 4 · Vercel · Supabase (
 | Project | Repo |
 | ------- | ---- |
 | Gardens of Eridu | [tybuildstech/GoE](https://github.com/tybuildstech/GoE) |
-| Basement CRT | [tybuildstech/basement-crt](https://github.com/tybuildstech/basement-crt) |
+| Basement CRT | [tybuildstech/CRT](https://github.com/tybuildstech/CRT) |
 | Tonal Learning | [Tonal-Learning/tonallearning](https://github.com/Tonal-Learning/tonallearning) |
 
 ## Author

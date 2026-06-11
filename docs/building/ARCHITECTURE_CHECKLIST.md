@@ -43,7 +43,7 @@ Per-slice audit: check applicable items for **this slice only** (`- [ ]` → `- 
 ## 4) Design doc honesty
 
 - [ ] **CRITICAL** [ARCHITECTURAL_DOCTRINE.md](./ARCHITECTURAL_DOCTRINE.md) still describes what was built
-- [ ] **CRITICAL** Decisions forced by the slice recorded (decisions log or BUILD_CHECKLIST handoff — not chat-only)
+- [ ] **CRITICAL** Decisions forced by the slice recorded ([RESEARCH_LOG.md](./RESEARCH_LOG.md) or doctrine §10 — not chat-only)
 - [ ] **ADVISORY** GoE disclosure level still matches handoff § GoE disclosure (moderate tease only)
 - [ ] **ADVISORY** BUILD_CHECKLIST phase status honest for affected slices
 

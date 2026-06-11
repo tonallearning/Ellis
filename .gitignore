@@ -41,3 +41,6 @@ yarn-error.log*
 
 # local
 scaffold-tmp/
+
+# supabase cli
+supabase/.temp/

@@ -192,3 +192,125 @@ body {
   white-space: nowrap;
   border: 0;
 }
+
+/* ── Anthropic excited hall (Claude-inspired, not impersonation) ── */
+[data-hall="anthropic"] .hall-ambient {
+  background:
+    radial-gradient(
+      ellipse 75% 55% at 15% 0%,
+      rgba(212, 165, 116, 0.28),
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 65% 50% at 85% 8%,
+      rgba(196, 149, 106, 0.18),
+      transparent 52%
+    ),
+    var(--surface-0);
+}
+
+.anthropic-hall[data-overlay="on"] {
+  --accent: #c4956a;
+  --accent-glow: rgba(196, 149, 106, 0.28);
+}
+
+.anthropic-hall[data-overlay="on"] .anthropic-chat-panel {
+  border-radius: 1.75rem;
+  border-color: rgba(196, 149, 106, 0.22);
+}
+
+[data-theme="dark"] .anthropic-hall[data-overlay="on"] {
+  --accent: #e0b48a;
+  --accent-glow: rgba(224, 180, 138, 0.2);
+}
+
+/* ── Build log markdown ── */
+.build-log-prose {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+.build-log-prose h3 {
+  margin-top: 1.75rem;
+  margin-bottom: 0.65rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.build-log-prose h3:first-child {
+  margin-top: 0;
+}
+
+.build-log-prose p {
+  margin: 0.5rem 0;
+  color: var(--text-secondary);
+}
+
+.build-log-prose ul {
+  margin: 0.35rem 0 0.75rem;
+  padding-left: 1.25rem;
+  color: var(--text-secondary);
+}
+
+.build-log-prose li {
+  margin: 0.25rem 0;
+}
+
+.build-log-prose li strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.build-log-prose hr {
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 1px solid var(--glass-border);
+}
+
+.build-log-prose code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.85em;
+  padding: 0.12em 0.35em;
+  border-radius: 0.35rem;
+  background: var(--surface-1);
+}
+
+.build-log-prose pre {
+  margin: 0.75rem 0;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid var(--glass-border);
+  background: var(--surface-1);
+}
+
+.build-log-prose pre code {
+  padding: 0;
+  background: transparent;
+}
+
+.build-log-prose table {
+  width: 100%;
+  margin: 1rem 0;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.build-log-prose th,
+.build-log-prose td {
+  border: 1px solid var(--glass-border);
+  padding: 0.45rem 0.65rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.build-log-prose th {
+  color: var(--text-primary);
+  font-weight: 600;
+  background: var(--surface-1);
+}
+
+.build-log-prose td {
+  color: var(--text-secondary);
+}

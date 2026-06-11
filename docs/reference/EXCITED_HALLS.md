@@ -23,7 +23,7 @@ Excitement is the gate — not application volume, not "might as well customize.
 
 | Slug | Route | Company | Status | Application URL | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `anthropic` | `/anthropic` | Anthropic (Fellows + beyond) | 🟡 Build with v1 | `https://tybuilds.tech/anthropic` | Claude-inspired visual + opener; toggle to Ellis |
+| `anthropic` | `/anthropic` | Anthropic (Fellows + beyond) | 🟢 Think · Build · Log live | `https://tybuilds.tech/anthropic` | Claude-inspired visual + opener; toggle to Ellis; build logs on-page |
 | `huggingface` | `/huggingface` | Hugging Face | ⏸ When Ty ready | `https://tybuilds.tech/huggingface` | Enthusiasm overlay when built |
 
 **Anthropic-only UX:** [ELLIS_EXPERIENCE.md](../building/ELLIS_EXPERIENCE.md) — visual overlay, Ellis types first, `content/halls/anthropic-opening.md`

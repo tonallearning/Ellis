@@ -9,9 +9,9 @@ Entrance  →  Build → Wire → Arch → Security → Hygiene  →  Exit
  "Should we?"              (repeat per slice)              "Ready?"
 ```
 
-**Related:** [BUILD_ETHOS.md](./BUILD_ETHOS.md) · [ELLIS_ME_BUILD.md](./ELLIS_ME_BUILD.md) · [ELLIS_EXPERIENCE.md](./ELLIS_EXPERIENCE.md) · [ENTRANCE_CRITERIA.md](./ENTRANCE_CRITERIA.md) · [BUILD_CHECKLIST.md](./BUILD_CHECKLIST.md) · [WIRING_MAP.md](./WIRING_MAP.md) · [ARCHITECTURAL_DOCTRINE.md](./ARCHITECTURAL_DOCTRINE.md) · [ARCHITECTURE_CHECKLIST.md](./ARCHITECTURE_CHECKLIST.md) · [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) · [HYGIENE_CHECKLIST.md](./HYGIENE_CHECKLIST.md) · [EXIT_CRITERIA.md](./EXIT_CRITERIA.md) · [STYLE.md](./STYLE.md) · [`~/coding-home/projects/tybuilds/HANDOFF.md`](../../../coding-home/projects/tybuilds/HANDOFF.md)
+**Related:** [BUILD_ETHOS.md](./BUILD_ETHOS.md) · [RESEARCH_LOG.md](./RESEARCH_LOG.md) · [DEBUG_LOG.md](./DEBUG_LOG.md) · [ELLIS_ME_BUILD.md](./ELLIS_ME_BUILD.md)
 
-**Status:** Pre-scaffold — onboarding before code (2026-06-09). Planning docs complete; knowledge pack + repo scaffold next.
+**Status:** Phase B next — static shell shipped (2026-06-10).
 
 **Before every Build step:** Read [BUILD_ETHOS.md](./BUILD_ETHOS.md). No patches — gut wrong shape, rebuild clean.
 
@@ -22,7 +22,7 @@ Entrance  →  Build → Wire → Arch → Security → Hygiene  →  Exit
 | Step                   | Question                                                                                                                 |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | **Build**              | Slice works — happy path manual test (chat streams, project page loads, demo embeds)?                                    |
-| **Wire**               | Traceable in `WIRING_MAP.md`?                                                                                            |
+| **Wire**               | Traceable in `WIRING_MAP.md`? Decisions in [RESEARCH_LOG.md](./RESEARCH_LOG.md); incidents in [DEBUG_LOG.md](./DEBUG_LOG.md)? |
 | **Architecture audit** | Knowledge boundaries + route ownership match doctrine? → [ARCHITECTURE_CHECKLIST.md](./ARCHITECTURE_CHECKLIST.md)        |
 | **Security audit**     | Anon cannot abuse API, exfiltrate keys, or access non-public content? → [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) |
 | **Hygiene audit**      | Touched files clean — build/lint, no dead/dupes/known bugs? → [HYGIENE_CHECKLIST.md](./HYGIENE_CHECKLIST.md) Core        |
@@ -39,7 +39,7 @@ Full step definitions: **canonical** [`BUILD_RHYTHM.md`](../coding-home/template
 
 **Build:** Match planned stack conventions. Knowledge shelf read-only at runtime. No visitor DB until explicitly scoped.
 
-**Wire:** Update `docs/WIRING_MAP.md` + relevant build specs. Confirm Ellis API cannot write to knowledge files from visitor input.
+**Wire:** Update `docs/WIRING_MAP.md` + relevant build specs. Append [RESEARCH_LOG.md](./RESEARCH_LOG.md) for slice decisions; [DEBUG_LOG.md](./DEBUG_LOG.md) for build/debug incidents. Confirm Ellis API cannot write to knowledge files from visitor input.
 
 **Architecture audit:** [ARCHITECTURE_CHECKLIST.md](./ARCHITECTURE_CHECKLIST.md) — all CRITICAL + applicable CONDITIONAL for the slice.
 

@@ -279,7 +279,7 @@ Ellis says so and offers contact — doesn't invent depth or leak sauce.
 | 2026-06-11 | `/anthropic` Claude visual hook + opener + toggle | [ELLIS_EXPERIENCE.md](./ELLIS_EXPERIENCE.md) |
 | 2026-06-11 | High solitude threshold; instance-maximal + return recall | Within 7-day IP window |
 
-_Append new rows when a slice forces a shape change — not chat-only._
+_Append new rows when a slice forces a shape change — detail in [RESEARCH_LOG.md](./RESEARCH_LOG.md); not chat-only._
 
 ---
 

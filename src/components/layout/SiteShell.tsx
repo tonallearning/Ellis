@@ -4,11 +4,17 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 type SiteShellProps = {
   children: React.ReactNode;
   variant?: "hall" | "plain";
+  hall?: "default" | "anthropic";
 };
 
-export function SiteShell({ children, variant = "hall" }: SiteShellProps) {
+export function SiteShell({
+  children,
+  variant = "hall",
+  hall = "default",
+}: SiteShellProps) {
   return (
     <div
+      data-hall={hall}
       className={
         variant === "hall"
           ? "relative flex min-h-full flex-1 flex-col overflow-hidden"
