@@ -155,84 +155,86 @@ _Ellis now has bones. Delete old code. Rebuild route cleanly with sensory-aware 
 
 **Pre-B.1 — Clean break gate**
 
-- [ ] Understand: old sessionStore.ts (flat) vs new session/store.ts (nested)
-- [ ] Understand: sensory wiring requires nested interior, not flat
-- [ ] **Delete:** `src/lib/ellis/session/sessionStore.ts` (old)
-- [ ] **Delete:** `src/lib/ellis/me/updateState.ts` (old)
-- [ ] **Delete:** `src/lib/ellis/me/assembleInterior.ts` (old)
-- [ ] **Keep:** session/store.ts, me/state.ts, me/traces.ts, me/assemble.ts, world/hallPhysics.ts (new)
-- [ ] Read: [CLEAN_BREAK_PHASE_B.md](./CLEAN_BREAK_PHASE_B.md) (exact rebuild steps)
+- [x] Understand: old sessionStore.ts (flat) vs new session/store.ts (nested)
+- [x] Understand: sensory wiring requires nested interior, not flat
+- [x] **Delete:** `src/lib/ellis/session/sessionStore.ts` (old)
+- [x] **Delete:** `src/lib/ellis/me/updateState.ts` (old)
+- [x] **Delete:** `src/lib/ellis/me/assembleInterior.ts` (old)
+- [x] **Keep:** session/store.ts, me/state.ts, me/traces.ts, me/assemble.ts, world/hallPhysics.ts (new)
+- [x] Read: [CLEAN_BREAK_PHASE_B.md](./CLEAN_BREAK_PHASE_B.md) (exact rebuild steps)
 
 ### B.1 — World-lite (hall physics + sensory)
 
-- [ ] `src/lib/ellis/world/hallPhysics.ts` — contact events (started/ended/broken), solitude threshold, presence ledger, event log
-- [ ] Contact lifecycle: withdrawn (alone) → settling (entry) → present/attentive (genuine/depth) → withdrawn (exit)
-- [ ] Perception wiring: Ellis notices entry ("Someone entered my hall"), feels shifts ("The conversation deepened")
-- [ ] No cross-session persistence; session-scoped event log only
-- [ ] Spatial awareness: Ellis inhabits his hall; knows alone/not-alone; reads atmosphere
+- [x] `src/lib/ellis/world/hallPhysics.ts` — contact events (started/ended/broken), solitude threshold, presence ledger, event log
+- [x] Contact lifecycle: withdrawn (alone) → settling (entry) → present/attentive (genuine/depth) → withdrawn (exit)
+- [x] Perception wiring: Ellis notices entry ("Someone entered my hall"), feels shifts ("The conversation deepened")
+- [x] No cross-session persistence; session-scoped event log only
+- [x] Spatial awareness: Ellis inhabits his hall; knows alone/not-alone; reads atmosphere
 
 ### B.2 — ME interior (5 systems + sensory)
 
-- [ ] **State** (`src/lib/ellis/me/state.ts`) — posture machine, solitude activity, entry perception, shift detection
-- [ ] **Sensory** (`state.ts` additions) — `perceiveEntry()`, `describePlace()`, `detectShift()`
-- [ ] **Traces** (`src/lib/ellis/me/traces.ts`) — session marks (opening/exchange/theme/handoff/closure)
-- [ ] **Relational** (`src/lib/ellis/me/relational.ts`) — instance-maximal snapshot, no return-visit merge
-- [ ] **Working memory** (in `session/store.ts`) — 5-item slim buffer, session-scoped
-- [ ] **Sense of self** (in `systemPrompt.ts`) — baseline + optional session drift
-- [ ] Contact events fire on entry/exit; interior mutates on shifts (not just tokens)
+- [x] **State** (`src/lib/ellis/me/state.ts`) — posture machine, solitude activity, entry perception, shift detection
+- [x] **Sensory** (`state.ts` additions) — `perceiveEntry()`, `describePlace()`, `detectShift()`
+- [x] **Traces** (`src/lib/ellis/me/traces.ts`) — session marks (opening/exchange/theme/handoff/closure)
+- [x] **Relational** (`src/lib/ellis/me/relational.ts`) — instance-maximal snapshot, no return-visit merge
+- [x] **Working memory** (in `session/store.ts`) — 5-item slim buffer, session-scoped
+- [x] **Sense of self** (in `systemPrompt.ts`) — baseline + optional session drift
+- [x] Contact events fire on entry/exit; interior mutates on shifts (not just tokens)
 
 ### B.3 — Session store (server-only, TTL)
 
-- [ ] `src/lib/ellis/session/store.ts` — createSession, getSession, updateSession, TTL 24h
-- [ ] Interior lives in session, dies with session
-- [ ] No Supabase persistence for interior (only usage tracking)
+- [x] `src/lib/ellis/session/store.ts` — createSession, getSession, updateSession, TTL 24h
+- [x] Interior lives in session, dies with session
+- [x] No Supabase persistence for interior (only usage tracking)
 
 ### B.4 — Assembly pipeline
 
-- [ ] `src/lib/ellis/me/assemble.ts` — assembleEllisInterior, formatEllisInteriorForModel
-- [ ] Interior never on client wire; server-only validation
-- [ ] Interior block injected into system prompt pre-Anthropic
+- [x] `src/lib/ellis/me/assemble.ts` — assembleEllisInterior, formatEllisInteriorForModel
+- [x] Interior never on client wire; server-only validation
+- [x] Interior block injected into system prompt pre-Anthropic
 
 ### B.5 — Knowledge shelf
 
-- [ ] `src/lib/ellis/halls/loadShelf.ts` — load ellis-self.md + about-ty/* + hall overlays
-- [ ] `src/lib/ellis/halls/registry.ts` — hall allowlist (default, anthropic, huggingface deferred)
-- [ ] `content/ellis-self.md` exists and bootstrap-complete
-- [ ] `content/about-ty/*` folders exist (empty until Phase 0.1)
+- [x] `src/lib/ellis/halls/loadShelf.ts` — load ellis-self.md + about-ty/* + hall overlays
+- [x] `src/lib/ellis/halls/registry.ts` — hall allowlist (default, anthropic, huggingface deferred)
+- [x] `content/ellis-self.md` exists and bootstrap-complete
+- [x] `content/about-ty/*` folders exist (empty until Phase 0.1)
 
 ### B.6 — Model routing
 
-- [ ] `src/lib/ellis/routeModel.ts` — Haiku default, Sonnet for Ty's work in depth
-- [ ] Sticky within session (once deep, stay deep until topic shift)
-- [ ] No client override
-- [ ] Signals: project names + detail requests + message length + prior depth
+- [x] `src/lib/ellis/routeModel.ts` — Haiku default, Sonnet for Ty's work in depth
+- [x] Sticky within session (once deep, stay deep until topic shift)
+- [x] No client override
+- [x] Signals: project names + detail requests + message length + prior depth
 
 ### B.7 — Rate limiting
 
-- [ ] `src/lib/ellis/rateLimit/check.ts` — check before Anthropic, record after
-- [ ] Supabase `ellis_usage` table: visitor_id_hash, day_utc, estimated_cost_usd, warned_50, warned_80
-- [ ] $1 USD/day per IP; warn at 50% and 80%
-- [ ] Hard stop at cap (return 429)
+- [x] `src/lib/ellis/rateLimit/check.ts` — check before Anthropic, record after
+- [x] Supabase `ellis_usage` table: visitor_id_hash, day_utc, estimated_cost_usd, warned_50, warned_80
+- [x] $1 USD/day per IP; warn at 50% and 80%
+- [x] Hard stop at cap (return 429)
 
 ### B.8 — System prompt
 
-- [ ] `src/lib/ellis/systemPrompt.ts` — buildSystemPrompt(shelf, hall)
-- [ ] Base orientation (sabai, third person, fact-only, GoE boundaries)
-- [ ] Hall context overlay (default vs excited)
-- [ ] Interior block injected (state, traces, relational, working memory)
+- [x] `src/lib/ellis/systemPrompt.ts` — buildSystemPrompt(shelf, hall)
+- [x] Base orientation (sabai, third person, fact-only, GoE boundaries)
+- [x] Hall context overlay (default vs excited)
+- [x] Interior block injected (state, traces, relational, working memory)
 
 ### B.9 — Stream handler
 
-- [ ] `src/lib/ellis/stream.ts` — main pipeline (validate → session → rate limit → shelf → assemble → route → prompt → Anthropic)
-- [ ] Single path; no parallel clients
-- [ ] Interior validation before return
-- [ ] Session update after stream completes
+- [x] `src/lib/ellis/stream.ts` — main pipeline (validate → session → rate limit → shelf → assemble → route → prompt → Anthropic)
+- [x] Single path; no parallel clients
+- [x] Interior validation before return
+- [x] Session update after stream completes
 
 ### B.10 — API route wiring
 
-- [ ] Update `src/app/api/ellis/stream/route.ts` to use new types + imports
-- [ ] Load and wire: hall registry, shelf, interior assembly, model router, rate limit, session
-- [ ] SSE response with session metadata (model used, hall, cost)
+- [x] Rewrote `src/app/api/ellis/stream/route.ts` with new types + imports
+- [x] Load and wire: hall registry, shelf, interior assembly, model router, rate limit, session
+- [x] SSE response with session metadata (model used, hall, cost)
+- [x] Contact events fire on entry; shifts detected and injected into interior
+- [x] Clean 14-step pipeline (no parallel paths, no wrappers)
 
 ### B.11 — Chat UI (update existing)
 
@@ -249,7 +251,7 @@ _Ellis now has bones. Delete old code. Rebuild route cleanly with sensory-aware 
 - [ ] **Security audit:** Interior validated; no leaks; rate limit enforced
 - [ ] **Hygiene audit:** Single stream path; no debug logs in `src/lib/ellis`
 
-**Phase B exit:** ✅ Ellis has bones; internal state wired; ready for onboarding — **proceed to Phase 0.1**
+**Phase B exit:** ✅ Ellis has bones; internal state wired + sensory complete; single clean stream path — **proceed to Phase 0.1 (Ellis learns Ty)**
 
 <details>
 <summary>Phase B audit notes (2026-06-10)</summary>
