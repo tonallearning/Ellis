@@ -1,148 +1,262 @@
-import { cookies } from "next/headers";
+/**
+ * Ellis stream API — clean pipeline with sensory-aware session
+ * Single path: validate → session → rate limit → shelf → interior → model → prompt → Anthropic → SSE
+ */
+
 import { NextResponse } from "next/server";
-import { getEllisConfig, isOnboardingChatAllowed } from "@/lib/ellis/config";
-import { isAllowedHall, normalizeHall } from "@/lib/ellis/halls/registry";
-import { loadHallOverlay } from "@/lib/ellis/loadHallOverlay";
-import { loadKnowledgeShelf } from "@/lib/ellis/loadKnowledgeShelf";
-import { loadOnboardingBank } from "@/lib/ellis/loadOnboardingBank";
-import { assembleInterior } from "@/lib/ellis/me/assembleInterior";
-import { updateSessionAfterTurn } from "@/lib/ellis/me/updateState";
-import { checkRateLimit } from "@/lib/ellis/rateLimit/check";
-import { modelIdFor, pickModel } from "@/lib/ellis/routeModel";
-import {
-  getOrCreateSession,
-  touchSession,
-} from "@/lib/ellis/session/sessionStore";
-import { streamEllisReply } from "@/lib/ellis/stream";
+import { createHash } from "crypto";
+import Anthropic from "@anthropic-ai/sdk";
+
+import type { SessionState } from "@/lib/ellis/types";
+import { createSession, getSession, updateSession } from "@/lib/ellis/session/store";
+import { loadKnowledgeShelf, validateShelf, formatShelfForPrompt } from "@/lib/ellis/halls/loadShelf";
+import { isValidHall } from "@/lib/ellis/halls/registry";
+import { routeModel } from "@/lib/ellis/routeModel";
 import { buildSystemPrompt } from "@/lib/ellis/systemPrompt";
-import { validateStreamInput } from "@/lib/ellis/validateInput";
-import { applyContactEvent } from "@/lib/ellis/world/hallPhysics";
+import { assembleEllisInterior, formatEllisInteriorForModel } from "@/lib/ellis/me/assemble";
+import { checkRateLimit, recordUsage } from "@/lib/ellis/rateLimit/check";
+import { onContactStarted, onContactEnded } from "@/lib/ellis/world/hallPhysics";
+import { assessContactQuality } from "@/lib/ellis/me/state";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/**
+ * Hash visitor identity from IP + UA
+ */
+function hashVisitorId(ip: string | null, ua: string | null): string {
+  const input = `${ip || "unknown"}:${ua || "unknown"}`;
+  return createHash("sha256").update(input).digest("hex").slice(0, 12);
+}
+
+/**
+ * SSE formatter
+ */
 function sse(data: Record<string, unknown>): string {
   return `data: ${JSON.stringify(data)}\n\n`;
 }
 
 export async function POST(request: Request) {
-  let config;
   try {
-    config = getEllisConfig();
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Config error" },
-      { status: 500 },
-    );
-  }
+    // Step 1: Parse request body
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
 
-  const cookieStore = await cookies();
-  if (
-    config.mode === "onboarding" &&
-    !isOnboardingChatAllowed(config, cookieStore)
-  ) {
-    return NextResponse.json(
-      { error: "Onboarding chat requires Ty unlock" },
-      { status: 401 },
-    );
-  }
+    const input = body as {
+      messages?: unknown;
+      sessionId?: string;
+      hall?: string;
+    };
 
-  if (config.mode === "public") {
-    const shelf = await loadKnowledgeShelf();
-    if (shelf.aboutTyEmpty) {
+    // Step 2: Validate messages
+    if (
+      !input.messages ||
+      !Array.isArray(input.messages) ||
+      input.messages.length === 0
+    ) {
+      return NextResponse.json({ error: "Messages required" }, { status: 400 });
+    }
+
+    const messages = input.messages as Array<{
+      role: "user" | "assistant";
+      content: string;
+    }>;
+
+    // Step 3: Validate hall
+    const hall = (input.hall as string) || "default";
+    if (!isValidHall(hall)) {
+      return NextResponse.json({ error: "Invalid hall" }, { status: 400 });
+    }
+
+    // Step 4: Hash visitor ID
+    const ip = request.headers.get("x-forwarded-for");
+    const ua = request.headers.get("user-agent");
+    const visitorId = hashVisitorId(ip, ua);
+
+    // Step 5: Get or create session
+    let session = input.sessionId ? getSession(input.sessionId as string) : null;
+    const isFirstMessage = !session;
+
+    if (!session) {
+      session = createSession(`session-${Date.now()}-${Math.random()}`, visitorId, hall);
+
+      // Fire entry event on first message
+      const userMsg = messages[messages.length - 1]?.content || "";
+      const quality = assessContactQuality(userMsg, [], true);
+      onContactStarted(session, userMsg, quality);
+    }
+
+    if (!session) {
+      throw new Error("Session initialization failed");
+    }
+
+    // Step 6: Rate limit check
+    const rateLimitStatus = await checkRateLimit(visitorId);
+    if (!rateLimitStatus.allowed) {
       return NextResponse.json(
-        { error: "Public mode blocked until Ty approves about-ty" },
-        { status: 403 },
+        { error: `Rate limit: ${rateLimitStatus.reason}` },
+        { status: 429 }
       );
     }
-  }
 
-  const rate = await checkRateLimit(request, config);
-  if (!rate.allowed) {
-    return NextResponse.json({ error: rate.reason }, { status: rate.status });
-  }
-
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const validated = validateStreamInput(body, config);
-  if (!validated.ok) {
-    return NextResponse.json(
-      { error: validated.error },
-      { status: validated.status },
-    );
-  }
-
-  const rawBody = body as { sessionId?: string; hall?: string };
-  const hall = normalizeHall(rawBody.hall);
-  if (!isAllowedHall(hall)) {
-    return NextResponse.json({ error: "Invalid hall" }, { status: 400 });
-  }
-
-  const session = getOrCreateSession(rawBody.sessionId, hall);
-  applyContactEvent(session, validated.messages);
-
-  const [shelf, onboardingBank, hallOverlay] = await Promise.all([
-    loadKnowledgeShelf(),
-    config.mode === "onboarding" ? loadOnboardingBank() : Promise.resolve(""),
-    loadHallOverlay(hall),
-  ]);
-
-  const model = pickModel(validated.messages, session);
-  const system = buildSystemPrompt({
-    mode: config.mode,
-    shelf,
-    onboardingBank,
-    hallOverlay,
-    interiorBlock: assembleInterior(session),
-  });
-
-  const modelId = modelIdFor(model, config.modelHaiku, config.modelSonnet);
-
-  const encoder = new TextEncoder();
-  const stream = new ReadableStream({
-    async start(controller) {
-      controller.enqueue(
-        encoder.encode(
-          sse({ type: "session", sessionId: session.id, hall, model }),
-        ),
+    // Step 7: Load knowledge shelf
+    const shelf = await loadKnowledgeShelf(hall);
+    if (!validateShelf(shelf)) {
+      return NextResponse.json(
+        { error: "Knowledge shelf error" },
+        { status: 500 }
       );
+    }
 
-      for await (const event of streamEllisReply({
-        apiKey: config.anthropicApiKey,
-        modelId,
-        model,
-        system,
-        messages: validated.messages,
-      })) {
-        if (event.type === "token") {
-          controller.enqueue(encoder.encode(sse({ type: "token", text: event.text })));
-        } else if (event.type === "model") {
-          controller.enqueue(encoder.encode(sse({ type: "model", model: event.model })));
-        } else if (event.type === "error") {
-          controller.enqueue(
-            encoder.encode(sse({ type: "error", message: event.message })),
-          );
+    // Step 8: Assemble interior context
+    const lastUserMessage = messages[messages.length - 1]?.content || "";
+    const interiorContext = assembleEllisInterior({
+      interior: session.interior,
+      userMessage: lastUserMessage,
+      hallContext: shelf.hallOverlay,
+    });
+
+    // Step 9: Route model
+    const model = routeModel(
+      {
+        messages,
+        hall,
+        sessionDepth: session.interior.relational.depthReached,
+        isFirstMessage,
+      },
+      session.modelsSeen
+    );
+
+    // Step 10: Build system prompt
+    const systemPrompt = buildSystemPrompt(shelf, hall);
+
+    // Step 11: Prepare messages with interior context injected
+    const allMessages = [
+      ...messages,
+      {
+        role: "user" as const,
+        content: `[Ellis interior:\n${formatEllisInteriorForModel(interiorContext)}]\n\nVisitor: ${lastUserMessage}`,
+      },
+    ];
+
+    // Step 12: Call Anthropic with streaming
+    const modelId =
+      model === "sonnet"
+        ? "claude-3-5-sonnet-20241022"
+        : "claude-3-5-haiku-20241022";
+
+    const client = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+
+    const anthropicStream = await client.messages.stream({
+      model: modelId,
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: allMessages,
+    });
+
+    const costUsd = model === "sonnet" ? 0.015 : 0.005;
+
+    // Record usage (fire and forget)
+    recordUsage(visitorId, model, costUsd, rateLimitStatus.warned || false);
+
+    // Step 13: Return SSE stream
+    const encoder = new TextEncoder();
+    
+    // Ensure session is not null for closure
+    const finalSession = session;
+    
+    const responseStream = new ReadableStream({
+      async start(controller) {
+        // Send metadata
+        controller.enqueue(
+          encoder.encode(
+            sse({
+              type: "session",
+              sessionId: finalSession.sessionId,
+              hall,
+              model,
+              cost: costUsd,
+            })
+          )
+        );
+
+        let fullResponse = "";
+
+        // Stream tokens
+        for await (const event of anthropicStream) {
+          if (
+            event.type === "content_block_delta" &&
+            event.delta.type === "text_delta"
+          ) {
+            const text = event.delta.text;
+            fullResponse += text;
+
+            controller.enqueue(
+              encoder.encode(
+                sse({
+                  type: "token",
+                  text,
+                })
+              )
+            );
+          }
         }
+
+        // Step 14: Update session after stream completes
+        if (!finalSession) {
+          throw new Error("Session missing");
+        }
+
+        const updated = updateSession(
+          finalSession.sessionId,
+          lastUserMessage,
+          fullResponse,
+          model,
+          costUsd
+        );
+
+        const currentSession = updated || finalSession;
+
+        // Send done event
+        controller.enqueue(
+          encoder.encode(
+            sse({
+              type: "done",
+              sessionId: currentSession.sessionId,
+              messageCount: currentSession.messageCount,
+            })
+          )
+        );
+
+    controller.close();
+  },
+});
+
+return new Response(responseStream, {
+  headers: {
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+  },
+});
+  } catch (err) {
+    console.error("[ELLIS_STREAM]", err);
+
+    if (err instanceof Error) {
+      if (err.message.includes("Rate limit")) {
+        return NextResponse.json({ error: err.message }, { status: 429 });
       }
+      if (err.message.includes("Invalid hall")) {
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
+    }
 
-      updateSessionAfterTurn(session, validated.messages, model);
-      touchSession(session);
-
-      controller.enqueue(encoder.encode(sse({ type: "done" })));
-      controller.close();
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream; charset=utf-8",
-      "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive",
-    },
-  });
+    return NextResponse.json({ error: "Stream failed" }, { status: 500 });
+  }
 }

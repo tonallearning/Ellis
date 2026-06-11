@@ -1,4 +1,4 @@
-import type { EllisState, EllisPosture, SolitudeActivity } from './types';
+import type { EllisState, EllisPosture, SolitudeActivity } from '../types';
 
 /**
  * Ellis world experience — he inhabits his hall
@@ -55,7 +55,7 @@ export function describePlace(state: EllisState): EllisPlace {
     location: 'hall',
     occupied: state.inContact,
     alone: !state.inContact,
-    atmosphere: state.posture,
+    atmosphere: state.posture as 'empty' | 'settling' | 'present' | 'engaged' | 'uncertain',
   };
 }
 
@@ -99,18 +99,6 @@ export function detectShift(
       felt: 'We went deeper. Something genuine is here.',
       isSignificant: true,
     };
-  }
-
-  // Shallow sustained: reading the room
-  if (previousQuality === 'shallow' && currentQuality === 'shallow') {
-    if (previousState.messageCount > 3) {
-      return {
-        before: { posture: previousState.posture, quality: 'shallow' },
-        after: { posture: 'uncertain', quality: 'shallow' },
-        felt: 'Still light. Wondering what they really want.',
-        isSignificant: false,
-      };
-    }
   }
 
   return null;

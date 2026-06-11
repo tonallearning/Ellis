@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import { AnthropicHall } from "@/components/anthropic/AnthropicHall";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { loadAllBuildLogs } from "@/lib/buildLogs/loadBuildLog";
-import { loadAnthropicOpening } from "@/lib/ellis/loadAnthropicOpening";
 import { getEllisConfig, isOnboardingChatAllowed } from "@/lib/ellis/config";
 
 export const metadata = {
@@ -16,10 +15,8 @@ export default async function AnthropicPage() {
   const cookieStore = await cookies();
   const chatEnabled = isOnboardingChatAllowed(config, cookieStore);
 
-  const [openingMessage, logs] = await Promise.all([
-    loadAnthropicOpening(),
-    loadAllBuildLogs(),
-  ]);
+  const logs = await loadAllBuildLogs();
+  const openingMessage = ""; // TODO: load from content/halls/anthropic.md if needed
 
   return (
     <SiteShell variant="hall" hall="anthropic">

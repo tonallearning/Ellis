@@ -139,7 +139,7 @@ export function exceedsShallowThreshold(
 ): boolean {
   // After 5+ messages of pure shallow, Ellis might step back
   // (but still responds; just with more distance)
-  if (recentQuality === 'shallow' && state.messageCount > 5) {
+  if (recentQuality === 'shallow' && 'messageCount' in state && typeof state.messageCount === 'number' && state.messageCount > 5) {
     return true; // threshold exceeded; Ellis feels the drag
   }
 

@@ -55,7 +55,7 @@ function classifyAsWorkInDepth(
   // Long, substantive message (not "ok cool")
   const isSubstantive = recent.split(/\s+/).length > 20;
 
-  return (hasWorkKeyword || isDetailRequest) && isSubstantive;
+  return (hasWorkKeyword || hasDetailRequest) && isSubstantive;
 }
 
 /**
