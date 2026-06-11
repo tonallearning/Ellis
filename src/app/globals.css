@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+/* ── Light (Rodeo morning) ── */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  --surface-0: #f4f1ec;
+  --surface-1: #faf8f5;
+  --surface-2: #ffffff;
+  --text-primary: #1a1816;
+  --text-secondary: #5c5650;
+  --accent: #4a6fa5;
+  --accent-glow: rgba(74, 111, 165, 0.22);
+  --border: rgba(26, 24, 22, 0.08);
+  --glass-tint: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(26, 24, 22, 0.1);
+  --glass-shadow: 0 24px 64px rgba(26, 24, 22, 0.08);
+
+  --basement: #8b5e3c;
+  --tl: #2a7a6f;
+  --goe: #6b5b95;
+
+  --ambient-a: rgba(180, 198, 230, 0.35);
+  --ambient-b: rgba(210, 190, 220, 0.25);
+}
+
+/* ── Dark (boutique window at night) ── */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface-0: #121110;
+  --surface-1: #1a1917;
+  --surface-2: #242220;
+  --text-primary: #f2ece4;
+  --text-secondary: #a39a90;
+  --accent: #8eb4e8;
+  --accent-glow: rgba(142, 180, 232, 0.18);
+  --border: rgba(242, 236, 228, 0.08);
+  --glass-tint: rgba(26, 25, 23, 0.62);
+  --glass-border: rgba(242, 236, 228, 0.1);
+  --glass-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+
+  --basement: #c4956a;
+  --tl: #5ec4b6;
+  --goe: #a894d4;
+
+  --ambient-a: rgba(90, 120, 180, 0.14);
+  --ambient-b: rgba(120, 90, 160, 0.1);
+}
+
+@theme inline {
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-glass-tint: var(--glass-tint);
+  --color-glass-border: var(--glass-border);
+  --color-basement: var(--basement);
+  --color-tl: var(--tl);
+  --color-goe: var(--goe);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-geist-sans);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --surface-0: #121110;
+    --surface-1: #1a1917;
+    --surface-2: #242220;
+    --text-primary: #f2ece4;
+    --text-secondary: #a39a90;
+    --accent: #8eb4e8;
+    --accent-glow: rgba(142, 180, 232, 0.18);
+    --border: rgba(242, 236, 228, 0.08);
+    --glass-tint: rgba(26, 25, 23, 0.62);
+    --glass-border: rgba(242, 236, 228, 0.1);
+    --glass-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+
+    --basement: #c4956a;
+    --tl: #5ec4b6;
+    --goe: #a894d4;
+
+    --ambient-a: rgba(90, 120, 180, 0.14);
+    --ambient-b: rgba(120, 90, 160, 0.1);
+  }
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.hall-ambient {
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 20% 0%,
+      var(--ambient-a),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 70% 45% at 80% 10%,
+      var(--ambient-b),
+      transparent 50%
+    ),
+    var(--surface-0);
+  animation: ambient-drift 48s ease-in-out infinite alternate;
+}
+
+.hall-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+.glass-panel {
+  background: var(--glass-tint);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(20px);
+}
+
+.chat-input-wrap {
+  background: var(--surface-1);
+  border: 1px solid var(--glass-border);
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.chat-input-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.stream-pulse {
+  animation: stream-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes ambient-drift {
+  from {
+    transform: scale(1) translateY(0);
+  }
+  to {
+    transform: scale(1.02) translateY(-1%);
+  }
+}
+
+@keyframes stream-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hall-ambient,
+  .stream-pulse {
+    animation: none;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

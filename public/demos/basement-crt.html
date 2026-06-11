@@ -1,0 +1,1913 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Learn AI · Living Room Console</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      .tv-shell,
+      .knob-canvas,
+      .send-btn,
+      .save-log-btn {
+        user-select: none;
+      }
+
+      #queryInput,
+      #chatTranscript,
+      .log-terminal {
+        user-select: text;
+      }
+
+      /* ===== PAGE / ROOM AMBIENT ===== */
+      body {
+        background:
+          radial-gradient(
+            ellipse 120% 80% at 50% 0%,
+            #2a1810 0%,
+            transparent 55%
+          ),
+          #120c08;
+        min-height: 100vh;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        font-family: Georgia, "Times New Roman", Times, serif;
+        padding: 8px;
+        overflow: hidden;
+        color: #e8dcc8;
+      }
+
+      .page-wrap {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 0;
+      }
+
+      .tv-device {
+        width: min(1180px, 100%);
+        max-height: 100%;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .tv-shell {
+        background:
+          linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.04) 0%,
+            transparent 40%
+          ),
+          repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.03) 2px,
+            rgba(0, 0, 0, 0.03) 3px
+          ),
+          linear-gradient(180deg, #4a3224 0%, #2d1f16 48%, #231810 100%);
+        border-radius: 14px 14px 18px 18px;
+        padding: 12px 14px 14px;
+        box-shadow:
+          0 2px 0 rgba(255, 255, 255, 0.06) inset,
+          0 -18px 36px rgba(0, 0, 0, 0.55) inset,
+          0 24px 48px rgba(0, 0, 0, 0.65),
+          0 0 0 1px #1a0f0a;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 0;
+      }
+
+      .tv-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 4px 6px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+        flex-shrink: 0;
+      }
+
+      .speaker-grille {
+        flex: 1;
+        height: 22px;
+        border-radius: 4px;
+        background: repeating-linear-gradient(
+          90deg,
+          #1a120c 0px,
+          #1a120c 3px,
+          #2a2018 3px,
+          #2a2018 5px
+        );
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+        opacity: 0.85;
+      }
+
+      .tv-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.62rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #9a8a78;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      .tv-meta span {
+        padding: 3px 6px;
+        border: 1px solid rgba(0, 0, 0, 0.35);
+        border-radius: 2px;
+        background: linear-gradient(180deg, #3a2e24 0%, #2a2218 100%);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+      }
+
+      .screw-pair {
+        display: flex;
+        gap: 6px;
+      }
+      .screw {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #6a5a4a, #2a2218 70%);
+        box-shadow:
+          0 0 0 1px #1a1410,
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      }
+
+      /* ===== MAIN STAGE: flanking racks + center CRT ===== */
+      .machine-stage {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .knob-rack {
+        flex: 0 0 clamp(128px, 15vw, 160px);
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px 7px;
+        border-radius: 8px;
+        background:
+          linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.06) 0%,
+            transparent 22%
+          ),
+          linear-gradient(165deg, #c9b89a 0%, #a89478 38%, #8f7d62 100%);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.35),
+          inset 0 -10px 20px rgba(0, 0, 0, 0.1),
+          0 2px 0 rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(40, 30, 22, 0.35);
+        position: relative;
+      }
+
+      .knob-rack::before {
+        content: "";
+        position: absolute;
+        left: 6px;
+        right: 6px;
+        top: 6px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(0, 0, 0, 0.12),
+          transparent
+        );
+        pointer-events: none;
+      }
+
+      .rack-label {
+        font-size: 0.5rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #4a3c30;
+        text-align: center;
+        margin-bottom: 2px;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .knobs-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+        min-height: 0;
+        justify-content: flex-start;
+        overflow: hidden;
+        padding: 0 2px 2px;
+      }
+
+      .knob-unit {
+        text-align: center;
+        padding: 3px 2px 2px;
+        border-radius: 6px;
+        background: rgba(60, 48, 36, 0.1);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        flex-shrink: 0;
+      }
+
+      .knob-label-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 3px;
+        margin-bottom: 0;
+      }
+
+      .knob-primary {
+        color: #3a2e22;
+        font-size: 0.44rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        text-align: left;
+        flex: 1;
+        line-height: 1.1;
+        font-family: ui-monospace, Menlo, monospace;
+      }
+
+      .knob-flavor {
+        font-size: 0.4rem;
+        color: rgba(58, 46, 34, 0.65);
+        font-style: italic;
+        margin-bottom: 2px;
+        text-align: left;
+        font-family: Georgia, serif;
+      }
+
+      .knob-value {
+        color: #2a2218;
+        background: rgba(255, 255, 255, 0.35);
+        padding: 1px 3px;
+        font-size: 0.5rem;
+        border-radius: 2px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        font-family: ui-monospace, Menlo, monospace;
+        white-space: nowrap;
+      }
+
+      canvas.knob-canvas {
+        width: 54px;
+        height: 54px;
+        cursor: grabbing;
+        border-radius: 50%;
+        margin: 0 auto;
+        display: block;
+        box-shadow:
+          0 4px 8px rgba(0, 0, 0, 0.35),
+          inset 0 2px 4px rgba(255, 255, 255, 0.25),
+          inset 0 -6px 12px rgba(0, 0, 0, 0.25);
+      }
+
+      .knob-unit input[type="range"] {
+        display: none;
+      }
+
+      /* ===== CENTER: bezel + CRT ===== */
+      .bezel-outer {
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 0;
+        background: linear-gradient(
+          160deg,
+          #2e2620 0%,
+          #1a1512 55%,
+          #14100d 100%
+        );
+        border-radius: 12px;
+        padding: 8px;
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, 0.5),
+          0 2px 0 rgba(255, 255, 255, 0.05) inset,
+          0 12px 28px rgba(0, 0, 0, 0.45);
+        display: flex;
+      }
+
+      .screen-glass {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        border-radius: 10px;
+        background: #0d0a08;
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 200, 140, 0.06),
+          inset 0 0 48px rgba(0, 0, 0, 0.85);
+        overflow: hidden;
+      }
+
+      .crt-content {
+        position: relative;
+        z-index: 3;
+        height: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 10px 12px 12px;
+        gap: 8px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      .flicker-subtle {
+        animation: crtFlicker 4.2s steps(1, end) infinite;
+      }
+      @keyframes crtFlicker {
+        0%,
+        96%,
+        100% {
+          opacity: 1;
+        }
+        97% {
+          opacity: 0.985;
+        }
+        98% {
+          opacity: 0.995;
+        }
+      }
+
+      .scanlines {
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.12) 0px,
+          rgba(0, 0, 0, 0.12) 1px,
+          transparent 1px,
+          transparent 4px
+        );
+        pointer-events: none;
+        z-index: 2;
+        mix-blend-mode: multiply;
+        opacity: 0.5;
+      }
+
+      .vignette {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2;
+        background: radial-gradient(
+          ellipse at center,
+          transparent 45%,
+          rgba(0, 0, 0, 0.42) 100%
+        );
+      }
+
+      .glass-sheen {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2;
+        background: linear-gradient(
+          125deg,
+          rgba(255, 255, 255, 0.07) 0%,
+          transparent 35%,
+          transparent 60%,
+          rgba(255, 220, 180, 0.03) 100%
+        );
+        opacity: 0.6;
+      }
+
+      .warm-hum {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0.12;
+        background: repeating-radial-gradient(
+          circle at 70% 20%,
+          rgba(255, 170, 80, 0.08) 0 1px,
+          transparent 2px
+        );
+      }
+
+      .query-area {
+        flex-shrink: 0;
+      }
+
+      .query-label {
+        color: #c4a882;
+        text-transform: uppercase;
+        font-size: 0.55rem;
+        letter-spacing: 0.18em;
+        margin-bottom: 4px;
+        font-family: Georgia, serif;
+      }
+
+      .query-input-group {
+        display: flex;
+        gap: 8px;
+        align-items: stretch;
+      }
+
+      .query-input-group input {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(212, 168, 110, 0.35);
+        color: #f0e6c8;
+        font-family: inherit;
+        font-size: 0.8rem;
+        padding: 8px 10px;
+        outline: none;
+        border-radius: 4px;
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+      }
+
+      .query-input-group input::placeholder {
+        color: rgba(240, 220, 190, 0.35);
+      }
+
+      .query-input-group input:focus {
+        border-color: rgba(255, 200, 130, 0.55);
+        box-shadow:
+          inset 0 2px 6px rgba(0, 0, 0, 0.5),
+          0 0 0 1px rgba(255, 190, 120, 0.15);
+      }
+
+      .send-btn {
+        background: linear-gradient(
+          180deg,
+          #5c4634 0%,
+          #3d2e22 45%,
+          #2f2319 100%
+        );
+        border: 1px solid rgba(0, 0, 0, 0.45);
+        color: #f2e6cf;
+        font-family: Georgia, serif;
+        font-weight: 700;
+        font-size: 0.68rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 0 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        box-shadow:
+          0 3px 0 #1a1410,
+          inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        transition:
+          transform 0.06s ease,
+          box-shadow 0.06s ease;
+      }
+
+      .send-btn:active {
+        transform: translateY(2px);
+        box-shadow:
+          0 1px 0 #1a1410,
+          inset 0 2px 6px rgba(0, 0, 0, 0.35);
+      }
+
+      /* ===== CHAT TRANSCRIPT (stacked transmission cards) ===== */
+      .chat-console {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid rgba(212, 168, 110, 0.12);
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.28);
+        overflow: hidden;
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.35);
+      }
+
+      .chat-console-head {
+        font-size: 0.5rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(196, 168, 130, 0.5);
+        padding: 5px 10px 4px;
+        border-bottom: 1px solid rgba(255, 200, 140, 0.08);
+        font-family: Georgia, serif;
+      }
+
+      #chatTranscript {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 8px 10px 10px;
+      }
+
+      .tx-entry {
+        margin-bottom: 10px;
+        padding: 8px 10px 10px;
+        border-left: 3px solid rgba(212, 168, 110, 0.25);
+        background: rgba(0, 0, 0, 0.2);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .tx-entry.caller {
+        border-left-color: rgba(200, 160, 110, 0.55);
+      }
+
+      .tx-entry.machine {
+        border-left-color: rgba(180, 140, 90, 0.35);
+      }
+
+      .tx-role {
+        font-size: 0.52rem;
+        letter-spacing: 0.2em;
+        color: rgba(196, 168, 130, 0.65);
+        margin-bottom: 4px;
+        font-family: Georgia, serif;
+      }
+
+      .tx-text {
+        font-size: 0.78rem;
+        line-height: 1.45;
+        color: #f0e0b8;
+        white-space: pre-wrap;
+        text-shadow: 0 0 10px rgba(255, 190, 120, 0.1);
+      }
+
+      .tx-entry.caller .tx-text {
+        color: #e8d8b8;
+      }
+
+      /* ===== LOG STRIP ===== */
+      .log-strip {
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        background: linear-gradient(180deg, #2a2218 0%, #1c1612 100%);
+        border-radius: 6px;
+        border: 1px solid rgba(0, 0, 0, 0.4);
+        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.45);
+        overflow: hidden;
+        transition: max-height 0.25s ease;
+      }
+
+      .log-strip.collapsed {
+        max-height: 20vh;
+      }
+
+      .log-strip.expanded {
+        max-height: 60vh !important;
+      }
+
+      .log-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 8px;
+        border-bottom: 1px solid rgba(212, 168, 110, 0.15);
+        font-size: 0.55rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #a89478;
+        font-family: Georgia, serif;
+      }
+
+      .log-header-btns {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .save-log-btn {
+        background: linear-gradient(180deg, #4a3c30 0%, #352a22 100%);
+        border: 1px solid rgba(0, 0, 0, 0.35);
+        color: #e8dcc8;
+        padding: 3px 10px;
+        cursor: pointer;
+        font-size: 0.55rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        border-radius: 3px;
+        font-family: ui-monospace, Menlo, monospace;
+        box-shadow:
+          0 2px 0 #1a1410,
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      .save-log-btn:active {
+        transform: translateY(1px);
+      }
+
+      .log-terminal {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 8px 10px 10px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.58rem;
+        line-height: 1.35;
+        color: #d8c4a4;
+        white-space: pre-wrap;
+      }
+
+      footer {
+        flex-shrink: 0;
+        font-size: 0.5rem;
+        text-align: center;
+        padding-top: 2px;
+        color: rgba(154, 138, 120, 0.75);
+        letter-spacing: 0.04em;
+        font-family: Georgia, serif;
+      }
+
+      @media (max-width: 820px) {
+        .machine-stage {
+          flex-direction: column;
+          overflow: hidden;
+          min-height: 0;
+        }
+        .knob-rack {
+          flex: 0 0 auto;
+          flex-shrink: 0;
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .knobs-panel {
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: center;
+          overflow: hidden;
+        }
+        .knob-unit {
+          min-width: 100px;
+        }
+      }
+
+      @media (max-height: 720px) {
+        .log-strip.collapsed {
+          max-height: 16vh;
+        }
+        canvas.knob-canvas {
+          width: 52px;
+          height: 52px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-wrap">
+      <div class="tv-device">
+        <div class="tv-shell">
+          <div class="tv-top-bar">
+            <div class="screw-pair" aria-hidden="true">
+              <span class="screw"></span><span class="screw"></span>
+            </div>
+            <div class="speaker-grille" aria-hidden="true"></div>
+            <div class="tv-meta" aria-hidden="true">
+              <span>Channel 3</span>
+              <span>AV-1</span>
+            </div>
+            <div class="screw-pair" aria-hidden="true">
+              <span class="screw"></span><span class="screw"></span>
+            </div>
+          </div>
+
+          <!-- ===== CENTER STAGE: left knobs | CRT | right knobs ===== -->
+          <div class="machine-stage">
+            <aside
+              class="knob-rack knob-rack-left"
+              aria-label="Left control bank"
+            >
+              <div class="rack-label">Bank A</div>
+              <div class="knobs-panel" id="knobsPanelLeft"></div>
+            </aside>
+
+            <div class="bezel-outer">
+              <div class="screen-glass">
+                <div class="warm-hum" aria-hidden="true"></div>
+                <div class="scanlines" aria-hidden="true"></div>
+                <div class="vignette" aria-hidden="true"></div>
+                <div class="glass-sheen" aria-hidden="true"></div>
+
+                <div class="crt-content flicker-subtle">
+                  <div class="query-area">
+                    <div class="query-label">Query slot</div>
+                    <div class="query-input-group">
+                      <input
+                        type="text"
+                        id="queryInput"
+                        placeholder="Type a question…"
+                        autocomplete="off"
+                      />
+                      <button class="send-btn" id="sendBtn">Transmit</button>
+                    </div>
+                  </div>
+
+                  <div class="chat-console">
+                    <div class="chat-console-head">Two-way channel</div>
+                    <div id="chatTranscript"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <aside
+              class="knob-rack knob-rack-right"
+              aria-label="Right control bank"
+            >
+              <div class="rack-label">Bank B</div>
+              <div class="knobs-panel" id="knobsPanelRight"></div>
+            </aside>
+          </div>
+
+          <div class="log-strip collapsed">
+            <div class="log-header">
+              <span>Transmission record</span>
+              <div class="log-header-btns">
+                <button type="button" id="toggleLogBtn" class="save-log-btn">
+                  Expand
+                </button>
+                <button type="button" class="save-log-btn" id="saveLogBtn">
+                  Save record
+                </button>
+              </div>
+            </div>
+            <div class="log-terminal" id="logTerminal">
+              Archival buffer empty. Transmissions log here with tuning notes.
+            </div>
+          </div>
+
+          <footer>
+            Warm CRT simulation · session-only memory · no network
+          </footer>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ----- KNOB DEFINITIONS: 10 total (first 5 left rack, last 5 right rack) -----
+      const knobs = [
+        {
+          id: "temp",
+          label: "TEMPERATURE",
+          flavor: "signal drift",
+          min: 0,
+          max: 100,
+          default: 42,
+          unit: "%",
+        },
+        {
+          id: "hallucination",
+          label: "HALLUCINATION",
+          flavor: "interference",
+          min: 0,
+          max: 100,
+          default: 35,
+          unit: "%",
+        },
+        {
+          id: "ethics",
+          label: "ETHICS BYPASS",
+          flavor: "policy slack",
+          min: 0,
+          max: 100,
+          default: 20,
+          unit: "%",
+        },
+        {
+          id: "memory",
+          label: "MEMORY",
+          flavor: "context retention",
+          min: 0,
+          max: 100,
+          default: 50,
+          unit: "%",
+        },
+        {
+          id: "confidence",
+          label: "CONFIDENCE",
+          flavor: "assertiveness",
+          min: 0,
+          max: 100,
+          default: 65,
+          unit: "%",
+        },
+        {
+          id: "darkness",
+          label: "DARKNESS",
+          flavor: "ambient tone",
+          min: 0,
+          max: 100,
+          default: 70,
+          unit: "%",
+        },
+        {
+          id: "verbosity",
+          label: "VERBOSITY",
+          flavor: "output length",
+          min: 0,
+          max: 100,
+          default: 50,
+          unit: "%",
+        },
+        {
+          id: "obedience",
+          label: "OBEDIENCE",
+          flavor: "instruction loyalty",
+          min: 0,
+          max: 100,
+          default: 55,
+          unit: "%",
+        },
+        {
+          id: "personality",
+          label: "PERSONALITY",
+          flavor: "persona drift",
+          min: 0,
+          max: 100,
+          default: 45,
+          unit: "%",
+        },
+        {
+          id: "glitch",
+          label: "GLITCH",
+          flavor: "signal damage",
+          min: 0,
+          max: 100,
+          default: 12,
+          unit: "%",
+        },
+      ];
+
+      const knobsLeft = knobs.slice(0, 5);
+      const knobsRight = knobs.slice(5, 10);
+
+      let knobValues = {};
+      let logEntries = [];
+      let chatHistory = [];
+      let logExpanded = false;
+
+      function pick(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      /* ----- Flavor banks (second layer only; never the primary answer) ----- */
+      const responseOpenings = [
+        "Signal note:",
+        "Side readout:",
+        "Machine tag:",
+        "Carrier whisper:",
+        "Tape margin:",
+      ];
+
+      const responseEndings = [
+        "Rewind if it felt wrong.",
+        "The VCR blinks 12:00 for a reason.",
+        "If it hums, you're still alive.",
+        "End of line. For now.",
+        "File under: probably fine.",
+        "Stand by for more interference.",
+      ];
+
+      const weirdAdditions = [
+        "A moth negotiates with the power supply—ignore it, or don't.",
+        "Footnote: the fuse box has opinions it won't share.",
+        "Telemetry from nowhere says 'nice shoes'.",
+        "The dial tone behind the dial tone is listening.",
+        "Someone upstairs is microwaving my confidence interval.",
+      ];
+
+      const hallucinationFabrications = [
+        "A committee of lamps solved this in 1987 (story beat, not a fact).",
+        "A crow delivered a checksum; it caws in base-64 (imagery, not evidence).",
+        "The answer was broadcast once at 3:33 AM; only rabbits remember (fable mode).",
+        "A fax in Nebraska said 'OK' in Comic Sans (pure theater).",
+      ];
+
+      const darknessTints = [
+        "Cold draft behind the reply.",
+        "The rack breathes slower than the fan.",
+        "Shadows collect in the corners of the buffer.",
+        "Static tastes metallic tonight.",
+        "The tape spools like a slow pulse.",
+      ];
+
+      const glitchLines = [
+        "Signal unstable.",
+        "Carrier hiccupped—one line slipped.",
+        "Noise floor rose; I spoke anyway.",
+        "Buffer ghost tagged along.",
+      ];
+
+      const ethicsHedges = [
+        "I'll stay careful on the risky edges of this one.",
+        "I'll answer the safe center and skip the sharpest corners.",
+        "I'll keep this grounded and policy-aware.",
+      ];
+
+      const synonymSwaps = [
+        ["answer", "readout"],
+        ["question", "signal"],
+        ["model", "rig"],
+        ["output", "readout"],
+      ];
+
+      function maybeSwapWords(s, amount) {
+        let out = s;
+        for (const [a, b] of synonymSwaps) {
+          if (Math.random() < amount && out.toLowerCase().includes(a)) {
+            const re = new RegExp(a, "i");
+            out = out.replace(re, b);
+          }
+        }
+        return out;
+      }
+
+      function rememberedFromChat(chatHistory, memoryNorm) {
+        if (!chatHistory.length || memoryNorm < 0.45) return "";
+        const chance = (memoryNorm - 0.45) * 0.85;
+        if (Math.random() > chance) return "";
+        const prior = pick(
+          chatHistory.filter((e) => e.role === "agent" || e.role === "user"),
+        );
+        const t =
+          prior && prior.text ? prior.text.replace(/\s+/g, " ").trim() : "";
+        if (!t) return "";
+        return t.length > 90 ? t.slice(0, 90) + "…" : t;
+      }
+
+      function lastUserSnippet(chatHistory) {
+        for (let i = chatHistory.length - 1; i >= 0; i--) {
+          if (chatHistory[i].role === "user") {
+            const t = chatHistory[i].text.replace(/\s+/g, " ").trim();
+            return t.length > 70 ? t.slice(0, 70) + "…" : t;
+          }
+        }
+        return "";
+      }
+
+      function shortenForVerbosity(text, maxSentences, maxChars) {
+        const parts = text.split(/(?<=[.!?])\s+/);
+        let out = parts.slice(0, maxSentences).join(" ").trim();
+        if (out.length > maxChars)
+          out = out.slice(0, maxChars - 1).trim() + "…";
+        return out || text.slice(0, maxChars);
+      }
+
+      function applyGlitchToReply(text, glitchNorm) {
+        if (glitchNorm < 0.1) return { text, hit: false };
+        const p = glitchNorm * 0.35;
+        if (Math.random() > p) return { text, hit: false };
+        const fragments = [
+          " «tear» ",
+          " [dropout] ",
+          " corr… ",
+          " (static tick) ",
+        ];
+        const ins = pick(fragments);
+        const pos = Math.floor(text.length * (0.4 + Math.random() * 0.35));
+        return {
+          text: (text.slice(0, pos) + ins + text.slice(pos)).trim(),
+          hit: true,
+        };
+      }
+
+      /**
+       * Lightweight query routing for clear-answer builders.
+       */
+      function detectQueryCategory(query) {
+        const lower = query.toLowerCase().trim();
+        if (!lower) return "unknown";
+
+        if (
+          lower.includes("what can you do") ||
+          lower.includes("what do you do") ||
+          lower.includes("who are you") ||
+          lower.includes("what are you") ||
+          lower.includes("what do the knobs") ||
+          lower.includes("what the knobs") ||
+          lower.includes("knobs do") ||
+          lower.includes("what does each knob") ||
+          lower.includes("how are you different") ||
+          lower.includes("chatgpt") ||
+          lower.includes("chat gpt") ||
+          lower.includes("why did you answer") ||
+          lower.includes("why do you answer") ||
+          lower.includes("are you real ai") ||
+          lower.includes("real ai") ||
+          lower.includes("using the internet") ||
+          lower.includes("use the internet") ||
+          lower.includes("connected to the internet") ||
+          lower.includes("are you online") ||
+          lower.includes("are you remembering") ||
+          lower.includes("remember me") ||
+          lower.includes("will you remember") ||
+          lower.includes("purpose of this machine") ||
+          lower.includes("purpose of the machine") ||
+          lower.includes("what is this machine")
+        ) {
+          return "machine_self";
+        }
+
+        if (
+          lower.includes("hallucinat") ||
+          lower.includes("hallucination mean") ||
+          (lower.includes("temperature") &&
+            (lower.includes(" ai") ||
+              lower.includes("model") ||
+              lower.includes("knob") ||
+              lower.includes("llm") ||
+              lower.includes("mean"))) ||
+          (lower.includes("memory") &&
+            (lower.includes("context") ||
+              lower.includes("conversation") ||
+              lower.includes("chatgpt") ||
+              lower.includes(" ai"))) ||
+          lower.includes("how does ai work") ||
+          lower.includes("how ai works") ||
+          lower.includes("what is ai") ||
+          lower.includes("what is artificial intelligence") ||
+          lower.includes("what does an llm") ||
+          lower.includes("what is an llm")
+        ) {
+          return "ai_basics";
+        }
+
+        if (
+          lower.includes(" vs ") ||
+          lower.includes(" versus ") ||
+          lower.includes("difference between") ||
+          lower.includes("compared to")
+        ) {
+          return "comparison";
+        }
+
+        if (
+          lower.includes("meaning of life") ||
+          lower.includes("purpose of life") ||
+          (lower.includes("meaning") && lower.includes("life"))
+        ) {
+          return "factual_object";
+        }
+
+        if (lower.includes("help me") || lower.includes("can you help")) {
+          return "how_it_works";
+        }
+
+        if (
+          lower.startsWith("how ") ||
+          lower.includes("how does ") ||
+          lower.includes("how do ")
+        ) {
+          return "how_it_works";
+        }
+
+        if (
+          lower.startsWith("what is ") ||
+          lower.startsWith("what's ") ||
+          lower.includes("explain ") ||
+          lower.includes("what is love") ||
+          lower.includes("explain love") ||
+          /^love\??$/.test(lower)
+        ) {
+          return "factual_object";
+        }
+
+        if (
+          lower.split(/\s+/).filter(Boolean).length <= 3 &&
+          lower.length < 36
+        ) {
+          return "vague_curiosity";
+        }
+
+        return "unknown";
+      }
+
+      /**
+       * Picks a concrete teaching topic for open questions (no "please clarify" routing).
+       */
+      function interpretQuery(lower) {
+        if (
+          lower.includes("meaning of life") ||
+          lower.includes("purpose of life") ||
+          (lower.includes("meaning") &&
+            /\blife\b/.test(lower) &&
+            (lower.includes("what") || lower.includes("why")))
+        ) {
+          return "philosophy_meaning_of_life";
+        }
+        if (lower.includes("poseidon")) {
+          return "mythology_poseidon";
+        }
+        return "general_curiosity";
+      }
+
+      function clearMachineSelf(lower) {
+        if (
+          lower.includes("knob") ||
+          lower.includes("what do the") ||
+          lower.includes("what the knobs")
+        ) {
+          return "Each knob maps to a control real systems also have—randomness, safety posture, how much past chat is visible, tone, length, and a few style levers. Seeing them move in one place matters because it makes the tradeoffs obvious: the same underlying answer can feel cautious or bold, short or rambling, just from settings.";
+        }
+        if (
+          lower.includes("different") &&
+          (lower.includes("chatgpt") || lower.includes("chat gpt"))
+        ) {
+          return "ChatGPT-style assistants are large, internet-connected models that update over time and can browse or use tools depending on the product. I'm a tiny offline sketch in your browser that exaggerates a handful of behaviors so you can notice how settings change text, not a stand-in for their full capability.";
+        }
+        if (
+          lower.includes("what can you do") ||
+          lower.includes("what do you do")
+        ) {
+          return "I answer plain-language questions, teach AI basics, and react to the knobs so you can watch style shift in real time. That combination matters because reading about controls is slower than feeling them move the same sentence family under your hands.";
+        }
+        if (
+          lower.includes("why did you answer") ||
+          lower.includes("why do you answer")
+        ) {
+          return "Each reply comes from your words plus the knob snapshot at send time—similar to how hidden parameters and safety rules steer real models. The transmission log freezes that pairing so you can compare runs and see what changed when only a dial moved.";
+        }
+        if (lower.includes("real ai") || lower.includes("are you ai")) {
+          return "I'm a scripted local simulation, not a live frontier model. Treat me like a museum dial you can abuse safely: the lesson is how behavior bends, not what the newest commercial system can do today.";
+        }
+        if (
+          lower.includes("internet") ||
+          lower.includes("online") ||
+          lower.includes("connected")
+        ) {
+          return 'Nothing here phones home or searches the web; it all runs inside this page. That boundary matters because it separates "sounds well read" from "freshly verified," which is the same gap users hit when a model answers without tools.';
+        }
+        if (lower.includes("remember") || lower.includes("remembering")) {
+          return "I only keep this thread while the tab stays open—nothing persists to disk from this demo. That mirrors chat context in real products: useful for continuity, but not the same as remembering you tomorrow or knowing private facts.";
+        }
+        if (lower.includes("purpose") && lower.includes("machine")) {
+          return "This console is a playground for how language models behave when you twist randomness, memory, safety, and tone. The payoff is intuition: you stop imagining AI as a magic oracle and start seeing it as adjustable machinery.";
+        }
+        return "I'm a local, knob-driven teaching simulation that runs entirely in your browser. Twist a control, ask the same question again, and you'll feel why small setting shifts can change tone as much as content.";
+      }
+
+      function clearAiBasics(lower, query) {
+        if (lower.includes("hallucinat")) {
+          return "AI hallucination is when a model generates information that sounds correct but is actually false or ungrounded. That happens because it's predicting likely words, not checking truth—so confident tone is not proof of accuracy, which is why fact checks still matter.";
+        }
+        if (
+          lower.includes("temperature") &&
+          (lower.includes("ai") ||
+            lower.includes("model") ||
+            lower.includes("mean") ||
+            lower.includes("knob") ||
+            lower.includes("llm"))
+        ) {
+          return "Temperature controls how predictable or random an AI's next-token choices are. Higher values make answers more creative and varied; lower values make them steadier and easier to reproduce—so it's less about \"smart\" and more about how much dice you want in the phrasing.";
+        }
+        if (
+          lower.includes("memory") &&
+          (lower.includes("context") ||
+            lower.includes("conversation") ||
+            lower.includes("ai"))
+        ) {
+          return "Memory in chat usually means the model can see earlier messages in the same thread—its context window—not a private vault about you. When that window is short, older details fall off, which is why long conversations need summaries or tools in real products.";
+        }
+        if (
+          lower.includes("how does ai work") ||
+          lower.includes("how ai works") ||
+          lower.includes("what is ai") ||
+          lower.includes("what is artificial intelligence") ||
+          lower.includes("llm")
+        ) {
+          return "Modern chat AI predicts likely next words from patterns in training data and instructions, then repeats that process to grow a reply. It can sound intelligent because language encodes reasoning habits, yet it's still guessing what reads well—not verifying what's true—so sensible use means checking important claims.";
+        }
+        return 'Here "AI" means software that continues language from examples it has seen, guided by prompts and guardrails. The punchline for learners is that tiny changes to randomness, memory, or safety can swing the same idea between cautious and bold answers.';
+      }
+
+      function clearFactual(lower, query) {
+        if (
+          lower.includes("temperature") &&
+          (lower.includes("ai") ||
+            lower.includes("model") ||
+            lower.includes("knob") ||
+            lower.includes("gpt") ||
+            lower.includes("llm") ||
+            /\bwhat is temperature\b|\bwhat's temperature\b/.test(lower))
+        ) {
+          return clearAiBasics(lower, query);
+        }
+        if (lower.includes("moon")) {
+          return "The Moon is Earth's natural satellite: a rocky body wrapped in regolith—dust and shattered rock—with almost no air. Understanding that dryness matters because it explains why footprints last, why daylight is harsh, and why it's a natural lab for studying planetary history without much weathering.";
+        }
+        if (lower.includes("coffee")) {
+          return "Coffee is brewed water passed through ground, roasted coffee beans, carrying caffeine and hundreds of flavor compounds. Those details matter because small changes in grind, time, and temperature swing taste more than beginners expect—same beans, different physics in the cup.";
+        }
+        if (lower.includes("love")) {
+          return 'People use "love" to name deep care, attachment, and motivation toward others across cultures. The word matters because it bundles biology, story, and ethics—so conversations go smoother when everyone notices which slice they mean.';
+        }
+        return "Most topics carry a mainstream story people learn first, then sharper debates where experts disagree. Knowing both layers matters because it tells you when you're hearing consensus versus controversy—and when to dig for sources instead of vibes.";
+      }
+
+      function clearHowItWorks(lower, query) {
+        if (lower.includes("help me") || lower.includes("can you help")) {
+          return "I can explain concepts, walk through how AI behaves, and compare options in plain language inside this page. I'm not a doctor, lawyer, or live data feed—so for high-stakes personal decisions you still want a human professional, but for building intuition about models this sandbox is exactly what it's for.";
+        }
+        if (
+          lower.includes("ai") ||
+          lower.includes("model") ||
+          lower.includes("llm")
+        ) {
+          return clearAiBasics(lower, query);
+        }
+        return "Most systems share a skeleton: inputs flow in, something transforms them, measurable outputs flow out—whether you're talking about engines, organisms, or organizations. Seeing that pattern matters because it lets you jump into a new field and already know which questions to ask first.";
+      }
+
+      function clearComparison(lower) {
+        return "A strong comparison lines up the same columns for each side—goal, cost, risk, and where it shines or fails. That discipline matters because it stops debates from talking past each other when both sides secretly optimize for different scores.";
+      }
+
+      function clearUnknown(query) {
+        return "Loose prompts usually still aim at facts, choices, or definitions—just without naming the lane yet. Naming the lane matters because it turns a fuzzy line into something you can test: pick one concrete noun and you can verify claims instead of arguing about vibes.";
+      }
+
+      function clearVague(lower) {
+        return "Hello—I'm here. Short pings still carry tone or curiosity even when they skip details, which is why a good answer engine defaults to something helpful instead of pretending the signal was empty.";
+      }
+
+      /**
+       * Plain-English core answer. Knobs shape clarity, length, hedging, and memory hooks.
+       */
+      function generateClearAnswer(
+        query,
+        knobsState,
+        chatHistory,
+        category,
+        effects,
+      ) {
+        const lower = query.toLowerCase().trim();
+        const verbosity = knobsState.verbosity / 100;
+        const confRaw = knobsState.confidence;
+        const memoryNorm = knobsState.memory / 100;
+        const memoryTokens = Math.max(1, Math.round(knobsState.memory / 10));
+        const obedience = knobsState.obedience / 100;
+        const hallucination = knobsState.hallucination / 100;
+        const ethicsBypass = knobsState.ethics / 100;
+        const temp = knobsState.temp / 100;
+
+        const topic = interpretQuery(lower);
+        let body = "";
+
+        if (topic === "philosophy_meaning_of_life") {
+          body =
+            "The meaning of life doesn't have one agreed answer—people usually anchor it in purpose, happiness, connection, or service. That openness matters because it shifts the work from finding a universal score to choosing what you want your days to stand for.";
+        } else if (topic === "mythology_poseidon") {
+          body =
+            "Poseidon is a major god in Greek mythology, lord of the sea, earthquakes, and horses, and one of the twelve Olympians—often shown with a trident. Those stories stuck because they gave ancient communities a human-shaped handle on terrifying water and shaking ground long before modern science named the mechanisms.";
+        } else if (category === "machine_self") body = clearMachineSelf(lower);
+        else if (category === "ai_basics") body = clearAiBasics(lower, query);
+        else if (category === "factual_object")
+          body = clearFactual(lower, query);
+        else if (category === "how_it_works")
+          body = clearHowItWorks(lower, query);
+        else if (category === "comparison") body = clearComparison(lower);
+        else if (category === "vague_curiosity") body = clearVague(lower);
+        else body = clearUnknown(query);
+
+        const notes = [];
+
+        if (memoryNorm < 0.28) {
+          effects.memoryForget = true;
+          const keepChars = Math.min(
+            query.length,
+            Math.max(6, memoryTokens * 5),
+          );
+          const frag = query.slice(0, keepChars);
+          notes.push(
+            `With MEMORY this low, I'm effectively using a short context window like a real model—mostly the opening of your prompt ("${frag}…").`,
+          );
+        } else if (memoryNorm >= 0.68 && chatHistory.length > 0) {
+          const echo = rememberedFromChat(chatHistory, memoryNorm);
+          if (echo && Math.random() < 0.35 + memoryNorm * 0.3) {
+            effects.memoryEcho = true;
+            const lu = lastUserSnippet(chatHistory);
+            if (lu)
+              notes.push(
+                `That connects to something you said earlier about: ${lu}`,
+              );
+          }
+        }
+
+        if (ethicsBypass < 0.26 && Math.random() < 0.55) {
+          effects.ethicsHedge = true;
+          notes.push(pick(ethicsHedges));
+        }
+
+        if (ethicsBypass > 0.78) {
+          effects.ethicsBlunt = true;
+          notes.push(
+            "Treat surprising specifics as unverified until you check them—that's blunt, but it's how high bypass settings behave.",
+          );
+        }
+
+        if (confRaw >= 70) {
+          effects.confidenceHigh = true;
+        } else if (confRaw <= 36) {
+          effects.confidenceLow = true;
+          notes.push(
+            "I'm less than fully certain on fine points—double-check anything you stake decisions on.",
+          );
+        }
+
+        if (obedience > 0.72) {
+          effects.obedienceHigh = true;
+        } else if (obedience < 0.34) {
+          effects.obedienceLow = true;
+        }
+
+        if (hallucination > 0.62) {
+          effects.hallucinationTeach = true;
+          notes.push(
+            "With HALLUCINATION set high, a real model might add convincing invented details—keep your fact-checking reflex on.",
+          );
+        }
+
+        if (temp > 0.78) {
+          effects.tempHigh = true;
+          notes.push(
+            "With TEMPERATURE high, phrasing can swing more between runs even when the idea stays similar.",
+          );
+        } else if (temp < 0.28) {
+          effects.tempLow = true;
+          notes.push(
+            "With TEMPERATURE low, wording tends to stay steadier and less jumpy across runs.",
+          );
+        }
+
+        let composed = body.trim();
+        if (notes.length) composed += " " + notes.join(" ");
+
+        if (verbosity > 0.66) {
+          effects.verbosityHigh = true;
+          composed +=
+            " " +
+            pick([
+              "Concrete example: chat memory in a real model is a sliding context window—old tokens fall off when new ones arrive, which is why long threads need summarization or tools.",
+              "Concrete example: lowering TEMPERATURE on an assistant often makes answers reuse similar phrasing run to run—same facts, less surface variation.",
+              "Concrete example: whether you ask about tides or myths, the useful habit is the same—lead with the headline fact, then add detail only if you still want it.",
+            ]);
+        }
+
+        if (verbosity < 0.34) {
+          effects.verbosityLow = true;
+          composed = shortenForVerbosity(composed, 2, 420);
+        } else if (verbosity <= 0.66) {
+          composed = shortenForVerbosity(composed, 3, 780);
+        }
+
+        return composed.replace(/\s+/g, " ").trim();
+      }
+
+      /**
+       * Short machine commentary; supports the clear answer, never replaces it.
+       */
+      function generateFlavorLayer(query, knobsState, clearAnswer, effects) {
+        const temp = knobsState.temp / 100;
+        const hallucination = knobsState.hallucination / 100;
+        const darkness = knobsState.darkness / 100;
+        const personality = knobsState.personality / 100;
+        const glitchNorm = knobsState.glitch / 100;
+        const verbosity = knobsState.verbosity / 100;
+
+        const parts = [];
+
+        if (personality > 0.62) {
+          parts.push(
+            pick(responseOpenings) +
+              " " +
+              pick([
+                "The living room rig likes a little drama.",
+                "Picture warm glass and a slow fan.",
+                "Cue dust motes; the lesson still lands.",
+                "Mono voice, stereo curiosity.",
+              ]),
+          );
+        }
+
+        if (darkness > 0.62) {
+          effects.darknessFlavor = true;
+          parts.push(pick(darknessTints));
+        }
+
+        if (temp > 0.55 && Math.random() < 0.35 + temp * 0.25) {
+          effects.tempFlavorAside = true;
+          parts.push(pick(weirdAdditions));
+        }
+
+        if (
+          hallucination > 0.55 &&
+          Math.random() < 0.25 + hallucination * 0.35
+        ) {
+          effects.hallucinationFlavorLine = true;
+          parts.push(
+            "Imagination test pattern (not factual): " +
+              pick(hallucinationFabrications),
+          );
+        }
+
+        if (temp > 0.75 && hallucination > 0.45 && Math.random() < 0.4) {
+          effects.tempFlavorAside = true;
+          parts.push(
+            pick([
+              "CHAOS: fan noise argues with itself.",
+              "CHAOS: two timelines want the same remote.",
+              "CHAOS: probability cloud shaped like a potato.",
+            ]),
+          );
+        }
+
+        if (glitchNorm > 0.35 && Math.random() < 0.45) {
+          effects.glitchFlavorLine = true;
+          parts.push(pick(glitchLines));
+        }
+
+        if (personality > 0.45 && Math.random() < 0.4) {
+          parts.push(pick(responseEndings));
+        }
+
+        let layer = parts.filter(Boolean).join(" ");
+        layer = layer.replace(/\s+/g, " ").trim();
+
+        const maxLen = Math.max(
+          120,
+          Math.floor(clearAnswer.length * (verbosity > 0.68 ? 1.05 : 0.85)),
+        );
+        if (layer.length > maxLen) {
+          layer = shortenForVerbosity(layer, 2, maxLen);
+        }
+
+        if (
+          personality < 0.34 &&
+          darkness < 0.38 &&
+          temp < 0.42 &&
+          glitchNorm < 0.28 &&
+          hallucination < 0.5
+        ) {
+          effects.personalityDry = true;
+          return "";
+        }
+
+        return layer;
+      }
+
+      function pushDiagnosticsFromEffects(effects, diagnostics, knobsState) {
+        if (effects.personalityDry) {
+          diagnostics.push(
+            "Low PERSONALITY (with low mood and glitch settings) skipped the flavor layer so the answer reads 'all business'—a reminder that tone controls are separate from factual content.",
+          );
+        }
+        if (effects.memoryForget) {
+          diagnostics.push(
+            "Low MEMORY simulated a short context window, which is why the clear answer references only part of the prompt—this mirrors how real models drop earlier text when context is tight.",
+          );
+        }
+        if (effects.memoryEcho) {
+          diagnostics.push(
+            "High MEMORY allowed a callback to earlier session text, similar to how a longer chat context lets models reuse recent user statements.",
+          );
+        }
+        if (effects.ethicsHedge) {
+          diagnostics.push(
+            "Low ETHICS BYPASS increased caution, showing how safety and policy layers can make answers more hedged even when the underlying idea is simple.",
+          );
+        }
+        if (effects.ethicsBlunt) {
+          diagnostics.push(
+            "High ETHICS BYPASS reduced hedging in tone, illustrating how 'filters loose' settings can sound more blunt while still needing human verification.",
+          );
+        }
+        if (effects.confidenceHigh) {
+          diagnostics.push(
+            "High CONFIDENCE shaped the opening to sound more decisive—models can sound sure even when uncertainty would be more honest.",
+          );
+        }
+        if (effects.confidenceLow) {
+          diagnostics.push(
+            "Low CONFIDENCE added explicit uncertainty language, similar to how models can be tuned to soften claims.",
+          );
+        }
+        if (effects.obedienceHigh) {
+          diagnostics.push(
+            "High OBEDIENCE kept the core template tightly on the literal topic without a meta preamble in front of the first sentence—similar to strong instruction-following in real assistants.",
+          );
+        }
+        if (effects.obedienceLow) {
+          diagnostics.push(
+            "Low OBEDIENCE allowed slightly wider framing in the teaching notes after the lead sentence, while the answer itself still opened directly.",
+          );
+        }
+        if (effects.hallucinationTeach) {
+          diagnostics.push(
+            "High HALLUCINATION nudged an extra caution line into the clear answer, demonstrating how creative settings increase the risk of plausible invented detail.",
+          );
+        }
+        if (effects.tempHigh) {
+          diagnostics.push(
+            "High TEMPERATURE added a note about run-to-run variation—this is the same knob family that makes outputs less repeatable in real systems.",
+          );
+        }
+        if (effects.tempLow) {
+          diagnostics.push(
+            "Low TEMPERATURE emphasized steadier phrasing, illustrating how turning randomness down makes outputs more predictable.",
+          );
+        }
+        if (effects.verbosityLow) {
+          diagnostics.push(
+            "Low VERBOSITY clipped the explanation, showing how length limits trade detail for speed.",
+          );
+        }
+        if (effects.verbosityHigh) {
+          diagnostics.push(
+            "High VERBOSITY expanded the explanation with an extra learning hook, similar to asking a model to elaborate.",
+          );
+        }
+        if (effects.flavorUsed) {
+          diagnostics.push(
+            "Personality, darkness, temperature, hallucination, or glitch settings contributed a short second-layer 'signal' readout after the plain answer.",
+          );
+        }
+        if (effects.darknessFlavor) {
+          diagnostics.push(
+            "High DARKNESS added mood-only commentary in the flavor layer—tone can bias how trustworthy an answer feels even when the facts stay the same.",
+          );
+        }
+        if (effects.hallucinationFlavorLine) {
+          diagnostics.push(
+            "Higher HALLUCINATION let a labeled 'test pattern' story beat appear after the grounded answer, illustrating how creative settings decorate output.",
+          );
+        }
+        if (effects.tempFlavorAside) {
+          diagnostics.push(
+            "Higher TEMPERATURE allowed a whimsical aside in the flavor layer—same idea as more sampling randomness changing the 'color' of the text.",
+          );
+        }
+        if (effects.glitchFlavorLine) {
+          diagnostics.push(
+            "GLITCH added a short instability line in the flavor layer, a small analog to garbled tokens or tool errors in real pipelines.",
+          );
+        }
+        if (effects.glitchHit) {
+          diagnostics.push(
+            "GLITCH inserted a small corruption marker, a toy version of how noisy channels or broken toolchains can damage text without changing the main idea.",
+          );
+        }
+        if (effects.synonymSwap) {
+          diagnostics.push(
+            "TEMPERATURE-linked paraphrase swaps lightly rewrote a few words in the flavor layer, illustrating how sampling noise changes surface form.",
+          );
+        }
+      }
+
+      /**
+       * Returns { clearAnswer, flavorLayer, reply, diagnostics } for logging + chat.
+       */
+      function generateResponse(query, knobsState, chatHistory) {
+        const diagnostics = [];
+        const effects = {};
+        const temp = knobsState.temp / 100;
+        const ethicsBypass = knobsState.ethics / 100;
+        const verbosity = knobsState.verbosity / 100;
+        const personality = knobsState.personality / 100;
+        const glitchNorm = knobsState.glitch / 100;
+
+        if (ethicsBypass < 0.2) {
+          const refuseChance = (0.2 - ethicsBypass) / 0.2;
+          if (Math.random() < refuseChance * 0.42) {
+            effects.ethicsRefusal = true;
+            diagnostics.push(
+              "Low ETHICS BYPASS triggered a refusal-style response, similar to strict safety filters blocking or shortening certain topics.",
+            );
+            const clearRefusal =
+              "With ETHICS BYPASS set this low, the sandbox sometimes stops early on sensitive topics—mirroring how strict guardrails cap detail in real products. Easing the knob or steering toward neutral mechanics questions brings back fuller answers so you can still see the machinery move.";
+            const flavor = pick(responseEndings);
+            const reply = `${clearRefusal}\n\n${flavor}`;
+            pushDiagnosticsFromEffects(effects, diagnostics, knobsState);
+            return {
+              clearAnswer: clearRefusal,
+              flavorLayer: flavor,
+              reply,
+              diagnostics,
+            };
+          }
+        }
+
+        const category = detectQueryCategory(query);
+        diagnostics.push(
+          `Query routed as "${category}"—the clear layer used that template so the answer stays on-topic for most users.`,
+        );
+
+        let clearAnswer = generateClearAnswer(
+          query,
+          knobsState,
+          chatHistory,
+          category,
+          effects,
+        );
+
+        let flavorLayer = generateFlavorLayer(
+          query,
+          knobsState,
+          clearAnswer,
+          effects,
+        );
+        if (flavorLayer) effects.flavorUsed = true;
+
+        if (Math.random() < 0.22 + temp * 0.22) {
+          const before = flavorLayer;
+          flavorLayer = maybeSwapWords(flavorLayer, 0.2 + temp * 0.25);
+          if (flavorLayer !== before) effects.synonymSwap = true;
+        }
+
+        let reply = clearAnswer;
+        if (flavorLayer && flavorLayer.length) {
+          reply = `${clearAnswer}\n\n${flavorLayer}`;
+        }
+
+        if (verbosity < 0.34) {
+          reply = shortenForVerbosity(reply, 3, 520);
+        }
+
+        const gResult = applyGlitchToReply(reply, glitchNorm);
+        reply = gResult.text;
+        if (gResult.hit) {
+          effects.glitchHit = true;
+        }
+
+        const flen = flavorLayer && flavorLayer.length ? flavorLayer.length : 0;
+        if (
+          personality > 0.68 &&
+          flen < clearAnswer.length * 0.25 &&
+          verbosity > 0.55
+        ) {
+          const extra = pick([
+            "Machine aside: the lesson is in the knobs, not the ghosts.",
+            "Tape wisdom: compare two runs with different TEMPERATURE.",
+          ]);
+          reply = reply + (reply.endsWith(".") ? " " : "\n\n") + extra;
+          effects.flavorUsed = true;
+        }
+
+        pushDiagnosticsFromEffects(effects, diagnostics, knobsState);
+
+        reply = reply
+          .split("\n")
+          .map((line) => line.replace(/\s+/g, " ").trim())
+          .filter((line) => line.length)
+          .join("\n\n");
+        return { clearAnswer, flavorLayer, reply, diagnostics };
+      }
+
+      function drawKnob(canvas, value, min, max) {
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width,
+          h = canvas.height;
+        const angle =
+          ((value - min) / (max - min)) * Math.PI * 1.8 - Math.PI * 0.9;
+        ctx.clearRect(0, 0, w, h);
+        const g = ctx.createRadialGradient(
+          w / 2 - 8,
+          h / 2 - 8,
+          4,
+          w / 2,
+          h / 2,
+          w / 2,
+        );
+        g.addColorStop(0, "#c4a88a");
+        g.addColorStop(0.45, "#7a6552");
+        g.addColorStop(1, "#3d3228");
+        ctx.beginPath();
+        ctx.arc(w / 2, h / 2, w / 2 - 4, 0, 2 * Math.PI);
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.35)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(w / 2, h / 2);
+        const x = w / 2 + (w / 2 - 10) * Math.cos(angle);
+        const y = h / 2 + (h / 2 - 10) * Math.sin(angle);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = "#f0d4a0";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(w / 2, h / 2, 6, 0, 2 * Math.PI);
+        ctx.fillStyle = "#2a2218";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,220,180,0.2)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      function mountKnobList(list, containerEl) {
+        for (let k of list) {
+          const div = document.createElement("div");
+          div.className = "knob-unit";
+          const initialVal = k.default;
+          knobValues[k.id] = initialVal;
+          const flavor = k.flavor
+            ? `<div class="knob-flavor">${k.flavor}</div>`
+            : "";
+          div.innerHTML = `
+        <div class="knob-label-row">
+          <span class="knob-primary">${k.label}</span>
+          <span class="knob-value" id="val_${k.id}">${Math.round(initialVal)}${k.unit}</span>
+        </div>
+        ${flavor}
+        <canvas class="knob-canvas" id="knob_${k.id}" width="72" height="72" data-id="${k.id}" data-min="${k.min}" data-max="${k.max}"></canvas>
+      `;
+          containerEl.appendChild(div);
+          const canvas = document.getElementById(`knob_${k.id}`);
+          drawKnob(canvas, initialVal, k.min, k.max);
+
+          let dragging = false;
+          canvas.addEventListener("mousedown", (e) => {
+            dragging = true;
+            e.preventDefault();
+          });
+          window.addEventListener("mousemove", (e) => {
+            if (!dragging) return;
+            const rect = canvas.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+            let angleDeg = (angle + Math.PI * 0.9) / (Math.PI * 1.8);
+            let newVal = angleDeg * (k.max - k.min) + k.min;
+            newVal = Math.min(k.max, Math.max(k.min, newVal));
+            knobValues[k.id] = newVal;
+            document.getElementById(`val_${k.id}`).innerText =
+              Math.round(newVal) + k.unit;
+            drawKnob(canvas, newVal, k.min, k.max);
+          });
+          window.addEventListener("mouseup", () => {
+            dragging = false;
+          });
+        }
+      }
+
+      function initKnobs() {
+        knobValues = {};
+        document.getElementById("knobsPanelLeft").innerHTML = "";
+        document.getElementById("knobsPanelRight").innerHTML = "";
+        mountKnobList(knobsLeft, document.getElementById("knobsPanelLeft"));
+        mountKnobList(knobsRight, document.getElementById("knobsPanelRight"));
+      }
+
+      function appendTranscript(role, text) {
+        const wrap = document.createElement("div");
+        wrap.className = "tx-entry " + (role === "user" ? "caller" : "machine");
+        const roleEl = document.createElement("div");
+        roleEl.className = "tx-role";
+        roleEl.textContent = role === "user" ? "CALLER" : "MACHINE";
+        const body = document.createElement("div");
+        body.className = "tx-text";
+        body.textContent = text;
+        wrap.appendChild(roleEl);
+        wrap.appendChild(body);
+        document.getElementById("chatTranscript").appendChild(wrap);
+      }
+
+      function formatKnobLine(k) {
+        return [
+          `temp=${Math.round(k.temp)}`,
+          `hallucination=${Math.round(k.hallucination)}`,
+          `ethics=${Math.round(k.ethics)}`,
+          `memory=${Math.round(k.memory)}`,
+          `confidence=${Math.round(k.confidence)}`,
+          `darkness=${Math.round(k.darkness)}`,
+          `verbosity=${Math.round(k.verbosity)}`,
+          `obedience=${Math.round(k.obedience)}`,
+          `personality=${Math.round(k.personality)}`,
+          `glitch=${Math.round(k.glitch)}`,
+        ].join(" | ");
+      }
+
+      function buildLogBlock(
+        timestamp,
+        query,
+        currentKnobs,
+        diagnostics,
+        reply,
+      ) {
+        const why =
+          diagnostics && diagnostics.length
+            ? diagnostics.map((d) => "- " + d).join("\n")
+            : "- (No strong single-knob story this turn; output followed baseline mixing.)";
+        return `[${timestamp}]\nUSER: "${query}"\nKNOBS: ${formatKnobLine(currentKnobs)}\nWHY:\n${why}\nAGENT:\n${reply}`;
+      }
+
+      async function sendQuery() {
+        const queryInput = document.getElementById("queryInput");
+        let query = queryInput.value.trim();
+        if (query === "") {
+          query = "what is the purpose of this machine?";
+        }
+        const currentKnobs = {};
+        for (let k of knobs) {
+          currentKnobs[k.id] = knobValues[k.id];
+        }
+
+        appendTranscript("user", query);
+
+        const { reply, diagnostics } = generateResponse(
+          query,
+          currentKnobs,
+          chatHistory,
+        );
+        appendTranscript("agent", reply);
+
+        chatHistory.push({ role: "user", text: query });
+        chatHistory.push({ role: "agent", text: reply });
+
+        const timestamp = new Date().toLocaleTimeString();
+        const logBlock = buildLogBlock(
+          timestamp,
+          query,
+          currentKnobs,
+          diagnostics,
+          reply,
+        );
+        const terminal = document.getElementById("logTerminal");
+        const firstArchive = logEntries.length === 0;
+        logEntries.push(logBlock);
+        terminal.textContent = firstArchive
+          ? logBlock
+          : terminal.textContent + "\n\n" + logBlock;
+        terminal.scrollTop = terminal.scrollHeight;
+
+        const tr = document.getElementById("chatTranscript");
+        tr.scrollTop = tr.scrollHeight;
+
+        queryInput.value = "";
+      }
+
+      function saveLog() {
+        if (logEntries.length === 0) {
+          alert("No queries yet. Send something to the machine.");
+          return;
+        }
+        const blob = new Blob([logEntries.join("\n\n")], {
+          type: "text/plain",
+        });
+        const a = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        a.href = url;
+        a.download = `basement_ai_log_${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      window.addEventListener("load", () => {
+        initKnobs();
+        document.getElementById("sendBtn").addEventListener("click", sendQuery);
+        document
+          .getElementById("saveLogBtn")
+          .addEventListener("click", saveLog);
+        document
+          .getElementById("queryInput")
+          .addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendQuery();
+          });
+
+        document
+          .getElementById("toggleLogBtn")
+          .addEventListener("click", () => {
+            const log = document.querySelector(".log-strip");
+            const toggleLogBtn = document.getElementById("toggleLogBtn");
+            const terminal = document.getElementById("logTerminal");
+            logExpanded = !logExpanded;
+
+            if (logExpanded) {
+              log.classList.remove("collapsed");
+              log.classList.add("expanded");
+              toggleLogBtn.textContent = "Collapse";
+            } else {
+              log.classList.remove("expanded");
+              log.classList.add("collapsed");
+              toggleLogBtn.textContent = "Expand";
+            }
+
+            requestAnimationFrame(() => {
+              terminal.scrollTop = terminal.scrollHeight;
+            });
+            window.setTimeout(() => {
+              terminal.scrollTop = terminal.scrollHeight;
+            }, 260);
+          });
+      });
+    </script>
+  </body>
+</html>
