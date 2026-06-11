@@ -236,22 +236,70 @@ _Ellis now has bones. Delete old code. Rebuild route cleanly with sensory-aware 
 - [x] Contact events fire on entry; shifts detected and injected into interior
 - [x] Clean 14-step pipeline (no parallel paths, no wrappers)
 
-### B.11 — Chat UI (update existing)
+### B.11 — IP Visitor Memory Setup
 
-- [ ] `src/app/` components wire to new stream API
+- [ ] Create `ellis_visitor_memory` table (Supabase migration)
+  - `ip_hash` (PK), `last_seen_at`, `episodic_beats` (JSONB), `thread_summary`, `expires_at`
+  - Indexes on `expires_at`, `ip_hash`
+- [ ] Create `ellis_global_traces` table (Supabase migration)
+  - `id` (UUID), `trace_text`, `trace_category`, `created_at`, `source_ip_count`
+  - Index on `trace_category`
+- [ ] Extend `ellis_usage` table: add `ip_hash`, `is_return_visit` columns
+- [ ] Implement `loadIpMemory(ipHash)` — returns IpVisitorMemory or null
+- [ ] Implement `recordIpVisit(ipHash, episodicBeats, summary)` — upsert IP memory + 7-day expiry
+- [ ] Implement `generateDayLabel(occurredAt, now)` — "Today", "Yesterday", "Earlier this week"
+
+### B.12 — IP Memory Integration + Interior Assembly
+
+- [ ] Wire loadIpMemory into stream route (after session load)
+- [ ] Mark return visits: `is_return_visit = true` in ellis_usage
+- [ ] Update `assembleEllisInterior()` to accept optional `ipMemory` param
+- [ ] Inject episodic beats into interior block (if return visit, not expired)
+- [ ] Ellis natural reference (not performative) — test that Ellis mentions priors only when relevant
+- [ ] Update `recordIpVisit()` call after stream completes
+  - Extract episodic beats from session traces
+  - Generate thread summary
+  - Record to IP memory with 7-day expiry
+
+### B.13 — IP Memory Decay Job
+
+- [ ] Implement `decayExpiredIpMemory()` — compress expired IP records to global traces
+  - Extract themes, resonances (no verbatim chat)
+  - Create trace: "Visitor explored X, Y; showed depth"
+  - Delete expired IP records
+- [ ] Deploy cron job (daily, 00:00 UTC)
+  - Vercel: `api/cron/decay-ip-memory.ts`
+  - Or: scheduled database job
+- [ ] Test: 7-day expiry → global trace creation → IP deletion
+- [ ] Verify RLS permissions (Supabase can delete own records)
+- [ ] Optional: Ellis global traces feed session drift ("I've been noticing...")
+
+### B.14 — IP Memory Testing + Disclosure
+
+- [ ] Test first visit → no IP memory → fresh interior
+- [ ] Test return within 7 days → IP memory injected → "We talked Friday about..."
+- [ ] Test after 7 days inactive → new IP thread → global traces exist
+- [ ] Verify no PII in global traces (no IP hash, no names, no raw chat)
+- [ ] Update footer disclosure: "Ellis may remember details for up to **7 days** if you return from the same connection"
+- [ ] Test in onboarding: return visit recall works
+- [ ] Verify temporal labels ("Friday", "earlier this week") display correctly
+
+### B.15 — Chat UI (return visit awareness)
+
+- [ ] `src/app/` components render UI signals for return visits (optional visual hint)
 - [ ] Error states for rate limit + validation failures
-- [ ] Session-only memory UX copy matches actual behavior (no cross-visit)
+- [ ] Session-only memory UX copy updated: "up to 7 days if you return"
 - [ ] Project card handoff hints preserved
 
-### B.12 — Phase B rhythm gate
+### B.16 — Phase B rhythm gate
 
 - [ ] **Build:** `npm run build` · `lint` · `typecheck` pass
-- [ ] **Wire:** [WIRING_MAP.md](./WIRING_MAP.md) updated with new file tree
-- [ ] **Architecture audit:** (see notes below)
-- [ ] **Security audit:** Interior validated; no leaks; rate limit enforced
-- [ ] **Hygiene audit:** Single stream path; no debug logs in `src/lib/ellis`
+- [ ] **Wire:** [WIRING_MAP.md](./WIRING_MAP.md) updated with IP memory flow
+- [ ] **Architecture audit:** Single stream path + IP memory isolated; no PII leaks
+- [ ] **Security audit:** Interior validated; no leaks; rate limit enforced; IP hashing correct
+- [ ] **Hygiene audit:** Single stream path; no debug logs; migration files clean
 
-**Phase B exit:** ✅ Ellis has bones; internal state wired + sensory complete; single clean stream path — **proceed to Phase 0.1 (Ellis learns Ty)**
+**Phase B exit:** ✅ Ellis wired end-to-end: bones + sensory + 7-day IP memory + clean stream — **proceed to Phase 0.1 (Ellis learns Ty)**
 
 <details>
 <summary>Phase B audit notes (2026-06-10)</summary>
