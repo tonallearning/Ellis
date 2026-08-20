@@ -19,7 +19,9 @@ This repo is the Next.js app behind tybuilds.tech. Ellis boots knowing **himself
 
 ## Status
 
-Active build. **Phase A complete** — Phase B (Ellis stream + onboarding mode) next.
+**Resect week (→ 2026-08-02):** Ellis work = **GoE-lite witness + thesis + Ashe links only** — no Phase B rabbit holes. Plan: [`~/coding-home/daily/WEEK-2026-07-27-resect.md`](../coding-home/daily/WEEK-2026-07-27-resect.md). Wed = Ellis knife day.
+
+Active build. **Phase A complete** — Phase B parked until resect ends.
 
 Architecture and build docs live in [`docs/`](./docs/). Maintainer notes: [`PROJECT_MEMORY.md`](./PROJECT_MEMORY.md).
 

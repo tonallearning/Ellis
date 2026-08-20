@@ -17,16 +17,25 @@ import { assembleEllisInterior, formatEllisInteriorForModel } from "@/lib/ellis/
 import { checkRateLimit, recordUsage } from "@/lib/ellis/rateLimit/check";
 import { onContactStarted, onContactEnded } from "@/lib/ellis/world/hallPhysics";
 import { assessContactQuality } from "@/lib/ellis/me/state";
+import {
+  hashVisitorIp,
+  extractVisitorIp,
+  buildEpisodBeat,
+  recordIpVisitAfterStream,
+} from "@/lib/ellis/ipMemoryIntegration";
+import { loadIpMemory } from "@/lib/ellis/memory/ipMemory";
+import type { IpVisitorMemory } from "@/lib/ellis/memory/ipMemory";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Hash visitor identity from IP + UA
+ * Hash visitor identity from IP + UA (uses proper salt-based hashing)
  */
 function hashVisitorId(ip: string | null, ua: string | null): string {
-  const input = `${ip || "unknown"}:${ua || "unknown"}`;
-  return createHash("sha256").update(input).digest("hex").slice(0, 12);
+  const ipHash = hashVisitorIp(ip || "unknown");
+  const combined = `${ipHash}:${ua || "unknown"}`;
+  return createHash("sha256").update(combined).digest("hex").slice(0, 12);
 }
 
 /**
@@ -77,9 +86,14 @@ export async function POST(request: Request) {
     const ua = request.headers.get("user-agent");
     const visitorId = hashVisitorId(ip, ua);
 
+    // Step 4.5: Load IP memory (check for return visit)
+    const ipHash = hashVisitorIp(ip || "unknown");
+    const ipMemory = await loadIpMemory(ipHash);
+
     // Step 5: Get or create session
     let session = input.sessionId ? getSession(input.sessionId as string) : null;
     const isFirstMessage = !session;
+    const isReturnVisit = ipMemory && !ipMemory.isExpired;
 
     if (!session) {
       session = createSession(`session-${Date.now()}-${Math.random()}`, visitorId, hall);
@@ -112,12 +126,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Step 8: Assemble interior context
+    // Step 8: Assemble interior context (with optional IP memory)
     const lastUserMessage = messages[messages.length - 1]?.content || "";
     const interiorContext = assembleEllisInterior({
       interior: session.interior,
       userMessage: lastUserMessage,
       hallContext: shelf.hallOverlay,
+      ipMemory: isReturnVisit ? ipMemory : undefined,
     });
 
     // Step 9: Route model
@@ -222,6 +237,10 @@ export async function POST(request: Request) {
         );
 
         const currentSession = updated || finalSession;
+
+        // Record IP visit (build beat from session + response)
+        const beat = buildEpisodBeat(currentSession, lastUserMessage, fullResponse);
+        await recordIpVisitAfterStream(ipHash, [beat], fullResponse.length);
 
         // Send done event
         controller.enqueue(

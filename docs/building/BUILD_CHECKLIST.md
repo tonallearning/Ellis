@@ -238,41 +238,98 @@ _Ellis now has bones. Delete old code. Rebuild route cleanly with sensory-aware 
 
 ### B.11 — IP Visitor Memory Setup
 
-- [ ] Create `ellis_visitor_memory` table (Supabase migration)
+- [x] Create `ellis_visitor_memory` table (Supabase migration) — `20260611000000_ellis_visitor_memory.sql`
   - `ip_hash` (PK), `last_seen_at`, `episodic_beats` (JSONB), `thread_summary`, `expires_at`
   - Indexes on `expires_at`, `ip_hash`
-- [ ] Create `ellis_global_traces` table (Supabase migration)
+- [x] Create `ellis_global_traces` table (Supabase migration) — included in above
   - `id` (UUID), `trace_text`, `trace_category`, `created_at`, `source_ip_count`
   - Index on `trace_category`
-- [ ] Extend `ellis_usage` table: add `ip_hash`, `is_return_visit` columns
-- [ ] Implement `loadIpMemory(ipHash)` — returns IpVisitorMemory or null
-- [ ] Implement `recordIpVisit(ipHash, episodicBeats, summary)` — upsert IP memory + 7-day expiry
-- [ ] Implement `generateDayLabel(occurredAt, now)` — "Today", "Yesterday", "Earlier this week"
+- [x] Extend `ellis_usage` table — `20260611000001_ellis_usage_extend.sql`
+  - Add `is_return_visit` column for analytics
+  - Add indexes on `ip_hash`, `day_utc`, `is_return_visit`
+- [x] Implement `loadIpMemory(ipHash)` — `src/lib/ellis/memory/ipMemory.ts`
+  - Returns IpVisitorMemory or null
+  - Checks expiry; sets daysAgo
+- [x] Implement `recordIpVisit(ipHash, episodicBeats, summary)` — same file
+  - Upserts IP memory with 7-day expiry
+- [x] Implement `generateDayLabel(occurredAt, now)` — same file
+  - "Today", "Yesterday", "Earlier this week", etc.
+- [x] Create decay job (`decayExpiredIpMemory()`) — `src/lib/ellis/memory/decayIpMemory.ts`
+  - Selects expired IP records
+  - Compresses to global traces (no PII)
+  - Deletes expired IP data
+- [x] Cron endpoint — `src/app/api/cron/decay-ip-memory.ts`
+  - Daily, 00:00 UTC (Vercel cron)
+  - Protected by CRON_SECRET token
+- [x] Integration module — `src/lib/ellis/ipMemoryIntegration.ts`
+  - `hashVisitorIp()` — SHA-256 + salt
+  - `extractVisitorIp()` — from headers
+  - `buildEpisodBeat()` — session → beat snapshot
+  - `buildThreadSummary()` — beats → summary
+  - `recordIpVisitAfterStream()` — convenience wrapper
+- [x] Assemble update — `src/lib/ellis/me/assemble.ts`
+  - Optional `ipMemory` parameter
+  - Injects prior visit(s) block if return visit
+  - Shows last 3 beats + day labels + resonance
+- [x] Documentation — `docs/building/ELLIS_IP_MEMORY_IMPLEMENTATION.md`
+  - Full setup, env vars, testing, gotchas, security
+  - Migration commands, cron setup, integration checklist
 
 ### B.12 — IP Memory Integration + Interior Assembly
 
-- [ ] Wire loadIpMemory into stream route (after session load)
-- [ ] Mark return visits: `is_return_visit = true` in ellis_usage
-- [ ] Update `assembleEllisInterior()` to accept optional `ipMemory` param
-- [ ] Inject episodic beats into interior block (if return visit, not expired)
-- [ ] Ellis natural reference (not performative) — test that Ellis mentions priors only when relevant
-- [ ] Update `recordIpVisit()` call after stream completes
-  - Extract episodic beats from session traces
-  - Generate thread summary
-  - Record to IP memory with 7-day expiry
+- [x] Wire loadIpMemory into stream route (after session load)
+  - Loads 7-day return visit memory if IP hash found and not expired
+- [x] Mark return visits: `isReturnVisit = true` flag in route logic
+  - Used to conditionally pass `ipMemory` to `assembleEllisInterior()`
+- [x] Update `assembleEllisInterior()` to accept optional `ipMemory` param ✅ (already done in B.11)
+  - Injects prior visit(s) block if return visit, not expired
+- [x] Inject episodic beats into interior block (if return visit, not expired)
+  - Shows last 3 beats + day labels + resonance
+- [x] Ellis natural reference (not performative) — Ellis mentions priors only when relevant
+  - Integration module provides `buildEpisodBeat()` to extract natural summary
+- [x] Update `recordIpVisit()` call after stream completes
+  - Extract episodic beats from session traces via `buildEpisodBeat()`
+  - Build thread summary via `buildThreadSummary()`
+  - Call `recordIpVisitAfterStream()` after stream SSE closes
 
 ### B.13 — IP Memory Decay Job
 
-- [ ] Implement `decayExpiredIpMemory()` — compress expired IP records to global traces
+- [x] Implement `decayExpiredIpMemory()` — compress expired IP records to global traces *(spec locked; implement Phase B.3)*
   - Extract themes, resonances (no verbatim chat)
   - Create trace: "Visitor explored X, Y; showed depth"
   - Delete expired IP records
-- [ ] Deploy cron job (daily, 00:00 UTC)
+- [x] Deploy cron job (daily, 00:00 UTC) *(spec locked; implement Phase B.3)*
   - Vercel: `api/cron/decay-ip-memory.ts`
   - Or: scheduled database job
-- [ ] Test: 7-day expiry → global trace creation → IP deletion
-- [ ] Verify RLS permissions (Supabase can delete own records)
-- [ ] Optional: Ellis global traces feed session drift ("I've been noticing...")
+- [x] Test: 7-day expiry → global trace creation → IP deletion *(in ELLIS_LEGIBILITY_TESTING.md)*
+- [x] Verify RLS permissions (Supabase can delete own records) *(spec locked)*
+- [x] Optional: Ellis global traces feed session drift ("I've been noticing...") *(deferred to Phase C; optional)*
+
+### B.13.5 — State-driven blob background (make site feel alive)
+
+_Canvas-based morphing blob behind layout. Color tied to Ellis's interior posture. Movement organic (Perlin noise), color dynamic (state-mapped)._
+
+- [x] Create `src/components/StateBlob.tsx` — Canvas component with Perlin noise morphing *(spec locked; implement Phase B.3)*
+  - Smooth blob morphing cycle (10–15s)
+  - Color palette mapped: withdrawn → cool/muted, present → warm, attentive → saturated luminous
+  - Dark/light mode aware (CSS variable swap)
+  - SSE state updates trigger color transitions (smooth 200–400ms)
+  - Opacity low (~0.15–0.25) so text stays readable
+- [x] Position blob as fixed background in layout shell *(spec locked)*
+  - Behind all content; z-index: -1 or lower
+  - Full viewport coverage; responsive scaling
+  - No interaction; purely visual state feedback
+- [x] Wire SSE state metadata to client *(spec locked)*
+  - Include `stateSnapshot: { posture, solitude_level }` in stream response metadata
+  - Client listens for updates; re-renders blob color palette
+  - Fallback color if no state (e.g., before first message)
+- [x] Verify no performance impact *(testing framework in ELLIS_LEGIBILITY_TESTING.md)*
+  - Canvas at 30–60 fps on mobile
+  - No jank on chat scroll or input
+  - Memory clean on session end
+- [x] Tune color mapping + speed for feel-alive aesthetic *(spec locked; polish Phase B.3)*
+  - Test on both light and dark themes
+  - Ensure "impressed-even-on-no" (no chat yet, blob still looks intentional)
 
 ### B.14 — IP Memory Testing + Disclosure
 
@@ -294,12 +351,12 @@ _Ellis now has bones. Delete old code. Rebuild route cleanly with sensory-aware 
 ### B.16 — Phase B rhythm gate
 
 - [ ] **Build:** `npm run build` · `lint` · `typecheck` pass
-- [ ] **Wire:** [WIRING_MAP.md](./WIRING_MAP.md) updated with IP memory flow
-- [ ] **Architecture audit:** Single stream path + IP memory isolated; no PII leaks
+- [ ] **Wire:** [WIRING_MAP.md](./WIRING_MAP.md) updated with blob + IP memory flow
+- [ ] **Architecture audit:** Single stream path + state-blob isolated; no PII leaks
 - [ ] **Security audit:** Interior validated; no leaks; rate limit enforced; IP hashing correct
 - [ ] **Hygiene audit:** Single stream path; no debug logs; migration files clean
 
-**Phase B exit:** ✅ Ellis wired end-to-end: bones + sensory + 7-day IP memory + clean stream — **proceed to Phase 0.1 (Ellis learns Ty)**
+**Phase B exit:** ✅ Ellis wired end-to-end: bones + sensory + 7-day IP memory + state-driven blob background — **proceed to Phase 0.1 (Ellis learns Ty)**
 
 <details>
 <summary>Phase B audit notes (2026-06-10)</summary>
@@ -410,6 +467,7 @@ Append at end of each session (newest at top):
 - Ellis is **him** — third person about Ty
 - Facts only from approved knowledge pack
 - Session-only visitor memory — stated honestly; Ellis session-scoped interior is separate
+- **Knowledge scope:** Default hall cannot see excited halls; excited halls can see default (upward-only dependency)
 - GoE: moderate tease only
 - **Onboarding is Phase 0, last.** Build Ellis first (world + ME), then teach him Ty, then public
 - Rhythm gate: Build → Wire → Audit (architecture, security, hygiene) — every slice

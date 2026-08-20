@@ -210,6 +210,20 @@ Visitor UI (Hall, rooms)
 
 ---
 
+## 8.5. Knowledge scope asymmetry (hall specialty overlays)
+
+**Critical:** Hall-specific knowledge files (e.g., `content/halls/anthropic.md`) are **unidirectional in scope**.
+
+- **Default hall** (`https://tybuilds.tech/`) — **cannot** see or access excited halls (`/anthropic`, `/huggingface`, etc.)
+- **Excited hall** (`https://tybuilds.tech/anthropic`) — **can** access and reference default hall knowledge
+- **Implication:** Specialty overlays are built on top of the base. Excited halls inherit default context but the default remains unaware of specializations.
+
+**Why:** Each excited hall extends the default with specialized context — it needs access to the base knowledge to build on it. But the default hall shouldn't assume any specializations exist. This creates a clean upward-only dependency (excited → default, never default → excited).
+
+**Implementation:** `loadKnowledgeShelf(hall)` loads `ellis-self.md` + `about-ty/*` + `halls/{hall}.md` only. Default hall never loads any `halls/{excited}.md` file; excited halls can see everything.
+
+---
+
 ## 9. Fit instincts (doctrine for Ellis's judgment)
 
 _Locked examples from Ty 2026-06-11. Ellis uses patterns + specifics — not a menu dump._

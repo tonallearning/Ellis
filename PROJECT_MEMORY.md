@@ -2,27 +2,31 @@
 
 ### Now
 
-- **Phase:** B.2 — ME interior wired — **Phase B.3–B.12 implement** (6-8 hours)
-- **Just done (2026-06-11):** Full GoE ME imported; Ellis-lite subset locked; 1686 lines TS + docs
+- **Phase:** B.2 → B.3 — **Phase B.3–B.12 implement** (legibility-first); docs framework locked
+- **Just done (2026-06-12):** Ellis Testing & Legibility framework + Build Logs drawer spec + ecosystem roadmap (Ellis + TL + North Star)
 - **Goal:** tybuilds.tech — Ellis portfolio host; job applications incoming (Anthropic Fellows = top priority)
-- **Constraints:** Session-only visitor memory; ~$1/day/IP budget (hard stop); topic scope; no patches; ME first (before onboarding)
-- **Routes:** `/` generic · excited halls only per [EXCITED_HALLS.md](docs/reference/EXCITED_HALLS.md) (`/anthropic`, `/huggingface`, …)
-- **Definition_of_done:** Ty puts URL on applications (`/anthropic` for Fellows); Ellis accurate; TL + CRT one click; GoE teased not leaked
+- **Constraints:** Session-only visitor memory; ~$1/day/IP budget (hard stop); topic scope; no patches; ME first (before onboarding); **legibility-first build** (proof > narrative); **coherence over scatter** (Ellis + TL as parallel proof of behavioral architecture)
+- **Routes:** `/` generic · `/anthropic` + Build Logs drawer (Ellis logs + TL logs + ecosystem roadmap) · excited halls per [EXCITED_HALLS.md](docs/reference/EXCITED_HALLS.md)
+- **Definition_of_done:** Ty puts URL on applications (`/anthropic` for Fellows); Ellis auditable; TL visible in logs; Build Logs transparent; ecosystem visible (not secret mythology)
 
-### Key insight (2026-06-11)
+### Key insight (2026-06-12)
 
-**Build the ME before forming a relationship.** Ellis now has bones (5-system interior, session memory, model routing, rate limit, knowledge shelf) wired before onboarding. Phase 0.1 (Ellis learns Ty) is now last, not first. This matches GoE philosophy: entity must know itself before knowing the world.
+**Legibility is the build order now.** Ellis isn't going public until we have concrete traces, failed attempts logged, boundary tests passing, and real beta responses annotated. The Build Logs drawer on `/anthropic` becomes proof-of-work. Reviewers can see: decisions (why), friction (what broke), tests (how we know it works).
+
+**Coherence over scatter.** Ellis proves behavioral architecture works at small scale. TL proves it works in a real domain. Sharing the drawer (Ellis logs + TL logs + ecosystem roadmap) shows they're not random projects—they're coordinated research on the same philosophy. Not mythology. Legible architecture.
 
 ### Read before every build (mandatory)
 
 1. [docs/reference/WHAT_TY_BRINGS.md](docs/reference/WHAT_TY_BRINGS.md) — **what Ty brings (positioning + build guardrails)**
 2. [docs/building/RESEARCH_LOG.md](docs/building/RESEARCH_LOG.md) — **decisions + why + system impact**
-3. [docs/building/ELLIS_EXPERIENCE.md](docs/building/ELLIS_EXPERIENCE.md) — memory, budget, scope, Anthropic hook
-4. [docs/building/BUILD_ETHOS.md](docs/building/BUILD_ETHOS.md) — **no patches; gut and build clean; dream-bot code**
-5. [docs/building/STYLE.md](docs/building/STYLE.md) — Rodeo Dr / Apple bar; dark+light parity
-6. [docs/building/BUILD_RHYTHM.md](docs/building/BUILD_RHYTHM.md) — slice loop
+3. [docs/building/ELLIS_LEGIBILITY_TESTING.md](docs/building/ELLIS_LEGIBILITY_TESTING.md) — **testing framework + proof-of-work**
+4. [docs/building/ELLIS_EXPERIENCE.md](docs/building/ELLIS_EXPERIENCE.md) — memory, budget, scope, Anthropic hook
+5. [docs/building/BUILD_ETHOS.md](docs/building/BUILD_ETHOS.md) — **no patches; gut and build clean; dream-bot code**
+6. [docs/building/STYLE.md](docs/building/STYLE.md) — Rodeo Dr / Apple bar; dark+light parity
+7. [docs/building/BUILD_RHYTHM.md](docs/building/BUILD_RHYTHM.md) — slice loop
 
-**Debug friction:** [docs/building/DEBUG_LOG.md](docs/building/DEBUG_LOG.md)
+**Debug friction:** [docs/building/DEBUG_LOG.md](docs/building/DEBUG_LOG.md)  
+**Build Logs drawer:** [docs/building/BUILD_LOGS_DRAWER_SPEC.md](docs/building/BUILD_LOGS_DRAWER_SPEC.md)
 
 ### Quickstart
 
@@ -32,6 +36,8 @@
 
 ### Decisions (dated)
 
+- 2026-06-12: **Legibility-first build order** — Ellis Testing & Legibility framework created; Build Logs drawer spec locked; proof before narrative
+- 2026-06-12: **Build Logs drawer on /anthropic only** — Non-invasive access to RESEARCH_LOG, DEBUG_LOG, test framework, anonymized traces, beta responses
 - 2026-06-11: **Full ME imported** — GoE architecture templates adapted; Ellis-lite 5-system subset; 1686 lines TS; Phase B gates clear
 - 2026-06-11: **Build order reversed** — ME first (Phase B), then onboarding (Phase 0.1 last). Ellis needs bones before learning Ty.
 - 2026-06-11: **Interior session-scoped** — posture + traces + relational + working memory live in session; die when session expires (no cross-visit)

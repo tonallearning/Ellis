@@ -3,6 +3,7 @@ import type {
   AssembleParams,
   InteriorContext,
 } from '../types';
+import type { IpVisitorMemory } from '../memory/ipMemory';
 import { prioritizeTraces, tracesSummary } from './traces';
 
 /**
@@ -10,10 +11,14 @@ import { prioritizeTraces, tracesSummary } from './traces';
  * Server-only; never exposed on client wire or API payload
  */
 
+export interface AssembleWithIpParams extends AssembleParams {
+  ipMemory?: IpVisitorMemory;
+}
+
 export function assembleEllisInterior(
-  params: AssembleParams
+  params: AssembleWithIpParams
 ): InteriorContext {
-  const { interior, userMessage, hallContext } = params;
+  const { interior, userMessage, hallContext, ipMemory } = params;
 
   const blocks: string[] = [];
 
@@ -24,6 +29,28 @@ export function assembleEllisInterior(
   blocks.push(`**Atmosphere:** ${interior.state.posture}`);
   if (interior.state.perceptionLast) {
     blocks.push(`**Felt:** ${interior.state.perceptionLast}`);
+  }
+
+  // 1.5. IP Memory (return visit recall)
+  if (ipMemory && !ipMemory.isExpired) {
+    blocks.push(`\n## Prior visit(s)`);
+    blocks.push(`**Last visit:** ${ipMemory.daysAgo} day(s) ago (${ipMemory.lastSeenAt.toLocaleDateString()})`);
+    
+    const recentBeats = ipMemory.episodicBeats.slice(-3); // last 3 beats for context
+    if (recentBeats.length > 0) {
+      blocks.push(`**What we discussed:**`);
+      recentBeats.forEach((beat) => {
+        const dayLabel = beat.dayLabel || beat.occurredAt.toLocaleDateString();
+        blocks.push(`- [${dayLabel}] ${beat.summary}`);
+        if (beat.resonance) {
+          blocks.push(`  → ${beat.resonance}`);
+        }
+      });
+    }
+
+    if (ipMemory.threadSummary) {
+      blocks.push(`**Overall thread:** ${ipMemory.threadSummary}`);
+    }
   }
 
   // 2. Interior state
