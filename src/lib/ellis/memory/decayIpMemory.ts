@@ -1,6 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 import type { EpisodBeat } from './ipMemory';
 
+/** A decayed visitor thread, compressed to carry no visitor identifiers. */
+export interface GlobalTrace {
+  id?: string;
+  trace_text: string;
+  trace_category: 'pattern' | 'visit';
+  source_ip_count: number;
+  created_at?: string;
+}
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
@@ -117,7 +126,9 @@ export async function decayExpiredIpMemory(): Promise<number> {
  * Get a sample of global traces for optional session drift.
  * Returns most recently created patterns.
  */
-export async function loadGlobalTraces(limit: number = 3): Promise<any[]> {
+export async function loadGlobalTraces(
+  limit: number = 3
+): Promise<GlobalTrace[]> {
   try {
     const { data, error } = await supabase
       .from('ellis_global_traces')

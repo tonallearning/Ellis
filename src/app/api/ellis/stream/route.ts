@@ -7,27 +7,27 @@ import { NextResponse } from "next/server";
 import { createHash } from "crypto";
 import Anthropic from "@anthropic-ai/sdk";
 
-import type { SessionState } from "@/lib/ellis/types";
 import { createSession, getSession, updateSession } from "@/lib/ellis/session/store";
-import { loadKnowledgeShelf, validateShelf, formatShelfForPrompt } from "@/lib/ellis/halls/loadShelf";
+import { loadKnowledgeShelf, validateShelf } from "@/lib/ellis/halls/loadShelf";
 import { isValidHall } from "@/lib/ellis/halls/registry";
 import { routeModel } from "@/lib/ellis/routeModel";
 import { buildSystemPrompt } from "@/lib/ellis/systemPrompt";
 import { assembleEllisInterior, formatEllisInteriorForModel } from "@/lib/ellis/me/assemble";
-import { checkRateLimit, recordUsage } from "@/lib/ellis/rateLimit/check";
-import { onContactStarted, onContactEnded } from "@/lib/ellis/world/hallPhysics";
+import { checkRateLimit, recordUsage, estimateCostUsd } from "@/lib/ellis/rateLimit/check";
+import { getEllisConfig } from "@/lib/ellis/config";
+import { onContactStarted } from "@/lib/ellis/world/hallPhysics";
 import { assessContactQuality } from "@/lib/ellis/me/state";
 import {
   hashVisitorIp,
-  extractVisitorIp,
   buildEpisodBeat,
   recordIpVisitAfterStream,
 } from "@/lib/ellis/ipMemoryIntegration";
 import { loadIpMemory } from "@/lib/ellis/memory/ipMemory";
-import type { IpVisitorMemory } from "@/lib/ellis/memory/ipMemory";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const MAX_OUTPUT_TOKENS = 1024;
 
 /**
  * Hash visitor identity from IP + UA (uses proper salt-based hashing)
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
     }
 
     // Step 6: Rate limit check
-    const rateLimitStatus = await checkRateLimit(visitorId);
+    const rateLimitStatus = await checkRateLimit(ipHash);
     if (!rateLimitStatus.allowed) {
       return NextResponse.json(
         { error: `Rate limit: ${rateLimitStatus.reason}` },
@@ -158,27 +158,36 @@ export async function POST(request: Request) {
       },
     ];
 
-    // Step 12: Call Anthropic with streaming
-    const modelId =
-      model === "sonnet"
-        ? "claude-3-5-sonnet-20241022"
-        : "claude-3-5-haiku-20241022";
+    // Step 12: Charge the ledger before spending, then call Anthropic
+    const config = getEllisConfig();
+    const modelId = model === "sonnet" ? config.modelSonnet : config.modelHaiku;
+
+    const promptChars =
+      systemPrompt.length +
+      allMessages.reduce((sum, m) => sum + m.content.length, 0);
+    const { costUsd, tokenEstimate } = estimateCostUsd(
+      model,
+      promptChars,
+      MAX_OUTPUT_TOKENS
+    );
+
+    await recordUsage(
+      ipHash,
+      costUsd,
+      tokenEstimate,
+      rateLimitStatus.warned || false
+    );
 
     const client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+      apiKey: config.anthropicApiKey,
     });
 
     const anthropicStream = await client.messages.stream({
       model: modelId,
-      max_tokens: 1024,
+      max_tokens: MAX_OUTPUT_TOKENS,
       system: systemPrompt,
       messages: allMessages,
     });
-
-    const costUsd = model === "sonnet" ? 0.015 : 0.005;
-
-    // Record usage (fire and forget)
-    recordUsage(visitorId, model, costUsd, rateLimitStatus.warned || false);
 
     // Step 13: Return SSE stream
     const encoder = new TextEncoder();

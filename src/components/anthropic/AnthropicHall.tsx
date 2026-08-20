@@ -132,7 +132,7 @@ export function AnthropicHall({
             title={overlayOn ? "Claude?" : "Ellis"}
             subtitle={
               overlayOn
-                ? "Hook first — then honest disclosure. Session-only this visit."
+                ? "Hook first — then honest disclosure. 7-day recall if you return."
                 : "Anthropic context — enthusiasm without cosplay."
             }
             openingMessage={openingMessage}

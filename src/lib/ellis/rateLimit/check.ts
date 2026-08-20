@@ -1,14 +1,10 @@
 /**
- * Rate limit gate — $1/day per IP
- * Protects against abuse + budget overflow
+ * Rate limit gate — daily spend ceiling per visitor IP.
+ * Bill protection only: IP-hashed counters, no visitor profiling.
  */
 
 import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-);
+import { getEllisConfig } from '../config';
 
 export interface RateLimitStatus {
   allowed: boolean;
@@ -18,51 +14,93 @@ export interface RateLimitStatus {
   reason?: string;
 }
 
-const DAILY_BUDGET_USD = parseFloat(process.env.ELLIS_DAILY_BUDGET || '1.0');
-const WARN_AT_50 = DAILY_BUDGET_USD * 0.5;
-const WARN_AT_80 = DAILY_BUDGET_USD * 0.8;
+export type EllisModel = 'haiku' | 'sonnet';
+
+/** USD per million tokens. */
+const PRICING: Record<EllisModel, { input: number; output: number }> = {
+  haiku: { input: 1.0, output: 5.0 },
+  sonnet: { input: 3.0, output: 15.0 },
+};
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const isConfigured = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+
+const supabase = isConfigured
+  ? createClient(SUPABASE_URL as string, SUPABASE_SERVICE_ROLE_KEY as string)
+  : null;
+
+function endOfUtcDay(now: Date): Date {
+  const resetAt = new Date(now);
+  resetAt.setUTCHours(24, 0, 0, 0);
+  return resetAt;
+}
+
+function dayUtc(now: Date): string {
+  return now.toISOString().split('T')[0];
+}
 
 /**
- * Check rate limit before API call
+ * Conservative pre-charge: bill the full output allowance rather than the
+ * tokens actually produced, so a visitor can never exceed the ceiling mid-turn.
  */
-export async function checkRateLimit(
-  visitorId: string // IP hash
-): Promise<RateLimitStatus> {
-  try {
-    const now = new Date();
-    const dayUtc = now.toISOString().split('T')[0];
+export function estimateCostUsd(
+  model: EllisModel,
+  promptChars: number,
+  maxOutputTokens: number
+): { costUsd: number; tokenEstimate: number } {
+  const inputTokens = Math.ceil(promptChars / 4);
+  const price = PRICING[model];
+  const costUsd =
+    (inputTokens / 1_000_000) * price.input +
+    (maxOutputTokens / 1_000_000) * price.output;
 
+  return {
+    costUsd: Number(costUsd.toFixed(6)),
+    tokenEstimate: inputTokens + maxOutputTokens,
+  };
+}
+
+/**
+ * Check remaining budget before calling the model.
+ *
+ * Fails closed: if the ledger is unreachable we cannot know what has been
+ * spent, and an unbounded model bill is worse than a visitor seeing an error.
+ */
+export async function checkRateLimit(ipHash: string): Promise<RateLimitStatus> {
+  const budget = getEllisConfig().dailyBudgetUsd;
+  const now = new Date();
+  const resetAt = endOfUtcDay(now);
+
+  if (!supabase) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[RATE_LIMIT] Supabase not configured; refusing to serve.');
+      return {
+        allowed: false,
+        remaining: 0,
+        resetAt,
+        reason: 'Usage ledger unavailable',
+      };
+    }
+    return { allowed: true, remaining: budget, resetAt };
+  }
+
+  try {
     const { data, error } = await supabase
       .from('ellis_usage')
-      .select('*')
-      .eq('visitor_id_hash', visitorId)
-      .eq('day_utc', dayUtc)
-      .single();
+      .select('estimated_cost_usd, warned_50, warned_80')
+      .eq('ip_hash', ipHash)
+      .eq('day_utc', dayUtc(now))
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 = not found
-      throw error;
-    }
+    if (error) throw error;
 
-    const usage = data || {
-      estimated_cost_usd: 0,
-      warned_50: false,
-      warned_80: false,
-    };
+    const spent = Number(data?.estimated_cost_usd ?? 0);
+    const remaining = Math.max(0, budget - spent);
 
-    const spent = usage.estimated_cost_usd || 0;
-    const remaining = Math.max(0, DAILY_BUDGET_USD - spent);
-
-    const resetAt = new Date(now);
-    resetAt.setUTCHours(24, 0, 0, 0);
-
-    // Warn thresholds
-    let warned = false;
-    if (spent >= WARN_AT_80 && !usage.warned_80) {
-      warned = true; // 80% warning
-    } else if (spent >= WARN_AT_50 && !usage.warned_50) {
-      warned = true; // 50% warning
-    }
+    const warned =
+      (spent >= budget * 0.8 && !data?.warned_80) ||
+      (spent >= budget * 0.5 && !data?.warned_50);
 
     return {
       allowed: remaining > 0,
@@ -70,66 +108,47 @@ export async function checkRateLimit(
       resetAt,
       warned,
       reason:
-        remaining <= 0
-          ? `Daily budget of $${DAILY_BUDGET_USD} exceeded`
-          : undefined,
+        remaining <= 0 ? `Daily budget of $${budget} reached` : undefined,
     };
   } catch (err) {
-    console.error('[RATE_LIMIT] Check failed:', err);
-    // Fail open in case of DB error (but log it)
+    console.error('[RATE_LIMIT] Check failed; denying:', err);
     return {
-      allowed: true,
-      remaining: DAILY_BUDGET_USD,
-      resetAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      reason: 'Rate limit check failed; allowing',
+      allowed: false,
+      remaining: 0,
+      resetAt,
+      reason: 'Usage ledger unavailable',
     };
   }
 }
 
 /**
- * Record usage after API call
+ * Add one message of spend to the visitor's daily row.
+ * Returns the new daily total, or null if it could not be written.
  */
 export async function recordUsage(
-  visitorId: string,
-  model: 'haiku' | 'sonnet',
+  ipHash: string,
   costUsd: number,
+  tokenEstimate: number,
   warned: boolean
-): Promise<void> {
+): Promise<number | null> {
+  if (!supabase) return null;
+
+  const budget = getEllisConfig().dailyBudgetUsd;
+
   try {
-    const now = new Date();
-    const dayUtc = now.toISOString().split('T')[0];
+    const { data, error } = await supabase.rpc('ellis_usage_increment', {
+      p_ip_hash: ipHash,
+      p_day_utc: dayUtc(new Date()),
+      p_cost_usd: costUsd,
+      p_token_estimate: tokenEstimate,
+      p_warned_50: warned && costUsd >= budget * 0.5,
+      p_warned_80: warned && costUsd >= budget * 0.8,
+    });
 
-    // Upsert (or create)
-    const { data: existing } = await supabase
-      .from('ellis_usage')
-      .select('*')
-      .eq('visitor_id_hash', visitorId)
-      .eq('day_utc', dayUtc)
-      .single();
-
-    if (existing) {
-      await supabase
-        .from('ellis_usage')
-        .update({
-          estimated_cost_usd: (existing.estimated_cost_usd || 0) + costUsd,
-          warned_50: warned || existing.warned_50,
-          warned_80: warned || existing.warned_80,
-          updated_at: now,
-        })
-        .eq('id', existing.id);
-    } else {
-      await supabase.from('ellis_usage').insert({
-        visitor_id_hash: visitorId,
-        day_utc: dayUtc,
-        estimated_cost_usd: costUsd,
-        model_used: model,
-        warned_50: costUsd >= WARN_AT_50,
-        warned_80: costUsd >= WARN_AT_80,
-        created_at: now,
-      });
-    }
+    if (error) throw error;
+    return data === null ? null : Number(data);
   } catch (err) {
     console.error('[RATE_LIMIT] Record failed:', err);
-    // Non-fatal; continue (but log)
+    return null;
   }
 }

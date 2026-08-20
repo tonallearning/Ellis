@@ -9,19 +9,19 @@ This repo is the Next.js app behind tybuilds.tech. Ellis boots knowing **himself
 - **Ellis Hall** — chat-first entry where visitors explore work through conversation
 - **Project rooms** — Tonal Learning, Basement CRT, Gardens of Eridu (tease), linked from the hall
 - **Excited halls** — role-specific entry points (e.g. `/anthropic`) when a visitor has a known context
-- **Behavioral architecture** — session-scoped visitor memory, rate limits, honest seams (no fake continuity)
+- **Behavioral architecture** — 7-day rolling visitor recall, rate limits, honest seams (no fake continuity)
 
 ## What this isn't
 
 - Not a CMS-driven resume site
 - Not full [Gardens of Eridu](https://github.com/tybuildstech/GoE) — GoE stays a tease here, not a leak
-- Not persistent cross-visit memory for strangers (by design)
+- Not a permanent visitor profile — recall is IP-hashed, 7 days from last contact, then compressed into anonymous traces
 
 ## Status
 
-**Resect week (→ 2026-08-02):** Ellis work = **GoE-lite witness + thesis + Ashe links only** — no Phase B rabbit holes. Plan: [`~/coding-home/daily/WEEK-2026-07-27-resect.md`](../coding-home/daily/WEEK-2026-07-27-resect.md). Wed = Ellis knife day.
+Active build. **Phase A complete.** Phase B (interior + visitor recall) landed 2026-08-19; the honesty pass on public copy and the spend ceiling shipped the same day.
 
-Active build. **Phase A complete** — Phase B parked until resect ends.
+Open: the `about-ty` knowledge shelf is still empty — Ellis does not know Ty yet.
 
 Architecture and build docs live in [`docs/`](./docs/). Maintainer notes: [`PROJECT_MEMORY.md`](./PROJECT_MEMORY.md).
 

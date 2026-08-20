@@ -159,7 +159,7 @@ export function ChatPanel({
     subtitle ??
     (mode === "onboarding"
       ? "Onboarding mode — Ty teaches Ellis"
-      : "Session-only memory — Ellis won't remember you next visit");
+      : "Ellis may remember this conversation for up to 7 days if you return");
 
   return (
     <section aria-label="Ellis chat" className={panelClass}>
@@ -245,7 +245,7 @@ export function ChatPanel({
             <p className="text-text-secondary text-xs">
               {input.length > 0
                 ? `${input.length.toLocaleString()} / ${maxMessageChars.toLocaleString()}`
-                : "Session-only. No cross-visit memory."}
+                : "7-day recall from this connection. No profile."}
             </p>
             <button
               type="submit"

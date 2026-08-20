@@ -8,8 +8,10 @@ export function Footer() {
     <footer className="border-glass-border text-text-secondary border-t px-6 py-5 text-sm">
       <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="max-w-md leading-relaxed">
-          Ellis is an AI host powered by Claude. This visit is session-only — he
-          won&apos;t remember you next time, and he&apos;ll say so.
+          Ellis is an AI host powered by Claude. He may remember details of your
+          conversation for up to 7 days if you return from the same connection.
+          After that, specifics fade — he keeps compressed learnings, not a
+          profile of you.
         </p>
         <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2">
           {contactHref ? (

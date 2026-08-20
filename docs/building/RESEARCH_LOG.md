@@ -38,6 +38,18 @@
 
 ## Log
 
+### 2026-08-19 — Ship 7-day recall honestly; repair the spend ceiling
+
+- **Decision:** Keep the 7-day rolling visitor recall and change the public copy to match it, rather than pulling the feature to preserve the session-only promise. Rate limit fails **closed**.
+- **Why:** Every visitor-facing surface claimed session-only memory while the server hashed IPs and stored seven days of episodic beats. A false privacy claim is worse than a stronger memory claim, and this site's argument is presence honesty. Separately, the spend gate had never functioned: `checkRateLimit` queried `visitor_id_hash` (not a column on `ellis_usage`), so it errored and fell through to fail-open, and `recordUsage` inserted three nonexistent columns, so spend was never recorded. There was no ceiling.
+- **System / design impact:** Rate limit now keys on `ip_hash` (matching the table and `markReturnVisit`) instead of an IP+UA hash, so changing user agent no longer resets budget. Spend is charged **before** the model call using a conservative estimate that prices the full `max_tokens` allowance. Ledger unreachable → request denied, except in non-production without Supabase configured. Stream route now reads model IDs and budget from `getEllisConfig()` instead of hardcoding `claude-3-5-*`.
+- **Artifacts:** `supabase/migrations/20260819000000_ellis_usage_increment.sql` (atomic upsert RPC), `src/lib/ellis/rateLimit/check.ts` (rewritten, adds `estimateCostUsd`), `src/app/api/ellis/stream/route.ts`, `src/app/api/cron/decay-ip-memory/route.ts` (was never a valid App Router path, so decay never ran), `vercel.json` (daily 00:00 UTC cron), `CRON_SECRET` env var. Copy: `Footer.tsx`, `ChatPanel.tsx`, `AnthropicHall.tsx`, `content/ellis-self.md`, `systemPrompt.ts`, `README.md`.
+- **Phase / slice:** Phase B.12 honesty pass
+- **Docs updated:** README status, this log
+- **Open follow-ups:** `about-ty/*` shelf still empty — Ellis does not know Ty. Owner tier (Ty exempt from decay) not built. `loadGlobalTraces` still write-only. Onboarding does not write to the shelf.
+
+---
+
 ### 2026-06-11 — `/anthropic` Think · Build · Log (excited hall v1)
 
 - **Decision:** `/anthropic` ships three tabs — **Think** (Ellis chat + Claude-inspired overlay toggle), **Build** (project cards), **Log** (live research + debug logs for tybuilds and GoE snapshots).

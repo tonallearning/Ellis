@@ -12,9 +12,9 @@ import {
 } from '../world/hallPhysics';
 
 /**
- * Session store — server-side memory for this visitor's session
- * TTL expires; no cross-visit persistence
- * In v1: in-memory or Redis; not Supabase (that's usage tracking only)
+ * Session store — server-side memory for this visitor's session.
+ * TTL expires with the session. Cross-visit recall is a separate layer
+ * (memory/ipMemory.ts, 7-day rolling); this store never outlives the visit.
  */
 
 const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours

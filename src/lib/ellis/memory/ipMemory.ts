@@ -10,6 +10,9 @@ export interface EpisodBeat {
   depthReached: number;
 }
 
+/** Beat shape as stored in jsonb — dates arrive as ISO strings. */
+type StoredEpisodBeat = Omit<EpisodBeat, 'occurredAt'> & { occurredAt: string };
+
 export interface IpVisitorMemory {
   ipHash: string;
   lastSeenAt: Date;
@@ -54,7 +57,9 @@ export async function loadIpMemory(ipHash: string): Promise<IpVisitorMemory | nu
     return {
       ipHash,
       lastSeenAt: new Date(data.last_seen_at),
-      episodicBeats: (data.episodic_beats || []).map((beat: any) => ({
+      episodicBeats: (
+        (data.episodic_beats || []) as StoredEpisodBeat[]
+      ).map((beat) => ({
         ...beat,
         occurredAt: new Date(beat.occurredAt),
       })),
