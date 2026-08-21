@@ -34,14 +34,16 @@ function loadEllisSelf(): string {
  * Load Ty knowledge (empty until onboarding)
  */
 function loadAboutTy(): KnowledgeShelf['aboutTy'] {
-  const files = ['earnest.md', 'facts.json', 'goe-teach.md'];
+  const files: Array<[string, keyof KnowledgeShelf['aboutTy']]> = [
+    ['earnest.md', 'earnest'],
+    ['facts.json', 'facts'],
+    ['goe-teach.md', 'goeTeach'],
+  ];
   const shelf: KnowledgeShelf['aboutTy'] = {};
 
-  for (const file of files) {
+  for (const [file, key] of files) {
     try {
-      const content = readFileSync(join(CONTENT_ROOT, 'about-ty', file), 'utf-8');
-      const key = file.replace(/\.(md|json)$/, '');
-      (shelf as Record<string, string>)[key] = content;
+      shelf[key] = readFileSync(join(CONTENT_ROOT, 'about-ty', file), 'utf-8');
     } catch (err) {
       // File not found (expected until onboarding)
     }
@@ -89,6 +91,11 @@ export function formatShelfForPrompt(shelf: KnowledgeShelf): string {
   if (shelf.aboutTy.earnest) {
     blocks.push('\n## About Ty (earnest)');
     blocks.push(shelf.aboutTy.earnest);
+  }
+
+  if (shelf.aboutTy.facts) {
+    blocks.push('\n## About Ty (verifiable facts)');
+    blocks.push(shelf.aboutTy.facts);
   }
 
   if (shelf.aboutTy.goeTeach) {

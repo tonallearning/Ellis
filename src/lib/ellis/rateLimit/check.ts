@@ -19,7 +19,7 @@ export type EllisModel = 'haiku' | 'sonnet';
 /** USD per million tokens. */
 const PRICING: Record<EllisModel, { input: number; output: number }> = {
   haiku: { input: 1.0, output: 5.0 },
-  sonnet: { input: 3.0, output: 15.0 },
+  sonnet: { input: 2.0, output: 10.0 },
 };
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;

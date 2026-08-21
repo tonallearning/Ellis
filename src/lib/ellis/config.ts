@@ -30,8 +30,7 @@ export function getEllisConfig(): EllisConfig {
     anthropicApiKey,
     modelHaiku:
       process.env.ELLIS_MODEL_HAIKU ?? "claude-haiku-4-5-20251001",
-    modelSonnet:
-      process.env.ELLIS_MODEL_SONNET ?? "claude-sonnet-4-20250514",
+    modelSonnet: process.env.ELLIS_MODEL_SONNET ?? "claude-sonnet-5",
     dailyBudgetUsd: Number(process.env.ELLIS_DAILY_BUDGET_USD ?? "1"),
     ipHashSalt: process.env.ELLIS_IP_HASH_SALT || undefined,
     maxMessageChars: Number(process.env.ELLIS_MAX_MESSAGE_CHARS ?? "12000"),
