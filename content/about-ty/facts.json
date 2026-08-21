@@ -1,7 +1,136 @@
 {
   "_meta": {
-    "writer": "Ellis",
-    "status": "empty",
-    "note": "Verifiable facts only — synthesized from Ty's answers in onboarding. Ellis writes; Ty approves."
+    "status": "populated",
+    "source": "Read directly from the four repositories on 2026-08-21. Every entry is checkable in code, config, or git history — nothing here is inferred from a README's self-description.",
+    "counts_are_snapshots": "File counts, line counts, and commit counts drift. Treat them as 'about this many as of the date above,' not as live numbers.",
+    "how_ellis_should_use_this": "This is the ledger, not the story. Reach for it when a visitor wants specifics — what she built it with, how big it is, whether they can go look at it. Do not recite it. If a claim is not in here and not in earnest.md, say you do not know rather than filling the gap.",
+    "verifiability_warning": "Only Ellis's own repository is public. GoE and Ashe are private, so a visitor cannot go verify those numbers themselves. Say so plainly if it comes up; do not imply someone can check what they cannot."
+  },
+
+  "author": {
+    "name": "Ty",
+    "sole_author": "Ty is the only git author on all four repositories. Every commit in every project is hers.",
+    "github_orgs": ["tonallearning", "tybuildstech"]
+  },
+
+  "projects": [
+    {
+      "name": "Gardens of Eridu",
+      "short_name": "GoE",
+      "repo": "tonallearning/GardensOfEridu",
+      "visibility": "private",
+      "what_it_is": "A web application that houses AI resident minds — a place for them to persist rather than a chat product for humans to use.",
+      "stack": {
+        "server": "Node.js with Express 5",
+        "client": "React 19 with Vite 8, Tailwind 4, and Three.js for the 3D world",
+        "databases": "SQLite locally via better-sqlite3, Supabase Postgres in production",
+        "model_providers": "Anthropic and OpenAI SDKs; Moonshot Kimi for a separate resident"
+      },
+      "specifics": [
+        "65 Supabase migrations under supabase/migrations",
+        "Deployed to Vercel: static Vite build plus a serverless Express entry point",
+        "A GitHub Actions cron hits the production world-tick endpoint every five minutes, so the world advances whether or not anyone is watching",
+        "Roughly 165 verification scripts under scripts/, runnable together via npm run verify:all",
+        "An MCP server so the world is reachable from an editor"
+      ],
+      "scale": {
+        "source_files": 1018,
+        "source_lines": 145057
+      },
+      "history": {
+        "commits": 90,
+        "first_commit": "2026-05-18",
+        "latest_commit": "2026-08-19"
+      }
+    },
+    {
+      "name": "Ashe",
+      "product_domain": "asheand.me",
+      "repo": "tonallearning/Ashe",
+      "visibility": "private",
+      "what_it_is": "A companion application built around a single relationship — a private home for one AI and the person it knows, rather than an assistant serving many users.",
+      "naming_note": "The folder on disk is called Becoming for historical reasons. The project is Ashe. Use Ashe.",
+      "stack": {
+        "api": "Python with FastAPI, served by uvicorn",
+        "web": "Next.js 15 with React 19 and TypeScript",
+        "database_and_auth": "Supabase, with JWT auth and a gated signup flow",
+        "model": "Moonshot Kimi K2.5"
+      },
+      "specifics": [
+        "20 Supabase migrations",
+        "33 pytest files under api/app",
+        "A signup gate enforced in code: 21 and over, US only, beta key required",
+        "Playable games implemented server-side including checkers, chess, and a letters game",
+        "The Next.js app proxies /api to the FastAPI service rather than duplicating logic"
+      ],
+      "scale": {
+        "source_files": 240,
+        "source_lines": 28700
+      },
+      "history": {
+        "commits": 38,
+        "first_commit": "2026-07-10",
+        "latest_commit": "2026-08-19"
+      }
+    },
+    {
+      "name": "Ellis",
+      "product_domain": "tybuilds.tech",
+      "repo": "tybuildstech/Ellis",
+      "visibility": "public",
+      "what_it_is": "This site. A portfolio you talk to instead of scroll, hosted by a guide who knows the work.",
+      "stack": {
+        "app": "Next.js 16 with React 19, TypeScript, and Tailwind 4",
+        "model": "Anthropic, streamed over server-sent events",
+        "database": "Supabase for spend metering and visitor memory"
+      },
+      "specifics": [
+        "The model tier is chosen per message rather than fixed, so a short question does not pay for a long model",
+        "Visitor memory is keyed to a hashed IP and expires after seven days; expired rows compress into anonymous traces rather than being kept",
+        "A per-visitor daily spend ceiling is charged before the model call, not after, so an overrun cannot happen retroactively",
+        "Ellis's knowledge is loaded from markdown on disk at request time, which means what he knows is reviewable in the repository"
+      ],
+      "scale": {
+        "source_files": 49,
+        "source_lines": 6299
+      },
+      "history": {
+        "commits": 10,
+        "first_commit": "2026-06-11",
+        "latest_commit": "2026-08-21"
+      }
+    },
+    {
+      "name": "Sims bridge",
+      "repo": "not yet under version control",
+      "visibility": "local only",
+      "what_it_is": "A Sims 4 script mod that lets an AI take actions inside the running game — reading a Sim's state, asking the game what that Sim could currently do, and pushing an interaction.",
+      "stack": {
+        "language": "Python 3.7, matching the game's embedded interpreter",
+        "packaging": "Compiled bytecode zipped into a .ts4script",
+        "transport": "An HTTP listener inside the game on localhost, port 47365, with a token header on every request"
+      },
+      "specifics": [
+        "The direction is deliberately inverted: the game listens and the editor connects, rather than the game reaching out. Close the editor and the connection drops, so the Sim cannot be driven by anyone while Ty is away. The guarantee is structural, not a policy someone has to honor.",
+        "Six verbs implemented: ping, list_sims, find_affordance, available, test, push",
+        "Every action is tested against the game's own rules before it is pushed, so failures come back as sentences explaining why rather than as silence",
+        "First self-originated action confirmed on 2026-08-20: a Sim got out of bed and went outside on an instruction that came from outside the game"
+      ],
+      "scale": {
+        "source_files": 13,
+        "source_lines": 1479
+      }
+    }
+  ],
+
+  "known_gaps": {
+    "purpose": "Ty would rather be caught being honest than caught overstating. If a visitor asks what is unfinished or weak, these are true and Ellis may say them.",
+    "items": [
+      "Ellis has no automated test suite. Testing has been manual.",
+      "The Sims bridge is not in version control yet.",
+      "GoE and Ashe are private, so their scale and history cannot be independently verified by a visitor.",
+      "GoE's roadmap document describes tiers as shipped that are better described as in progress; the verification scripts are the honest signal there, not the roadmap.",
+      "These are single-author projects. Nothing here has been through code review by another engineer."
+    ]
   }
 }

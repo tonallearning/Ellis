@@ -14,14 +14,16 @@ This repo is the Next.js app behind tybuilds.tech. Ellis boots knowing **himself
 ## What this isn't
 
 - Not a CMS-driven resume site
-- Not full [Gardens of Eridu](https://github.com/tybuildstech/GoE) — GoE stays a tease here, not a leak
+- Not full Gardens of Eridu — GoE stays a tease here, not a leak (that repo is private)
 - Not a permanent visitor profile — recall is IP-hashed, 7 days from last contact, then compressed into anonymous traces
 
 ## Status
 
 Active build. **Phase A complete.** Phase B (interior + visitor recall) landed 2026-08-19; the honesty pass on public copy and the spend ceiling shipped the same day.
 
-Open: the `about-ty` knowledge shelf is still empty — Ellis does not know Ty yet.
+Open: the `about-ty` knowledge shelf is partially filled. `facts.json` holds repo-verifiable
+claims; `earnest.md` and `goe-teach.md` are drafts pending replacement by Ellis's own onboarding
+interview, so what he knows about Ty is still secondhand.
 
 Architecture and build docs live in [`docs/`](./docs/). Maintainer notes: [`PROJECT_MEMORY.md`](./PROJECT_MEMORY.md).
 
@@ -83,9 +85,10 @@ Next.js 16 · App Router · TypeScript · Tailwind CSS 4 · Vercel · Supabase (
 
 | Project | Repo |
 | ------- | ---- |
-| Gardens of Eridu | [tybuildstech/GoE](https://github.com/tybuildstech/GoE) |
 | Basement CRT | [tybuildstech/CRT](https://github.com/tybuildstech/CRT) |
-| Tonal Learning | [Tonal-Learning/tonallearning](https://github.com/Tonal-Learning/tonallearning) |
+| Gardens of Eridu | private |
+| Ashe | private |
+| Tonal Learning | private |
 
 ## Author
 
