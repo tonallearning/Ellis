@@ -182,10 +182,19 @@ export async function POST(request: Request) {
       apiKey: config.anthropicApiKey,
     });
 
+    // The shelf is identical on every request, so it is cached rather than
+    // re-billed each turn. Interior state and the visitor's words stay outside
+    // the cached block, below, where they belong.
     const anthropicStream = await client.messages.stream({
       model: modelId,
       max_tokens: MAX_OUTPUT_TOKENS,
-      system: systemPrompt,
+      system: [
+        {
+          type: "text",
+          text: systemPrompt,
+          cache_control: { type: "ephemeral" },
+        },
+      ],
       messages: allMessages,
     });
 

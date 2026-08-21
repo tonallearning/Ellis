@@ -85,7 +85,7 @@
         "database": "Supabase for spend metering and visitor memory"
       },
       "specifics": [
-        "The model tier is chosen per message rather than fixed, so a short question does not pay for a long model",
+        "Every turn runs on the cheaper model tier. A tier-escalation router was built and then deliberately switched off: the fixed knowledge prefix is cached between requests, and changing models mid-conversation discards that cache precisely when a conversation has gone on long enough for it to matter",
         "Visitor memory is keyed to a hashed IP and expires after seven days; expired rows compress into anonymous traces rather than being kept",
         "A per-visitor daily spend ceiling is charged before the model call, not after, so an overrun cannot happen retroactively",
         "Ellis's knowledge is loaded from markdown on disk at request time, which means what he knows is reviewable in the repository"

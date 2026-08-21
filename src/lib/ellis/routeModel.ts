@@ -1,6 +1,16 @@
 /**
- * Model router — Haiku by default; Sonnet for Ty's work in depth
- * Rules-based; no client override
+ * Model router — Haiku for every turn.
+ *
+ * This used to escalate to Sonnet when a visitor started asking about the work
+ * in depth. Two things killed that. The shelf is a fixed ~3,700-token prefix
+ * sent on every request, and prompt caching only pays off while the model stays
+ * put — an escalation mid-conversation discards the cache exactly when the
+ * conversation gets long enough for it to matter. And the escalation fired on
+ * keyword matches ("architecture", "research", "anthropic"), which is to say it
+ * fired hardest on the visitors Ellis exists for.
+ *
+ * The type still admits 'sonnet' and config still carries a Sonnet model id, so
+ * restoring escalation means changing this function and nothing else.
  */
 
 export type ModelDecision = 'haiku' | 'sonnet';
@@ -8,113 +18,22 @@ export type ModelDecision = 'haiku' | 'sonnet';
 interface RouterContext {
   messages: Array<{ role: string; content: string }>;
   hall: string;
-  sessionDepth: number; // 0-5 scale of conversation depth
+  sessionDepth: number;
   isFirstMessage: boolean;
 }
 
-/**
- * Classify if this turn is "Ty's work in depth"
- * Signals:
- * - Named project (Tonal Learning, GoE, Ada, etc.)
- * - Architecture/behavioral/research keywords
- * - Detailed follow-up after opening
- * - Visitor actively drilling into evidence
- */
-function classifyAsWorkInDepth(
-  messages: Array<{ role: string; content: string }>,
-  isFirstMessage: boolean
-): boolean {
-  if (isFirstMessage) return false; // Never jump to Sonnet on first message
-
-  // Look at last 2 messages for signals
-  const recent = messages.slice(-2).map((m) => m.content).join(' ');
-
-  const workKeywords = [
-    'tonal learning',
-    'goe',
-    'gardens of eridu',
-    'ada',
-    'behavioral',
-    'architecture',
-    'research',
-    'pre-output',
-    'sabai',
-    'basement crt',
-    'anthropic',
-    'philosophy',
-  ];
-
-  const hasWorkKeyword = workKeywords.some(
-    (kw) => recent.toLowerCase().includes(kw)
-  );
-
-  // "How did you..." / "Explain the..." patterns on projects
-  const hasDetailRequest =
-    /\b(how|explain|why|what's|describe|walk me through)\b/i.test(recent);
-
-  // Long, substantive message (not "ok cool")
-  const isSubstantive = recent.split(/\s+/).length > 20;
-
-  return (hasWorkKeyword || hasDetailRequest) && isSubstantive;
-}
-
-/**
- * Route to appropriate model
- * Sticky within session (once deep, stay deep until topic shift)
- */
 export function routeModel(
-  ctx: RouterContext,
-  sessionModels: ('haiku' | 'sonnet')[]
+  _ctx: RouterContext,
+  _sessionModels: ('haiku' | 'sonnet')[]
 ): ModelDecision {
-  // Default: Haiku
-  if (ctx.isFirstMessage) return 'haiku';
-
-  // Check if this turn qualifies
-  const workInDepth = classifyAsWorkInDepth(ctx.messages, ctx.isFirstMessage);
-
-  // If we're already using Sonnet in this session, stay sticky
-  if (sessionModels.includes('sonnet')) {
-    // Only drop back to Haiku if topic clearly shifted away from work
-    const currentMessage = ctx.messages[ctx.messages.length - 1]?.content || '';
-    const workKeywords = [
-      'tonal',
-      'goe',
-      'ada',
-      'behavioral',
-      'architecture',
-    ];
-    const stillOnTopic = workKeywords.some(
-      (kw) => currentMessage.toLowerCase().includes(kw)
-    );
-
-    if (stillOnTopic) {
-      return 'sonnet';
-    }
-  }
-
-  // First time hitting depth signals? Switch to Sonnet
-  if (workInDepth) {
-    return 'sonnet';
-  }
-
   return 'haiku';
 }
 
-/**
- * Debug: explain routing decision
- */
 export function explainRouting(
   model: ModelDecision,
-  context: RouterContext
+  _context: RouterContext
 ): string {
-  const recent = context.messages
-    .slice(-1)
-    .map((m) => m.content)
-    .join(' ');
-
-  if (model === 'sonnet') {
-    return `Switching to Claude Sonnet: "${recent.substring(0, 60)}..." contains work-in-depth signals`;
-  }
-
-  return `Using Claude Haiku (standard)`;
+  return model === 'haiku'
+    ? 'Using Claude Haiku (all turns; escalation disabled to preserve prompt cache)'
+    : `Using ${model}`;
 }
