@@ -164,17 +164,6 @@ export function createRelationalSnapshot(
     visitorTone: tone,
     fitSignal,
     depthReached,
-    openThreads: [], // would track what's unresolved
     projectsDiscussed: projectsMentioned,
-  };
-}
-
-export function updateRelational(
-  current: RelationalSnapshot,
-  newThemes: string[]
-): RelationalSnapshot {
-  return {
-    ...current,
-    openThreads: [...new Set([...current.openThreads, ...newThemes])],
   };
 }

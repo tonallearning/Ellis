@@ -1,12 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { MessageBubble } from "@/components/ellis/MessageBubble";
-import {
-  detectProjectHandoffs,
-  ProjectHandoff,
-} from "@/components/ellis/ProjectHandoff";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -17,9 +13,6 @@ type ChatPanelProps = {
   chatEnabled: boolean;
   mode: "onboarding" | "public";
   hall?: string;
-  variant?: "default" | "anthropic";
-  title?: string;
-  subtitle?: string;
   openingMessage?: string;
   maxMessageChars?: number;
 };
@@ -28,22 +21,77 @@ export function ChatPanel({
   chatEnabled,
   mode,
   hall = "default",
-  variant = "default",
-  title,
-  subtitle,
   openingMessage,
   maxMessageChars = 12000,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
-    openingMessage
-      ? [{ role: "assistant", content: openingMessage }]
-      : [],
+    openingMessage ? [{ role: "assistant", content: openingMessage }] : [],
   );
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const transcriptRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const storageKey = `ellis:chat:${hall}`;
+  const [restored, setRestored] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = window.sessionStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved) as {
+          messages?: ChatMessage[];
+          sessionId?: string | null;
+        };
+        if (Array.isArray(parsed.messages) && parsed.messages.length > 0) {
+          setMessages(parsed.messages);
+        }
+        if (parsed.sessionId) setSessionId(parsed.sessionId);
+      }
+    } catch {
+      // Malformed or blocked storage should cost the transcript, not the page.
+    }
+    setRestored(true);
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      const last = messages[messages.length - 1];
+      const durable =
+        last?.role === "assistant" && !last.content
+          ? messages.slice(0, -1)
+          : messages;
+
+      if (!durable.some((message) => message.role === "user")) {
+        window.sessionStorage.removeItem(storageKey);
+        return;
+      }
+
+      window.sessionStorage.setItem(
+        storageKey,
+        JSON.stringify({ messages: durable, sessionId }),
+      );
+    } catch {
+      // Over quota or storage disabled — the live conversation still works.
+    }
+  }, [restored, messages, sessionId, storageKey]);
+
+  useEffect(() => {
+    if (!restored) return;
+    const node = transcriptRef.current;
+    if (node) node.scrollTop = node.scrollHeight;
+  }, [restored, messages, streaming]);
+
+  useEffect(() => {
+    const node = textareaRef.current;
+    if (!node) return;
+    node.style.height = "auto";
+    node.style.height = `${Math.min(node.scrollHeight, 160)}px`;
+  }, [input]);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -126,7 +174,8 @@ export function ChatPanel({
         }
       } catch (err) {
         if (controller.signal.aborted) return;
-        const message = err instanceof Error ? err.message : "Something went wrong";
+        const message =
+          err instanceof Error ? err.message : "Something went wrong";
         setError(message);
         setMessages((prev) => {
           const copy = [...prev];
@@ -148,81 +197,53 @@ export function ChatPanel({
     void sendMessage(input);
   }
 
-  const panelClass =
-    variant === "anthropic"
-      ? "anthropic-chat-panel glass-panel mx-auto flex w-full max-w-2xl flex-col rounded-3xl p-6 sm:p-8"
-      : "glass-panel mx-auto flex w-full max-w-2xl flex-col rounded-3xl p-6 sm:p-8";
-
-  const headerLabel = variant === "anthropic" ? "Anthropic" : "Ellis";
-  const headerTitle = title ?? (variant === "anthropic" ? "Claude?" : "Ellis Hall");
-  const headerSubtitle =
-    subtitle ??
-    (mode === "onboarding"
-      ? "Onboarding mode — Ty teaches Ellis"
-      : "Ellis may remember this conversation for up to 7 days if you return");
-
   return (
-    <section aria-label="Ellis chat" className={panelClass}>
-      <header className="border-glass-border border-b pb-5">
-        <p className="font-display text-text-secondary text-xs tracking-[0.28em] uppercase">
-          {headerLabel}
-        </p>
-        <h1 className="text-text-primary mt-2 text-2xl font-medium tracking-tight sm:text-3xl">
-          {headerTitle}
-        </h1>
-        <p className="text-text-secondary mt-1 text-sm">{headerSubtitle}</p>
-      </header>
-
-      <div aria-live="polite" className="flex max-h-[min(52vh,520px)] flex-1 flex-col gap-4 overflow-y-auto py-6">
-        {messages.map((message, index) => {
-          const showHandoffs =
-            message.role === "assistant" &&
-            message.content.length > 0 &&
-            !(streaming && index === messages.length - 1);
-
-          const handoffs = showHandoffs
-            ? detectProjectHandoffs(message.content)
-            : [];
-
-          return (
-            <MessageBubble
-              key={`${index}-${message.role}`}
-              role={message.role}
-              content={message.content}
-              streaming={
-                streaming &&
-                index === messages.length - 1 &&
-                message.role === "assistant"
-              }
-              handoffs={
-                handoffs.length > 0 ? (
-                  <ProjectHandoff projects={handoffs} />
-                ) : null
-              }
-            />
-          );
-        })}
+    <section
+      aria-label="Ellis chat"
+      className="mx-auto flex min-h-0 w-full max-w-[40rem] flex-1 flex-col"
+    >
+      <div
+        ref={transcriptRef}
+        aria-live="polite"
+        className="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto px-1 py-6"
+      >
+        {messages.map((message, index) => (
+          <MessageBubble
+            key={`${index}-${message.role}`}
+            role={message.role}
+            content={message.content}
+            streaming={
+              streaming &&
+              index === messages.length - 1 &&
+              message.role === "assistant"
+            }
+          />
+        ))}
       </div>
 
       {!chatEnabled ? (
-        <div className="border-glass-border mt-auto border-t pt-5">
+        <div className="shrink-0 pb-2">
           <p className="text-text-secondary text-sm leading-relaxed">
-            Ellis is in onboarding mode. Ty can unlock chat at{" "}
-            <Link href="/onboarding" className="text-accent focus-ring underline-offset-4 hover:underline">
-              /onboarding
+            The hall is locked.{" "}
+            <Link
+              href="/onboarding"
+              className="text-text-primary focus-ring underline-offset-4 hover:underline"
+            >
+              It&apos;s you
             </Link>
             .
           </p>
         </div>
       ) : (
-        <form className="border-glass-border mt-auto border-t pt-5" onSubmit={onSubmit}>
+        <form className="shrink-0 pb-2" onSubmit={onSubmit}>
           <label htmlFor="ellis-input" className="sr-only">
             Message Ellis
           </label>
-          <div className="chat-input-wrap rounded-2xl px-4 py-3">
+          <div className="composer flex items-end gap-3 rounded-2xl px-4 py-3">
             <textarea
               id="ellis-input"
-              rows={4}
+              ref={textareaRef}
+              rows={1}
               value={input}
               disabled={streaming}
               maxLength={maxMessageChars}
@@ -234,25 +255,16 @@ export function ChatPanel({
                 }
               }}
               placeholder={
-                mode === "onboarding"
-                  ? "Ty — teach Ellis…"
-                  : "Message Ellis…"
+                mode === "onboarding" ? "Tell him something…" : "Message Ellis…"
               }
-              className="text-text-primary placeholder:text-text-secondary/70 w-full resize-none bg-transparent text-base focus:outline-none disabled:opacity-60"
+              className="text-text-primary placeholder:text-text-secondary/55 max-h-40 min-h-[1.5rem] w-full resize-none bg-transparent text-base leading-relaxed focus:outline-none disabled:opacity-60"
             />
-          </div>
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <p className="text-text-secondary text-xs">
-              {input.length > 0
-                ? `${input.length.toLocaleString()} / ${maxMessageChars.toLocaleString()}`
-                : "7-day recall from this connection. No profile."}
-            </p>
             <button
               type="submit"
               disabled={streaming || !input.trim()}
-              className="focus-ring bg-accent min-h-11 rounded-full px-5 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+              className="focus-ring text-accent shrink-0 pb-0.5 text-sm tracking-wide uppercase disabled:cursor-not-allowed disabled:opacity-30"
             >
-              {streaming ? "Ellis is typing…" : "Send"}
+              {streaming ? "…" : "Send"}
             </button>
           </div>
           {error ? (

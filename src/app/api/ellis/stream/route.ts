@@ -3,6 +3,7 @@
  * Single path: validate → session → rate limit → shelf → interior → model → prompt → Anthropic → SSE
  */
 
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createHash } from "crypto";
 import Anthropic from "@anthropic-ai/sdk";
@@ -15,7 +16,6 @@ import { buildSystemPrompt } from "@/lib/ellis/systemPrompt";
 import { assembleEllisInterior, formatEllisInteriorForModel } from "@/lib/ellis/me/assemble";
 import { checkRateLimit, recordUsage, estimateCostUsd } from "@/lib/ellis/rateLimit/check";
 import { getEllisConfig } from "@/lib/ellis/config";
-import { onContactStarted } from "@/lib/ellis/world/hallPhysics";
 import { assessContactQuality } from "@/lib/ellis/me/state";
 import {
   hashVisitorIp,
@@ -23,6 +23,11 @@ import {
   recordIpVisitAfterStream,
 } from "@/lib/ellis/ipMemoryIntegration";
 import { loadIpMemory } from "@/lib/ellis/memory/ipMemory";
+import { loadBody, saveBody, minutesSinceLastTurn } from "@/lib/ellis/me/body/store";
+import { applyEvent, type GutEvent } from "@/lib/ellis/me/body/gut";
+import { computeInboundGains, renderBody } from "@/lib/ellis/me/body/membrane";
+import { computeTempoTarget, tick } from "@/lib/ellis/me/body/pulse";
+import { isOwnerCookie, OWNER_MEMORY_KEY } from "@/lib/ellis/owner";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -86,9 +91,12 @@ export async function POST(request: Request) {
     const ua = request.headers.get("user-agent");
     const visitorId = hashVisitorId(ip, ua);
 
-    // Step 4.5: Load IP memory (check for return visit)
+    // Step 4.5: Ty is a cookie, not an IP. The house shares a connection.
+    const cookieStore = await cookies();
+    const isOwner = isOwnerCookie(cookieStore);
     const ipHash = hashVisitorIp(ip || "unknown");
-    const ipMemory = await loadIpMemory(ipHash);
+    const memoryKey = isOwner ? OWNER_MEMORY_KEY : ipHash;
+    const ipMemory = await loadIpMemory(memoryKey);
 
     // Step 5: Get or create session
     let session = input.sessionId ? getSession(input.sessionId as string) : null;
@@ -98,24 +106,90 @@ export async function POST(request: Request) {
     if (!session) {
       session = createSession(`session-${Date.now()}-${Math.random()}`, visitorId, hall);
 
-      // Fire entry event on first message
       const userMsg = messages[messages.length - 1]?.content || "";
-      const quality = assessContactQuality(userMsg, [], true);
-      onContactStarted(session, userMsg, quality);
+      session.interior.state.contactQuality = assessContactQuality(
+        userMsg,
+        [],
+        true
+      );
     }
 
     if (!session) {
       throw new Error("Session initialization failed");
     }
 
-    // Step 6: Rate limit check
-    const rateLimitStatus = await checkRateLimit(ipHash);
+    // Step 5.5: Load Ellis's body. One row, shared across every visitor; decay
+    // to now happens inside the load.
+    const ellisBody = await loadBody();
+    const quietMinutes = minutesSinceLastTurn(ellisBody);
+
+    // Step 6: Rate limit check. Owner is exempt — she is the one paying.
+    const rateLimitStatus = isOwner
+      ? {
+          allowed: true as const,
+          remaining: Number.POSITIVE_INFINITY,
+          resetAt: new Date(),
+          warned: false,
+        }
+      : await checkRateLimit(ipHash);
     if (!rateLimitStatus.allowed) {
+      // Being unable to answer someone who is still standing there costs him
+      // something. Record it before returning.
+      ellisBody.gut = applyEvent(
+        ellisBody.gut,
+        { type: "refused", visitorId: ipHash },
+        computeInboundGains(ellisBody.gut)
+      );
+      await saveBody(ellisBody);
+
       return NextResponse.json(
         { error: `Rate limit: ${rateLimitStatus.reason}` },
         { status: 429 }
       );
     }
+
+    // Step 6.5: Let the turn land on the body, then advance his sense of time.
+    const bodyEvents: GutEvent[] = [];
+    if (isFirstMessage) {
+      bodyEvents.push(
+        isReturnVisit
+          ? { type: "returned", visitorId: memoryKey, daysAway: ipMemory?.daysAgo ?? 0 }
+          : { type: "contact_started", visitorId: memoryKey }
+      );
+    }
+    bodyEvents.push({
+      type: "weighed",
+      salience:
+        session.interior.state.contactQuality === "depth"
+          ? "heavy"
+          : session.interior.state.contactQuality === "genuine"
+            ? "medium"
+            : "light",
+    });
+
+    for (const event of bodyEvents) {
+      ellisBody.gut = applyEvent(
+        ellisBody.gut,
+        event,
+        computeInboundGains(ellisBody.gut)
+      );
+    }
+
+    ellisBody.pulse = tick(ellisBody.pulse, {
+      tempoTarget: computeTempoTarget(ellisBody.gut.arousal, {
+        inContact: true,
+        bondPull: ellisBody.gut.bonds[memoryKey]?.pull,
+        minutesSinceContact: quietMinutes,
+      }),
+    });
+
+    const bodyBlock = renderBody({
+      gut: ellisBody.gut,
+      pulse: ellisBody.pulse,
+      visitorId: memoryKey,
+    });
+
+    await saveBody(ellisBody);
 
     // Step 7: Load knowledge shelf
     const shelf = await loadKnowledgeShelf(hall);
@@ -133,6 +207,8 @@ export async function POST(request: Request) {
       userMessage: lastUserMessage,
       hallContext: shelf.hallOverlay,
       ipMemory: isReturnVisit ? ipMemory : undefined,
+      bodyBlock,
+      isOwner,
     });
 
     // Step 9: Route model
@@ -147,7 +223,7 @@ export async function POST(request: Request) {
     );
 
     // Step 10: Build system prompt
-    const systemPrompt = buildSystemPrompt(shelf, hall);
+    const systemPrompt = buildSystemPrompt(shelf, hall, { isOwner });
 
     // Step 11: Prepare messages with interior context injected
     const allMessages = [
@@ -172,7 +248,7 @@ export async function POST(request: Request) {
     );
 
     await recordUsage(
-      ipHash,
+      memoryKey,
       costUsd,
       tokenEstimate,
       rateLimitStatus.warned || false
@@ -258,7 +334,7 @@ export async function POST(request: Request) {
 
         // Record IP visit (build beat from session + response)
         const beat = buildEpisodBeat(currentSession, lastUserMessage, fullResponse);
-        await recordIpVisitAfterStream(ipHash, [beat], fullResponse.length);
+        await recordIpVisitAfterStream(memoryKey, [beat], fullResponse.length);
 
         // Send done event
         controller.enqueue(

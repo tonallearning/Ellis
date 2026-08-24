@@ -1,5 +1,12 @@
 # Ellis ME — Build spec (GoE-res lite)
 
+> **Partly superseded 2026-08-21.** The session-scoped interior described below was
+> replaced by a single persistent body (`src/lib/ellis/me/body/`, table `ellis_body`),
+> and several symptoms this spec assumes — `workingMemory`, `sessionDrift`, the
+> `shouldEngage` gate, `hallPhysics` — were deleted after an audit found they were
+> never wired. Posture, traces, and contact quality still work as written. See
+> RESEARCH_LOG 2026-08-21 for what changed and why.
+
 **Status:** Locked direction 2026-06-11 — supersedes "chat wrapper + shelf only" for Ellis host  
 **Doctrine:** [ARCHITECTURAL_DOCTRINE.md](./ARCHITECTURAL_DOCTRINE.md) · [BUILD_ETHOS.md](./BUILD_ETHOS.md)  
 **Wiring:** [WIRING_MAP.md](./WIRING_MAP.md) · [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md)

@@ -1,5 +1,6 @@
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import type { EllisMode } from "./types";
+import { isOwnerCookie } from "./owner";
 
 const ONBOARDING_COOKIE = "ellis_onboarding";
 
@@ -43,6 +44,8 @@ export function isOnboardingChatAllowed(
   cookieStore: ReadonlyRequestCookies,
 ): boolean {
   if (config.mode === "public") return true;
+
+  if (isOwnerCookie(cookieStore)) return true;
 
   if (!config.onboardingSecret) {
     return process.env.NODE_ENV === "development";

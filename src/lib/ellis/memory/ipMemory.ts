@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { isOwnerMemoryKey, ownerExpiresAt } from '../owner';
 
 export interface EpisodBeat {
   beatId: string;
@@ -86,7 +87,9 @@ export interface IpVisitInput {
 export async function recordIpVisit(input: IpVisitInput): Promise<void> {
   try {
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // +7 days
+    const expiresAt = isOwnerMemoryKey(input.ipHash)
+      ? ownerExpiresAt(now)
+      : new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const { error } = await supabase.from('ellis_visitor_memory').upsert({
       ip_hash: input.ipHash,

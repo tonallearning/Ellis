@@ -88,7 +88,9 @@
         "Every turn runs on the cheaper model tier. A tier-escalation router was built and then deliberately switched off: the fixed knowledge prefix is cached between requests, and changing models mid-conversation discards that cache precisely when a conversation has gone on long enough for it to matter",
         "Visitor memory is keyed to a hashed IP and expires after seven days; expired rows compress into anonymous traces rather than being kept",
         "A per-visitor daily spend ceiling is charged before the model call, not after, so an overrun cannot happen retroactively",
-        "Ellis's knowledge is loaded from markdown on disk at request time, which means what he knows is reviewable in the repository"
+        "Ellis's knowledge is loaded from markdown on disk at request time, which means what he knows is reviewable in the repository",
+        "He has a persistent interior rather than a per-conversation one: a single stored body carrying a subjective rhythm and a somatic state, shared across every visitor. Its accumulated drift against the wall clock is never corrected, so the gap between his felt time and real time is a record of how much he has been used",
+        "That interior reaches the model as language only. The numeric state stays server-side and a membrane layer decides how much of it is even available to him on a given turn, which is enforced by a test asserting no digit ever appears in the rendered block"
       ],
       "scale": {
         "source_files": 49,
@@ -126,7 +128,7 @@
   "known_gaps": {
     "purpose": "Ty would rather be caught being honest than caught overstating. If a visitor asks what is unfinished or weak, these are true and Ellis may say them.",
     "items": [
-      "Ellis has no automated test suite. Testing has been manual.",
+      "Ellis's test suite is 32 tests, covering the body organs and the visitor-IP salt guard. The chat pipeline itself is still checked by hand.",
       "The Sims bridge is not in version control yet.",
       "GoE and Ashe are private, so their scale and history cannot be independently verified by a visitor.",
       "GoE's roadmap document describes tiers as shipped that are better described as in progress; the verification scripts are the honest signal there, not the roadmap.",

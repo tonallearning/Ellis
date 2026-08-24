@@ -39,23 +39,15 @@ export interface RelationalSnapshot {
   visitorTone: string;
   fitSignal: 'strong' | 'maybe' | 'weak';
   depthReached: number; // 0-5 scale (5 = discussing Ty's core work)
-  openThreads: string[];
   projectsDiscussed: string[];
-  seriesRating?: number; // 1-5, Ellis's sense of "likely to apply here"
 }
 
 export interface EllisInterior {
   state: EllisState;
   traces: Trace[];
   relational: RelationalSnapshot;
-  workingMemory: Array<{
-    kind: 'observation' | 'question' | 'pattern';
-    text: string;
-    weight: number;
-  }>;
   senseOfSelf: {
     baseline: string; // from ellis-self.md
-    sessionDrift?: string; // how this conversation is changing him
   };
 }
 

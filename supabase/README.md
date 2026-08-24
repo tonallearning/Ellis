@@ -1,48 +1,83 @@
-# Supabase — Ellis on GoE project
+# Supabase — Ellis's own project
 
-tybuilds uses **one table** on the Gardens of Eridu Supabase project: `ellis_usage`.
+Ellis used to be a guest on the Gardens of Eridu project, holding a single
+`ellis_usage` table there. He now has his own project. GoE is a private world
+build with its own residents and its own retention problems; a public site that
+strangers can reach should not share a database with it, and Ellis's tables had
+already grown from one to four.
 
-Ellis server code reads/writes **only** `ellis_usage` via `SUPABASE_SERVICE_ROLE_KEY`. It never touches GoE workshop, ME, or auth tables.
+Ellis owns four tables and nothing else lives beside them:
 
-## Apply migration (once)
+| Table                   | Holds                                                            | Lifetime            |
+| ----------------------- | ---------------------------------------------------------------- | ------------------- |
+| `ellis_usage`           | Per-IP daily spend, for the rate limiter                          | Per UTC day         |
+| `ellis_visitor_memory`  | Episodic beats per visitor, keyed by salted IP hash — except Ty, whose row is `owner` and is skipped by decay | 7 days inactivity; owner indefinite |
+| `ellis_global_traces`   | Compressed patterns left after a visitor memory expires; no PII   | Indefinite          |
+| `ellis_body`            | Ellis's own interior — pulse and gut. One row, never expires      | Indefinite          |
 
-From this repo:
+The split matters: `ellis_visitor_memory` expires so Ellis does not hold onto
+people, while `ellis_body` persists because it holds what meeting them did to
+him. The second contains no visitor content and identifies nobody.
+
+Every table has RLS enabled with no policies and is revoked from `anon` and
+`authenticated`. Server code reaches them only through
+`SUPABASE_SERVICE_ROLE_KEY`.
+
+## Applying migrations
+
+Migrations are ordered by filename and every one is idempotent, so re-running
+the full set is safe.
+
+**Dashboard (no CLI needed).** Copy all of them in order and paste into the
+project's SQL Editor:
+
+```bash
+cat supabase/migrations/*.sql | pbcopy
+```
+
+The paste must begin with `-- Ellis / tybuilds.tech`. If it begins with `>`, npm's
+run banner got copied into the buffer and Postgres will reject it at line 2 —
+use the bare `cat` above, or `npm run --silent db:bundle`.
+
+**CLI.**
 
 ```bash
 supabase login
-supabase link --project-ref oubavruicijhxiqrlikr
+supabase link --project-ref <ellis-project-ref>
 supabase db push
 ```
 
-Or paste `migrations/20260610000000_ellis_usage.sql` into the GoE project **SQL Editor** in the Supabase dashboard.
+## Environment
 
-## Env (tybuilds / Vercel)
+From the project's **Settings → API**:
 
-Copy from GoE project → **Settings → API**:
+| Variable                        | Use                                                       |
+| ------------------------------- | --------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Project URL                                                |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Unused today; kept for any future client-safe call         |
+| `SUPABASE_SERVICE_ROLE_KEY`     | **Server only.** Every table above is reached through this |
 
-| Variable | Use |
-| --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Not used for rate limits; keep for future client-safe calls if any |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Server only** — rate limit upserts |
+These must be set in Vercel for Production as well as locally. Pointing
+production at the old GoE project after this move would silently split Ellis's
+memory across two databases.
 
-Optional before public mode:
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `ELLIS_DAILY_BUDGET_USD` | `1` | Soft/hard cap per IP per UTC day |
-| `ELLIS_IP_HASH_SALT` | (required in prod) | Salt for IP hashing |
-
-## Verify
-
-After push, in SQL Editor:
+## Verifying
 
 ```sql
-SELECT * FROM public.ellis_usage LIMIT 1;
+select table_name
+from information_schema.tables
+where table_schema = 'public' and table_name like 'ellis_%'
+order by table_name;
+-- expect: ellis_body, ellis_global_traces, ellis_usage, ellis_visitor_memory
+
+select id, pulse->>'state' as pulse_state, gut->>'arousal' as arousal
+from public.ellis_body;
+-- expect exactly one row, id = 'ellis'
+
+select proname from pg_proc where proname = 'ellis_usage_increment';
+-- must return a row, or spend is never recorded and the ceiling never binds
 ```
 
-Should return zero rows. Confirm RLS is on and anon cannot select:
-
-```sql
-SELECT relrowsecurity FROM pg_class WHERE relname = 'ellis_usage';
-```
+That last check is not decorative. The spend gate silently failed open for
+weeks because `ellis_usage_increment` was defined in a migration that had never
+been applied, so every recorded cost was dropped on the floor.

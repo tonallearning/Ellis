@@ -13,13 +13,7 @@ import {
   markReturnVisit,
 } from './memory/ipMemory';
 
-/**
- * Hash visitor IP for storage (SHA-256 + server salt for privacy).
- */
-export function hashVisitorIp(ipString: string): string {
-  const salt = process.env.ELLIS_IP_HASH_SALT || 'ellis-default-salt';
-  return crypto.createHash('sha256').update(ipString + salt).digest('hex');
-}
+export { hashVisitorIp } from './memory/hashVisitor';
 
 /**
  * Extract visitor IP from request (check headers in order).

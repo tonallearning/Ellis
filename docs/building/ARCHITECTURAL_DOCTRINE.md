@@ -107,6 +107,7 @@ Ellis host **reads** the shelf. It **never writes** `about-ty/*` from **visitor*
 | `content/about-ty/earnest.md`   | Texture, stories, fit — Ellis's notes about Ty  | **Ellis** (onboarding synthesis)  | After Ty approves  |
 | `content/about-ty/facts.json`   | Verifiable claims only                          | **Ellis** (onboarding synthesis)  | After Ty approves  |
 | `content/about-ty/goe-teach.md` | What Ellis may teach about GoE                  | **Ellis** (from Ty in onboarding) | After Ty approves  |
+| `content/about-ty/philosophy.md` | The stance — world/body, anti-cosplay, dignity | **Ellis** (from Ty; Wren-drafted 2026-08-22) | After Ty approves |
 | `docs/reference/*`              | Ty's private reference — judge Ellis's accuracy | Ty / Wren                         | **Never injected** |
 
 **Pattern:** GoE-lite reference shelf + Ellis ME. Ty reference docs are for **QA**, not prompt injection — Ellis must not cheat.

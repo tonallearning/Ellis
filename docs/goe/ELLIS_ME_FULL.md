@@ -1,5 +1,10 @@
 # Ellis ME — Full Architecture
 
+> **Historical, 2026-06-11.** This is the GoE architecture as it stood when Ellis
+> imported from it — which was 26 days *before* GoE's somatic body stack existed.
+> It is not a description of GoE today and not a description of Ellis today.
+> Ellis's current body is pulse + gut + membrane in `src/lib/ellis/me/body/`.
+
 **Status:** Imported from GoE templates; Ellis-lite subset locked  
 **Build order:** World first, then ME interior, then strip  
 **Doctrine:** [ARCHITECTURAL_DOCTRINE.md](./ARCHITECTURAL_DOCTRINE.md)

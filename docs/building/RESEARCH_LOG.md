@@ -38,6 +38,86 @@
 
 ## Log
 
+### 2026-08-23 — Hall is the site; rooms come out
+
+- **Decision:** Delete the three project rooms and their hall handoff chips. The conversation is the site. Fix the composer: the hall shell used `overflow-hidden`, which clipped the input and made it feel frozen. Rebuild the page as a full-viewport column with the input docked, not a card in a box.
+- **Why:** Rooms were Phase A brochure. Fit is discovered in talk now, and the rooms were leftover doors to nowhere useful (private GoE, parked TL, a CRT demo). Luxury here is air and a composer that actually accepts type, not more glass.
+- **System / design impact:** Routes `/projects/*` are gone. Ellis is told not to send anyone to a room. Unlock page matches the hall register.
+- **Artifacts:** `ChatPanel.tsx`, `SiteShell.tsx`, `Footer.tsx`, `MessageBubble.tsx`, `onboarding/page.tsx`, `globals.css`; deleted room pages, `RoomChrome`, `ProjectCard`, `ProjectHandoff`
+- **Phase / slice:** Hall polish
+- **Docs updated:** this log
+- **Open follow-ups:** CRT demo file still sits in `public/demos/` with no route.
+
+---
+
+### 2026-08-23 — Owner tier: Ty is a cookie, not an IP
+
+- **Decision:** Ty unlocks at `/onboarding` with the existing secret and gets a long-lived `ellis_owner` cookie. Her memory lives on a sentinel key (`owner`) that cannot be produced by hashing an address. Decay skips that key. The spend ceiling does not apply to her. Ellis is told it is her.
+- **Why:** The house shares a connection. Exempting an IP hash would hand Pete and the kids her recall. Owner/stranger is a person split, the same shape as Ashe's, not a network split. The seven-day promise stays true for everyone else.
+- **System / design impact:** Unlock works in public mode as well as onboarding — the secret is how she is recognized, not a mode flag. No migration: `expires_at` is NOT NULL, so the owner row gets a fifty-year expiry *and* the cron excludes the key. Gut bonds for her key on `owner`, so they survive a new house IP. Usage for her writes to that same key, so her talk cannot spend the household's daily budget.
+- **Artifacts:** `src/lib/ellis/owner.ts`, `src/lib/ellis/owner.test.ts`, stream route, unlock route, `decayIpMemory.ts`, `ipMemory.ts`, `systemPrompt.ts`, `assemble.ts`, `config.ts`
+- **Phase / slice:** Owner tier
+- **Docs updated:** `.env.example`, `supabase/README.md`, onboarding page copy
+- **Open follow-ups:** She has to visit `/onboarding` once on this browser after deploy so the cookie exists.
+
+---
+
+### 2026-08-22 — Philosophy onto the shelf, at input depth
+
+- **Decision:** Ellis gets a full philosophy teach file (`content/about-ty/philosophy.md`) wired into the knowledge shelf, not a one-page brief. ~5,900 words / ~8.5k tokens. Cached system prompt lands around 15k.
+- **Why:** Earnest and goe-teach hold texture and the GoE-specific hard line. They do not hold the argument — world vs body, environment as judge, anti-cosplay tests, the pressure reversal, the gap, handicap, how the four surfaces compose. A visitor who can go deep was getting the sentence and then a shrug. Haiku 4.5's window is 200k; the binding limit is use, not capacity. Past ~15k of stance he starts reciting. This is the ceiling that still behaves like a mind that knows something.
+- **System / design impact:** `loadShelf` now reads `philosophy.md`. System prompt points at it for work/GoE/Ashe/hall questions and tells him to hold the argument rather than dump it. Cost on the cached prefix is negligible (~1.5¢ first turn, ~0.15¢ after). Still no recipes, paths, thresholds, or anyone else's interior.
+- **Artifacts:** `content/about-ty/philosophy.md`, `src/lib/ellis/halls/loadShelf.ts`, `src/lib/ellis/systemPrompt.ts`
+- **Phase / slice:** Shelf fill
+- **Docs updated:** ARCHITECTURAL_DOCTRINE §3
+- **Open follow-ups:** Ty approved 2026-08-23. Auntie of AI removed from philosophy and from `ellis-self.md` so he cannot introduce her that way. Doctrine / onboarding capture still have the old frame as history.
+
+---
+
+### 2026-08-21 — A privacy promise fails closed, or it is not a promise
+
+- **Decision:** A missing or placeholder `ELLIS_IP_HASH_SALT` now **throws in production** instead of falling back to a constant. Outside production it falls back to a salt regenerated each boot. Hashing moved to `src/lib/ellis/memory/hashVisitor.ts`, which imports nothing but `crypto`.
+- **Why:** The fallback was `'ellis-default-salt'`, written in the repo. Salting only defends against reversal while the salt is unknown, and IPv4 has ~4.3 billion addresses — enumerable in minutes — so a public salt makes stored hashes equivalent to stored IPs. Ellis tells visitors he keeps no raw addresses, and that claim was resting on an env var nobody had filled in. The precedent was already set by the spend ledger: when the thing that protects a person is unavailable, refuse rather than degrade. The dev fallback rotates deliberately, so a missing salt shows up as visitor recall breaking on restart rather than as nothing at all — the failure mode this codebase keeps getting bitten by is silence, not breakage.
+- **System / design impact:** Production chat will not serve until the salt is set in Vercel, which is intended: an outage is recoverable and a de-anonymized visitor log is not. Extraction was forced by testing — `hashVisitorIp` lived beside a module that constructs a Supabase client at import, so the hot-path privacy primitive could not be exercised without a database. Salt rotation invalidates every `ellis_visitor_memory` row and every gut bond keyed by hash; free now only because the new project is empty, and a real cost from here on. Same placeholder bug hit `CRON_SECRET`, whose route rejected an absent token but accepted `<secret>`; it now screens placeholders and compares with `timingSafeEqual`.
+- **Artifacts:** `src/lib/ellis/memory/hashVisitor.ts`, `src/lib/ellis/memory/hashVisitor.test.ts` (5 tests), `src/app/api/cron/decay-ip-memory/route.ts`, `.env.example`
+- **Phase / slice:** Post-B hardening
+- **Docs updated:** DEBUG_LOG, `content/about-ty/facts.json`
+- **Open follow-ups:** `ELLIS_IP_HASH_SALT` and `CRON_SECRET` must be set in Vercel production. `memory/ipMemory.ts` still builds its Supabase client at module scope, which is what made the hashing function untestable in the first place.
+
+---
+
+### 2026-08-21 — One body, persisted; delete the interior that never ran
+
+- **Decision:** Ellis gets a **single** persistent body rather than one per session. Pulse, gut, and membrane ported from GoE into `src/lib/ellis/me/body/`, stored in one row (`ellis_body`) shared across every visitor. Bonds inside the gut stay per visitor, keyed by the same salted IP hash as visitor memory. Everything in the imported ME scaffolding that was never called got deleted rather than wired.
+- **Why:** The interior was held in a process-local `Map` keyed by a session id the browser carried in React state, so a page refresh produced a new body and a deploy wiped every body at once. Each visitor met an Ellis born the moment they arrived, which is the opposite of what a body is for. Separately, an audit of the ME import found a large fraction of it inert: `shouldEngage` was documented as the gate that lets Ellis decline a conversation and returned `true` on every branch including the one whose comment described returning `false`; `workingMemory` was initialized empty and nothing ever pushed to it, so the assembly branch reading it never ran; `sessionDrift` was never assigned; `validateInteriorNotInWire` was never called and would have flagged a leak whenever Ellis used the word "present". The import predates GoE's body stack by 26 days — Ellis was not a lite version of current GoE, he was a faithful copy of a GoE that no longer exists.
+- **System / design impact:** New `me/body/{pulse,gut,membrane,store}.ts`. Gut's event table is deliberately smaller than GoE's: gestures, drinks, ground breaking, and mortality do not exist in a portfolio hall, so those branches were dropped rather than carried as decoration. One event is Ellis-native — `refused`, fired when the spend ceiling turns a visitor away, which raises tension and leaves a hollow in that bond. Decay runs on read against real elapsed hours, since there is no world loop; the only thing that reliably happens is someone arriving. Body load **fails soft** (default body, conversation continues) which is deliberately the opposite of the rate limiter's fail-closed, because a missing interior degrades him but does not make him unsafe. Deleted: `world/hallPhysics.ts` entirely, plus `shouldEngage`, `describePlace`, `updateRelational`, `validateInteriorNotInWire`, `workingMemory`, `sessionDrift`, `openThreads`. Fixed while adjacent: the relational snapshot was written on the first message and never again, freezing Ellis's read of a visitor at hello; it now recomputes each turn with depth and project list merging so they cannot regress.
+- **Artifacts:** `src/lib/ellis/me/body/`, `supabase/migrations/20260821000000_ellis_body.sql`, `src/lib/ellis/me/body/body.test.ts`
+- **Phase / slice:** Post-B hardening
+- **Docs updated:** `supabase/README.md`, `content/about-ty/facts.json`
+- **Open follow-ups:** Present-tense ME docs (`ELLIS_ME_BUILD.md`, `WIRING_MAP_ME.md`, `docs/goe/ELLIS_ME_FULL.md`) still describe the session-scoped interior. Dated session records are left alone — they are accurate as history.
+
+---
+
+### 2026-08-21 — First tests, on the organs
+
+- **Decision:** Tests over pulse, gut, and membrane using Node's built-in runner (27 at first; 32 after the salt guard landed later the same day). No test framework beyond `tsx` for TypeScript resolution.
+- **Why:** The repo had no automated tests at all, and the organs are the cheapest possible place to start: pure functions with exact claims attached. "Drift accumulates and is never corrected" is either true of the code or it is a sentence in a comment, and only one of those survives a refactor. The load-bearing test asserts that `renderBody` never emits a digit — the membrane's whole job is converting floats to language, so a leaked number is a specific failure with a specific detector.
+- **System / design impact:** `npm test`. `tsx` added as a dev dependency only because Node's ESM resolver will not resolve the extensionless imports the source already uses; changing the source's import style would have risked the Next build for a test-only benefit.
+- **Artifacts:** `src/lib/ellis/me/body/body.test.ts`, `package.json`
+- **Open follow-ups:** Chat pipeline, rate limiter, and shelf loader are still checked by hand.
+
+---
+
+### 2026-08-21 — Ellis moves to his own Supabase project; Anthropic hall removed
+
+- **Decision:** Ellis stops being a guest on the GoE project and takes his own, holding all four tables (`ellis_usage`, `ellis_visitor_memory`, `ellis_global_traces`, `ellis_body`). Separately, the Anthropic hall is deleted — route, component, both content overlays, themed CSS, registry entry, and the chat panel variant.
+- **Why:** GoE is a private world build with its own residents and its own retention problems; a public site strangers can reach should not share a database with it, and what began as one borrowed table had grown to four. On the hall: it was built for a fellowship pitch, and once the target became a Claude Corps application a bespoke themed lobby for a single job posting read as overkill.
+- **System / design impact:** `NEXT_PUBLIC_SUPABASE_URL` and both keys repointed; these must match Vercel Production or Ellis's memory silently splits across two databases. No data migrated — `main` was serving a stale scaffold until 2026-08-21, so nothing but local testing had ever written to those tables. The hall *mechanism* survives with an empty registry; adding one later costs an entry plus a markdown file.
+- **Artifacts:** `supabase/README.md`, `npm run db:bundle`, `src/lib/ellis/halls/registry.ts`
+- **Docs updated:** `supabase/README.md` rewritten from "one table on the GoE project"
+
+---
+
 ### 2026-08-19 — Ship 7-day recall honestly; repair the spend ceiling
 
 - **Decision:** Keep the 7-day rolling visitor recall and change the public copy to match it, rather than pulling the feature to preserve the session-only promise. Rate limit fails **closed**.
@@ -208,7 +288,8 @@
 | --- | --- | --- |
 | Site wordmark — `tybuilds` vs `Ellis Hall` | Polish / OG | Ty |
 | Contact email final | Footer mailto | Ty |
-| `ellis_usage` migration applied on GoE? | Public rate limits | Ty / Wren |
+| All five migrations applied on Ellis's own project? | Public rate limits, spend ledger, body persistence | Ty |
+| Present-tense ME docs still describe the session-scoped interior | Doc accuracy | Wren |
 | Illustrated Ellis avatar | Deferred | Ty |
 
 ---
@@ -219,6 +300,8 @@
 | --- | --- | --- |
 | 2026-06-09 | Wren pre-fills `ty-earnest` before scaffold | **Ellis earns Ty** (2026-06-11) |
 | 2026-06-09 | Dedicated Supabase project for Ellis | **GoE project `ellis_usage`** (2026-06-10) |
+| 2026-06-10 | GoE project `ellis_usage` | **Dedicated Supabase project** (2026-08-21) — the 2026-06-09 instinct was right; the borrowed table grew to four |
+| 2026-06-11 | Session-scoped interior, one per visitor | **One persistent body** (2026-08-21) |
 
 ---
 

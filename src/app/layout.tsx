@@ -35,7 +35,7 @@ export default function RootLayout({
           {themeInitScript}
         </Script>
       </head>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-dvh flex-col">{children}</body>
     </html>
   );
 }

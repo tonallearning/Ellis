@@ -7,7 +7,7 @@ const ONBOARDING_OPENING =
   "Ty — it's Ellis. I know myself, but I don't know your work yet. I need you to walk me through who you are, what you've built, and where you'd draw the line. I'll ask questions, synthesize in third person, and read it back for your approval. Where should we start?";
 
 const PUBLIC_OPENING =
-  "I'm Ellis — I host conversations here so visitors can assess whether Ty is a fit. Ask about her work; I'll be honest, including when I don't know.";
+  "I'm Ellis. Ask about her work. I'll be honest, including when I don't know.";
 
 export default async function Home() {
   const config = getEllisConfig();
@@ -19,7 +19,7 @@ export default async function Home() {
 
   return (
     <SiteShell variant="hall">
-      <main className="flex flex-1 flex-col px-4 pb-8 pt-2 sm:px-6">
+      <main className="flex min-h-0 flex-1 flex-col px-5 sm:px-6">
         <ChatPanel
           chatEnabled={chatEnabled}
           mode={config.mode}

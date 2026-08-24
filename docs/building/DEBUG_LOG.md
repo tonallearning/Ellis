@@ -27,6 +27,15 @@
 
 ## Log
 
+### 2026-08-21 — Two secrets were never filled in; IP salt fell back to a repo constant
+
+- **Context:** Applying the Supabase migrations for Ellis's own project. `set -a && . ./.env.local` failed with `parse error near '\n'`.
+- **Symptom:** zsh choked on line 9 of `.env.local`. Auditing every key showed `ELLIS_IP_HASH_SALT` and `CRON_SECRET` both still held the literal placeholder `<secret>` — the angle brackets read as shell redirection, which is what surfaced it.
+- **Cause:** Both were added in the B.12 honesty pass as `<placeholder>` and never generated. Worse than unset: `hashVisitorIp` read `process.env.ELLIS_IP_HASH_SALT || 'ellis-default-salt'`, so a missing salt silently downgraded to a constant visible to anyone reading the repo. IPv4 is 2^32 wide, so a known salt makes every stored hash reversible to a real address — the README promises visitors the opposite. The cron route rejected an *absent* secret but happily accepted `<secret>` as a valid token.
+- **Fix:** Generated 64-char hex for both. Extracted hashing into `src/lib/ellis/memory/hashVisitor.ts` (no DB import) with a guard that treats `<placeholder>` as unset, **throws** in production, and falls back to a per-process random salt in dev so recall breaks visibly instead of leaking quietly. Cron route now rejects placeholders and compares with `timingSafeEqual` behind a length check.
+- **Verified:** `npm test` 32/32, including five new salt-guard cases (the dev-fallback test asserts two fresh imports disagree, which a fixed constant would fail). Cron endpoint returns 401 for absent / wrong / placeholder / short tokens and 200 for the real one, running the decay job against the new project: `{"ok":true,"processed":0}`. `tsc --noEmit` clean.
+- **Notes:** Rotating the salt invalidates existing visitor hashes. Harmless here only because the new Supabase project is empty — on a populated database this would have orphaned every `ellis_visitor_memory` row and every gut bond in `ellis_body`. Both vars must be set in Vercel before production chat will serve at all, which is now deliberate.
+
 ### 2026-06-10 — Chat 400: sessionId null
 
 - **Context:** Ty reports Ellis doesn't respond; terminal `POST /api/ellis/stream 400`

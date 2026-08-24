@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { decayExpiredIpMemory } from '@/lib/ellis/memory/decayIpMemory';
 
@@ -9,9 +10,9 @@ import { decayExpiredIpMemory } from '@/lib/ellis/memory/decayIpMemory';
  * Endpoint: GET /api/cron/decay-ip-memory
  */
 export async function GET(req: Request) {
-  // Verify Vercel cron token
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
+  // An unfilled `<placeholder>` is a guessable token, so treat it as unset.
+  const cronSecret = process.env.CRON_SECRET?.trim();
+  if (!cronSecret || /^<.*>$/.test(cronSecret)) {
     console.error('[CRON] CRON_SECRET not set');
     return NextResponse.json(
       { error: 'CRON_SECRET not configured' },
@@ -19,8 +20,15 @@ export async function GET(req: Request) {
     );
   }
 
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
+  const authHeader = req.headers.get('authorization') ?? '';
+  const expected = `Bearer ${cronSecret}`;
+  const expectedBuf = Buffer.from(expected);
+  const providedBuf = Buffer.from(authHeader);
+  const authorized =
+    providedBuf.length === expectedBuf.length &&
+    timingSafeEqual(providedBuf, expectedBuf);
+
+  if (!authorized) {
     console.error('[CRON] Unauthorized cron request');
     return NextResponse.json(
       { error: 'Unauthorized' },

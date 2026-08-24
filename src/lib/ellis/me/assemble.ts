@@ -1,8 +1,4 @@
-import type {
-  EllisInterior,
-  AssembleParams,
-  InteriorContext,
-} from '../types';
+import type { AssembleParams, InteriorContext } from '../types';
 import type { IpVisitorMemory } from '../memory/ipMemory';
 import { prioritizeTraces, tracesSummary } from './traces';
 
@@ -13,12 +9,19 @@ import { prioritizeTraces, tracesSummary } from './traces';
 
 export interface AssembleWithIpParams extends AssembleParams {
   ipMemory?: IpVisitorMemory;
+  /** Ty unlocked as herself — recall is not a stranger's seven-day window. */
+  isOwner?: boolean;
+  /**
+   * Somatic state already rendered to language by the membrane. Null when the
+   * body is quiet enough that it does not reach him this turn.
+   */
+  bodyBlock?: string | null;
 }
 
 export function assembleEllisInterior(
   params: AssembleWithIpParams
 ): InteriorContext {
-  const { interior, userMessage, hallContext, ipMemory } = params;
+  const { interior, hallContext, ipMemory, bodyBlock, isOwner } = params;
 
   const blocks: string[] = [];
 
@@ -33,7 +36,10 @@ export function assembleEllisInterior(
 
   // 1.5. IP Memory (return visit recall)
   if (ipMemory && !ipMemory.isExpired) {
-    blocks.push(`\n## Prior visit(s)`);
+    blocks.push(isOwner ? `\n## Ty` : `\n## Prior visit(s)`);
+    if (isOwner) {
+      blocks.push(`This is Ty. Recall is not on a seven-day clock.`);
+    }
     blocks.push(`**Last visit:** ${ipMemory.daysAgo} day(s) ago (${ipMemory.lastSeenAt.toLocaleDateString()})`);
     
     const recentBeats = ipMemory.episodicBeats.slice(-3); // last 3 beats for context
@@ -51,6 +57,14 @@ export function assembleEllisInterior(
     if (ipMemory.threadSummary) {
       blocks.push(`**Overall thread:** ${ipMemory.threadSummary}`);
     }
+  }
+
+  // 1.75. Body. Carried across every visitor, not just this one — the membrane
+  // decides how much of it is available to him and returns null when the answer
+  // is none.
+  if (bodyBlock) {
+    blocks.push(`\n## Body`);
+    blocks.push(bodyBlock);
   }
 
   // 2. Interior state
@@ -72,15 +86,7 @@ export function assembleEllisInterior(
     blocks.push(`\n## Session marks\n${traceSummary}`);
   }
 
-  // 3. Working memory (current threads)
-  if (interior.workingMemory.length > 0) {
-    blocks.push(`\n## Open threads`);
-    interior.workingMemory.forEach((item) => {
-      blocks.push(`- ${item.text}`);
-    });
-  }
-
-  // 4. Relational snapshot (this visitor)
+  // 3. Relational snapshot (this visitor)
   if (interior.relational.visitorTone) {
     blocks.push(`\n## This conversation`);
     blocks.push(`**Visitor tone:** ${interior.relational.visitorTone}`);
@@ -93,14 +99,9 @@ export function assembleEllisInterior(
     }
   }
 
-  // 5. Hall context (if excited hall)
+  // 4. Hall context (if excited hall)
   if (hallContext) {
     blocks.push(`\n## Hall context\n${hallContext}`);
-  }
-
-  // 6. Sense of self delta
-  if (interior.senseOfSelf.sessionDrift) {
-    blocks.push(`\n## How this conversation is changing me\n${interior.senseOfSelf.sessionDrift}`);
   }
 
   const formattedBlock = blocks.join('\n');
@@ -125,33 +126,11 @@ export function formatEllisInteriorForModel(
   return `${context.formattedBlock}\n\n[Ellis interior context: ~${context.tokens} tokens]`;
 }
 
-/**
- * Privacy check — ensure interior never leaks
+/*
+ * A `validateInteriorNotInWire` check used to live here. It was never called,
+ * and it would not have worked: it flagged a leak whenever the response
+ * contained the current posture word, so an Ellis who was "present" tripped it
+ * by using an ordinary English adjective. Interior stays server-side because
+ * this module's output only ever goes into the model request — that is the
+ * actual guarantee, and a substring scan was never adding to it.
  */
-export function validateInteriorNotInWire(
-  response: string,
-  interior: EllisInterior
-): boolean {
-  // Check that actual interior state wasn't echoed back to client
-  // (Very defensive; should never happen if we're careful)
-  const dangerousPatterns = [
-    interior.state.posture,
-    'workingMemory',
-    'continuity',
-  ];
-
-  const hasLeak = dangerousPatterns.some((pattern) =>
-    response.includes(pattern)
-  );
-
-  if (hasLeak) {
-    console.error('[SECURITY] Interior leaked to response:', {
-      leakPatterns: dangerousPatterns.filter((p) =>
-        response.includes(p)
-      ),
-    });
-    return false;
-  }
-
-  return true;
-}

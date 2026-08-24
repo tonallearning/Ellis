@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { OWNER_MEMORY_KEY } from '../owner';
 import type { EpisodBeat } from './ipMemory';
 
 /** A decayed visitor thread, compressed to carry no visitor identifiers. */
@@ -63,7 +64,8 @@ export async function decayExpiredIpMemory(): Promise<number> {
     const { data: expired, error: selectError } = await supabase
       .from('ellis_visitor_memory')
       .select('ip_hash, episodic_beats, thread_summary')
-      .lte('expires_at', now.toISOString());
+      .lte('expires_at', now.toISOString())
+      .neq('ip_hash', OWNER_MEMORY_KEY);
 
     if (selectError) {
       console.error('[DECAY] selectError:', selectError);
@@ -107,7 +109,8 @@ export async function decayExpiredIpMemory(): Promise<number> {
     const { error: deleteError } = await supabase
       .from('ellis_visitor_memory')
       .delete()
-      .lte('expires_at', now.toISOString());
+      .lte('expires_at', now.toISOString())
+      .neq('ip_hash', OWNER_MEMORY_KEY);
 
     if (deleteError) {
       console.error('[DECAY] deleteError:', deleteError);

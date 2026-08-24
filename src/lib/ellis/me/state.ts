@@ -43,21 +43,11 @@ export function perceiveEntry(
  * He's not moving through Gardens or changing rooms (unlike Vale).
  * But he perceives: alone/not-alone. Empty/occupied. Shallow visitor / genuine seeker.
  */
-export interface EllisPlace {
-  location: 'hall'; // always his hall in v1
-  occupied: boolean; // is someone here?
-  alone: boolean; // is he in solitude?
-  atmosphere: 'empty' | 'settling' | 'present' | 'engaged' | 'uncertain';
-}
-
-export function describePlace(state: EllisState): EllisPlace {
-  return {
-    location: 'hall',
-    occupied: state.inContact,
-    alone: !state.inContact,
-    atmosphere: state.posture as 'empty' | 'settling' | 'present' | 'engaged' | 'uncertain',
-  };
-}
+/*
+ * `EllisPlace` and `describePlace` were removed. They restated `inContact` in
+ * three fields and cast posture to a set of atmosphere values that posture
+ * never produces, so the cast was always a lie. Nothing imported either.
+ */
 
 /**
  * Felt shifts in conversation
@@ -199,27 +189,13 @@ export function assessContactQuality(
  * High threshold = prefers depth or clean exit
  * Default true (engage); return false to gently refuse
  */
-export function shouldEngage(
-  contactQuality: 'shallow' | 'genuine' | 'depth',
-  messageCount: number,
-  sessionAge: number // seconds
-): boolean {
-  // Always engage if there's depth or genuine curiosity
-  if (contactQuality !== 'shallow') return true;
-
-  // Shallow openers are fine at message 1-2
-  if (messageCount <= 2) return true;
-
-  // After 3+ shallow messages, start considering exit
-  // (but still respond gracefully; just indicate time/energy limit)
-  if (messageCount > 5 && contactQuality === 'shallow') {
-    // Option: return false here to trigger "I think this might not be the right fit" response
-    // For v1, still engage but with slightly more distance
-    return true;
-  }
-
-  return true;
-}
+/*
+ * `shouldEngage` was removed. It was documented as the gate that let Ellis
+ * decline a conversation that had gone nowhere, and it returned true on every
+ * branch — including the one whose own comment described returning false. It
+ * was never called, so nothing changed when it went; the honest note is that
+ * Ellis has no refusal mechanism, rather than one that always says yes.
+ */
 
 export function createInitialState(
   sessionId: string

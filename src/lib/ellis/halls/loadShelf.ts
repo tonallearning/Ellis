@@ -14,6 +14,7 @@ export interface KnowledgeShelf {
     earnest?: string;
     facts?: string;
     goeTeach?: string;
+    philosophy?: string;
   };
   hallOverlay?: string;
 }
@@ -38,6 +39,7 @@ function loadAboutTy(): KnowledgeShelf['aboutTy'] {
     ['earnest.md', 'earnest'],
     ['facts.json', 'facts'],
     ['goe-teach.md', 'goeTeach'],
+    ['philosophy.md', 'philosophy'],
   ];
   const shelf: KnowledgeShelf['aboutTy'] = {};
 
@@ -101,6 +103,11 @@ export function formatShelfForPrompt(shelf: KnowledgeShelf): string {
   if (shelf.aboutTy.goeTeach) {
     blocks.push('\n## GoE (what you may teach)');
     blocks.push(shelf.aboutTy.goeTeach);
+  }
+
+  if (shelf.aboutTy.philosophy) {
+    blocks.push('\n## Philosophy (what you may teach)');
+    blocks.push(shelf.aboutTy.philosophy);
   }
 
   if (shelf.hallOverlay) {

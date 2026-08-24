@@ -1,5 +1,10 @@
 # Ellis Wiring Map — ME Interior
 
+> **Stale as of 2026-08-21.** This map shows the Phase B topology. Since then the
+> interior became a single persisted body and `world/hallPhysics.ts` was deleted
+> outright, so any edge drawn through it no longer exists. See RESEARCH_LOG
+> 2026-08-21.
+
 **Master topology after Phase B (ME wired)**
 
 ---

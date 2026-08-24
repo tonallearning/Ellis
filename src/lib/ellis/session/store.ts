@@ -5,16 +5,14 @@ import {
   extractTracesFromResponse,
   createRelationalSnapshot,
 } from '../me/traces';
-import {
-  onContactStarted,
-  onContactEnded,
-  readPresenceLedger,
-} from '../world/hallPhysics';
 
 /**
- * Session store — server-side memory for this visitor's session.
- * TTL expires with the session. Cross-visit recall is a separate layer
- * (memory/ipMemory.ts, 7-day rolling); this store never outlives the visit.
+ * Session store — what happened inside this one conversation.
+ *
+ * Three layers, deliberately separate. This one holds the shape of a single
+ * visit and dies with it. `memory/ipMemory.ts` remembers a visitor for seven
+ * days. `me/body/` is Ellis himself and outlives both — it is the only layer
+ * that is not scoped to whoever is currently here.
  */
 
 const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
@@ -48,10 +46,8 @@ export function createSession(
       visitorTone: 'unknown',
       fitSignal: 'maybe',
       depthReached: 0,
-      openThreads: [],
       projectsDiscussed: [],
     },
-    workingMemory: [],
     senseOfSelf: {
       baseline:
         'I am Ellis, a portfolio host for Ty. I know myself; I am learning Ty. I inhabit my hall.',
@@ -72,14 +68,10 @@ export function createSession(
 
   sessions.set(sessionId, session);
 
-  // Auto-expire
-  setTimeout(() => {
-    const expiring = sessions.get(sessionId);
-    if (expiring && expiring.interior.state.inContact) {
-      onContactEnded(expiring);
-    }
-    sessions.delete(sessionId);
-  }, SESSION_TTL);
+  // No end-of-contact hook here. A timer scheduled inside a serverless request
+  // will usually not survive to fire, so anything that depended on it would be
+  // decoration. Expiry is swept on read instead.
+  setTimeout(() => sessions.delete(sessionId), SESSION_TTL);
 
   return session;
 }
@@ -107,11 +99,7 @@ export function updateSession(
   const isFirstMessage = session.messageCount === 0;
   const messageCount = session.messageCount + 1;
 
-  // First message: contact event
   if (isFirstMessage) {
-    const quality = session.interior.state.contactQuality;
-    onContactStarted(session, userMessage, quality);
-    
     const entry = perceiveEntry(session.interior.state.posture, true);
     session.interior.state.perceptionLast = entry.felt;
   }
@@ -140,13 +128,21 @@ export function updateSession(
   );
   session.interior.traces.push(...newTraces);
 
-  // Update relational snapshot
-  if (isFirstMessage) {
-    session.interior.relational = createRelationalSnapshot(
-      userMessage,
-      [ellisResponse]
-    );
-  }
+  // Re-read the visitor every turn, not just the first. Tone and fit are about
+  // the message in front of him and should move; depth and the project list are
+  // cumulative, so they merge rather than get overwritten — a conversation that
+  // reached the architecture once has reached it, even if the next message is
+  // "thanks".
+  const reading = createRelationalSnapshot(userMessage, [ellisResponse]);
+  const previous = session.interior.relational;
+  session.interior.relational = {
+    visitorTone: reading.visitorTone,
+    fitSignal: reading.fitSignal,
+    depthReached: Math.max(previous.depthReached, reading.depthReached),
+    projectsDiscussed: [
+      ...new Set([...previous.projectsDiscussed, ...reading.projectsDiscussed]),
+    ],
+  };
 
   // Track models used
   if (!session.modelsSeen.includes(modelUsed)) {
