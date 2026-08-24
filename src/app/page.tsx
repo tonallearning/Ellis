@@ -26,7 +26,7 @@ export default async function Home() {
       : PUBLIC_OPENING;
 
   return (
-    <SiteShell variant="hall">
+    <SiteShell variant="hall" isOwner={isOwner}>
       <main className="flex min-h-0 flex-1 flex-col px-5 sm:px-6">
         <ChatPanel
           chatEnabled={chatEnabled}

@@ -4,9 +4,14 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 type SiteShellProps = {
   children: React.ReactNode;
   variant?: "hall" | "plain";
+  isOwner?: boolean;
 };
 
-export function SiteShell({ children, variant = "hall" }: SiteShellProps) {
+export function SiteShell({
+  children,
+  variant = "hall",
+  isOwner = false,
+}: SiteShellProps) {
   return (
     <div
       data-hall="default"
@@ -42,7 +47,7 @@ export function SiteShell({ children, variant = "hall" }: SiteShellProps) {
       </div>
 
       <div className="relative z-10 shrink-0">
-        <Footer />
+        <Footer isOwner={isOwner} />
       </div>
     </div>
   );

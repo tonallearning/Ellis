@@ -27,7 +27,7 @@ export function getEllisConfig(): EllisConfig {
 
   return {
     mode,
-    onboardingSecret: process.env.ELLIS_ONBOARDING_SECRET || undefined,
+    onboardingSecret: process.env.ELLIS_ONBOARDING_SECRET?.trim() || undefined,
     anthropicApiKey,
     modelHaiku:
       process.env.ELLIS_MODEL_HAIKU ?? "claude-haiku-4-5-20251001",

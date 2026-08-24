@@ -1,10 +1,10 @@
-import { cookies } from "next/headers";
 import { SITE } from "@/lib/site";
-import { isOwnerCookie } from "@/lib/ellis/owner";
 
-export async function Footer() {
-  const cookieStore = await cookies();
-  const isOwner = isOwnerCookie(cookieStore);
+type FooterProps = {
+  isOwner?: boolean;
+};
+
+export function Footer({ isOwner = false }: FooterProps) {
   const contactHref = SITE.contactEmail ? `mailto:${SITE.contactEmail}` : null;
 
   return (
