@@ -49,7 +49,8 @@ export default function OnboardingUnlockPage() {
             He knows you by the secret, not the house.
           </h1>
           <p className="text-text-secondary mt-4 text-sm leading-relaxed">
-            Unlock, and he will not forget you on the seven-day clock.
+            Unlock, and he keeps you. Visitors fade in seven days. You
+            don&apos;t.
           </p>
           <form className="mt-10" onSubmit={onSubmit}>
             <label htmlFor="ellis-secret" className="sr-only">

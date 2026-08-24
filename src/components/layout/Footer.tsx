@@ -1,14 +1,19 @@
+import { cookies } from "next/headers";
 import { SITE } from "@/lib/site";
+import { isOwnerCookie } from "@/lib/ellis/owner";
 
-export function Footer() {
+export async function Footer() {
+  const cookieStore = await cookies();
+  const isOwner = isOwnerCookie(cookieStore);
   const contactHref = SITE.contactEmail ? `mailto:${SITE.contactEmail}` : null;
 
   return (
     <footer className="text-text-secondary px-6 py-4 text-[0.7rem] leading-relaxed tracking-wide">
       <div className="mx-auto flex max-w-[40rem] flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <p className="max-w-sm">
-          AI host. He may remember this conversation for seven days from the
-          same connection. Then it fades.
+          {isOwner
+            ? "AI host. He remembers you. The seven-day clock is for everyone else."
+            : "AI host. He may remember this conversation for seven days from the same connection. Then it fades."}
         </p>
         {contactHref ? (
           <a
