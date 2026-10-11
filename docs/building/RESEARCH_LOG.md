@@ -6,12 +6,12 @@
 
 **Relationship to other docs**
 
-| Doc | Role |
-| --- | --- |
-| This log | Full decision journal with impact |
+| Doc                                                          | Role                                                           |
+| ------------------------------------------------------------ | -------------------------------------------------------------- |
+| This log                                                     | Full decision journal with impact                              |
 | [ARCHITECTURAL_DOCTRINE.md](./ARCHITECTURAL_DOCTRINE.md) §10 | Locked doctrine summary — link here, don’t duplicate rationale |
-| [PROJECT_MEMORY.md](../../PROJECT_MEMORY.md) | Current state + pointers — not history |
-| [WIRING_MAP.md](./WIRING_MAP.md) | Topology after each **Wire** step |
+| [PROJECT_MEMORY.md](../../PROJECT_MEMORY.md)                 | Current state + pointers — not history                         |
+| [WIRING_MAP.md](./WIRING_MAP.md)                             | Topology after each **Wire** step                              |
 
 **When to append**
 
@@ -38,6 +38,45 @@
 
 ## Log
 
+### 2026-10-10 — Public release gate: signed owner identity and atomic spend reservation
+
+- **Decision:** Treat the owner and onboarding cookies as authenticated bearer credentials, not boolean flags. Both are now purpose-separated HMAC values derived from the onboarding secret. Public chat validates the complete message envelope server-side, binds sessions to the originating visitor and hall, and uses the atomic Supabase usage increment as the final authorization point before an Anthropic call.
+- **Why:** A literal cookie value of `1` was forgeable, which exposed owner-only context and bypassed the public spend ceiling. A read-then-increment rate check also allowed concurrent requests to pass against the same remaining balance. Client-only message limits were not an API boundary.
+- **System / design impact:** Existing owner cookies are intentionally invalidated; Ty unlocks once again at `/onboarding`. Anonymous callers cannot claim owner status, reuse another visitor's session, submit system-role messages, exceed message/history caps, or race multiple generations past the daily budget.
+- **Artifacts:** `src/lib/ellis/owner.ts`, `config.ts`, `validateChatInput.ts`, `/api/ellis/onboarding/unlock`, `/api/ellis/stream`, `ChatPanel.tsx`, `next.config.ts`
+- **Phase / slice:** Public release security gate
+- **Docs updated:** this log, `DEBUG_LOG.md`, `WIRING_MAP.md`
+- **Open follow-ups:** Add Anthropic API credit, then rerun the live streaming smoke test before switching `ELLIS_MODE=public` in production.
+
+### 2026-08-26 — The work (one door, her words)
+
+- **Decision:** One quiet header link — “the work” — opens a centered panel. The panel is Ty’s personal thesis statement, not a project catalog. Ashe, GoE, and Ellis appear in the prose if the argument needs them. Close is talk to Ellis. Sims bridge is not a peer in this chrome. Copy lives in `content/from-ty/the-work.ts` and is placeholder until she writes it. Default hall is still conversation-first.
+- **Why:** A reviewer who won’t type still needs to read something she wrote. Four obvious buttons would have been the rooms coming back as modals.
+- **System / design impact:** Hall header only. Native `<dialog>`. Ellis’s knowledge shelf is unchanged — this is public first-person, not his third-person notes.
+- **Artifacts:** `content/from-ty/the-work.ts`, `src/components/work/TheWork.tsx`, `SiteShell.tsx`, `globals.css`
+- **Phase / slice:** Hall polish
+- **Docs updated:** this log
+- **Open follow-ups:** Thesis statement in her words (replace placeholders). Walkthrough video. One more form of proof. Do not ship filler.
+
+### 2026-08-24 — Privacy and terms that match the code
+
+- **Decision:** Ship `/privacy` and `/terms` as plain-English pages in the hall chrome, linked from the footer. Copy tracks the actual stores: hashed IP (fail-closed salt), seven-day beats, compressed traces after decay, daily usage ledger, persistent body with hashed visitor markers, Anthropic for replies, Vercel logs, operator cookie. Footer now says specifics fade, not that the visit vanishes.
+- **Why:** The footer already promised seven-day memory with no policy behind it. Submission-ready means a reviewer can click through and get the same story the code tells. Ashe's legal register (short, true, not HR) is the model; 18+ not 21 because this is a portfolio host, not a companion.
+- **System / design impact:** New public routes. Wordmark links home. Contact falls back to the address already published on Ashe if `NEXT_PUBLIC_CONTACT_EMAIL` is empty.
+- **Artifacts:** `src/app/privacy/page.tsx`, `src/app/terms/page.tsx`, `src/components/layout/LegalArticle.tsx`, `Footer.tsx`, `SiteShell.tsx`, `src/lib/site.ts`, `globals.css`
+- **Phase / slice:** Submission-ready legal
+- **Docs updated:** this log
+- **Open follow-ups:** Creative attachments are writing, not chrome.
+
+### 2026-08-24 — Link preview polish
+
+- **Decision:** Metadata, generated OG (1200×630), and a typographic favicon. No font swap tonight. Title template is `%s · Ellis`; the card says "Ask about her work."
+- **Why:** Reviewers see the unfurl before they see the hall. Geist stays; type is a longer night.
+- **System / design impact:** `metadataBase` is tybuilds.tech so relative OG URLs resolve in production.
+- **Artifacts:** `src/app/layout.tsx`, `opengraph-image.tsx`, `icon.tsx`
+- **Phase / slice:** Submission-ready polish
+- **Docs updated:** this log
+
 ### 2026-08-23 — Hall is the site; rooms come out
 
 - **Decision:** Delete the three project rooms and their hall handoff chips. The conversation is the site. Fix the composer: the hall shell used `overflow-hidden`, which clipped the input and made it feel frozen. Rebuild the page as a full-viewport column with the input docked, not a card in a box.
@@ -54,7 +93,7 @@
 
 - **Decision:** Ty unlocks at `/onboarding` with the existing secret and gets a long-lived `ellis_owner` cookie. Her memory lives on a sentinel key (`owner`) that cannot be produced by hashing an address. Decay skips that key. The spend ceiling does not apply to her. Ellis is told it is her.
 - **Why:** The house shares a connection. Exempting an IP hash would hand Pete and the kids her recall. Owner/stranger is a person split, the same shape as Ashe's, not a network split. The seven-day promise stays true for everyone else.
-- **System / design impact:** Unlock works in public mode as well as onboarding — the secret is how she is recognized, not a mode flag. No migration: `expires_at` is NOT NULL, so the owner row gets a fifty-year expiry *and* the cron excludes the key. Gut bonds for her key on `owner`, so they survive a new house IP. Usage for her writes to that same key, so her talk cannot spend the household's daily budget.
+- **System / design impact:** Unlock works in public mode as well as onboarding — the secret is how she is recognized, not a mode flag. No migration: `expires_at` is NOT NULL, so the owner row gets a fifty-year expiry _and_ the cron excludes the key. Gut bonds for her key on `owner`, so they survive a new house IP. Usage for her writes to that same key, so her talk cannot spend the household's daily budget.
 - **Artifacts:** `src/lib/ellis/owner.ts`, `src/lib/ellis/owner.test.ts`, stream route, unlock route, `decayIpMemory.ts`, `ipMemory.ts`, `systemPrompt.ts`, `assemble.ts`, `config.ts`
 - **Phase / slice:** Owner tier
 - **Docs updated:** `.env.example`, `supabase/README.md`, onboarding page copy
@@ -112,7 +151,7 @@
 
 - **Decision:** Ellis stops being a guest on the GoE project and takes his own, holding all four tables (`ellis_usage`, `ellis_visitor_memory`, `ellis_global_traces`, `ellis_body`). Separately, the Anthropic hall is deleted — route, component, both content overlays, themed CSS, registry entry, and the chat panel variant.
 - **Why:** GoE is a private world build with its own residents and its own retention problems; a public site strangers can reach should not share a database with it, and what began as one borrowed table had grown to four. On the hall: it was built for a fellowship pitch, and once the target became a Claude Corps application a bespoke themed lobby for a single job posting read as overkill.
-- **System / design impact:** `NEXT_PUBLIC_SUPABASE_URL` and both keys repointed; these must match Vercel Production or Ellis's memory silently splits across two databases. No data migrated — `main` was serving a stale scaffold until 2026-08-21, so nothing but local testing had ever written to those tables. The hall *mechanism* survives with an empty registry; adding one later costs an entry plus a markdown file.
+- **System / design impact:** `NEXT_PUBLIC_SUPABASE_URL` and both keys repointed; these must match Vercel Production or Ellis's memory silently splits across two databases. No data migrated — `main` was serving a stale scaffold until 2026-08-21, so nothing but local testing had ever written to those tables. The hall _mechanism_ survives with an empty registry; adding one later costs an entry plus a markdown file.
 - **Artifacts:** `supabase/README.md`, `npm run db:bundle`, `src/lib/ellis/halls/registry.ts`
 - **Docs updated:** `supabase/README.md` rewritten from "one table on the GoE project"
 
@@ -284,25 +323,25 @@
 
 ## Open questions (research backlog)
 
-| Question | Blocks | Owner |
-| --- | --- | --- |
-| Site wordmark — `tybuilds` vs `Ellis Hall` | Polish / OG | Ty |
-| Contact email final | Footer mailto | Ty |
-| All five migrations applied on Ellis's own project? | Public rate limits, spend ledger, body persistence | Ty |
-| Present-tense ME docs still describe the session-scoped interior | Doc accuracy | Wren |
-| Illustrated Ellis avatar | Deferred | Ty |
+| Question                                                         | Blocks                                             | Owner |
+| ---------------------------------------------------------------- | -------------------------------------------------- | ----- |
+| Site wordmark — `tybuilds` vs `Ellis Hall`                       | Polish / OG                                        | Ty    |
+| Contact email final                                              | Footer mailto                                      | Ty    |
+| All five migrations applied on Ellis's own project?              | Public rate limits, spend ledger, body persistence | Ty    |
+| Present-tense ME docs still describe the session-scoped interior | Doc accuracy                                       | Wren  |
+| Illustrated Ellis avatar                                         | Deferred                                           | Ty    |
 
 ---
 
 ## Superseded
 
-| Date | Was | Superseded by |
-| --- | --- | --- |
-| 2026-06-09 | Wren pre-fills `ty-earnest` before scaffold | **Ellis earns Ty** (2026-06-11) |
-| 2026-06-09 | Dedicated Supabase project for Ellis | **GoE project `ellis_usage`** (2026-06-10) |
-| 2026-06-10 | GoE project `ellis_usage` | **Dedicated Supabase project** (2026-08-21) — the 2026-06-09 instinct was right; the borrowed table grew to four |
-| 2026-06-11 | Session-scoped interior, one per visitor | **One persistent body** (2026-08-21) |
+| Date       | Was                                         | Superseded by                                                                                                    |
+| ---------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 2026-06-09 | Wren pre-fills `ty-earnest` before scaffold | **Ellis earns Ty** (2026-06-11)                                                                                  |
+| 2026-06-09 | Dedicated Supabase project for Ellis        | **GoE project `ellis_usage`** (2026-06-10)                                                                       |
+| 2026-06-10 | GoE project `ellis_usage`                   | **Dedicated Supabase project** (2026-08-21) — the 2026-06-09 instinct was right; the borrowed table grew to four |
+| 2026-06-11 | Session-scoped interior, one per visitor    | **One persistent body** (2026-08-21)                                                                             |
 
 ---
 
-*Append at top of **Log** section. Doctrine §10 stays summary-only — detail lives here.*
+_Append at top of **Log** section. Doctrine §10 stays summary-only — detail lives here._

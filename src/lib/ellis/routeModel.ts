@@ -13,7 +13,7 @@
  * restoring escalation means changing this function and nothing else.
  */
 
-export type ModelDecision = 'haiku' | 'sonnet';
+export type ModelDecision = "haiku" | "sonnet";
 
 interface RouterContext {
   messages: Array<{ role: string; content: string }>;
@@ -24,16 +24,19 @@ interface RouterContext {
 
 export function routeModel(
   _ctx: RouterContext,
-  _sessionModels: ('haiku' | 'sonnet')[]
+  _sessionModels: ("haiku" | "sonnet")[],
 ): ModelDecision {
-  return 'haiku';
+  void _ctx;
+  void _sessionModels;
+  return "haiku";
 }
 
 export function explainRouting(
   model: ModelDecision,
-  _context: RouterContext
+  _context: RouterContext,
 ): string {
-  return model === 'haiku'
-    ? 'Using Claude Haiku (all turns; escalation disabled to preserve prompt cache)'
+  void _context;
+  return model === "haiku"
+    ? "Using Claude Haiku (all turns; escalation disabled to preserve prompt cache)"
     : `Using ${model}`;
 }

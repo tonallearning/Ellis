@@ -15,6 +15,7 @@ type ChatPanelProps = {
   hall?: string;
   openingMessage?: string;
   maxMessageChars?: number;
+  maxHistoryMessages?: number;
 };
 
 export function ChatPanel({
@@ -23,6 +24,7 @@ export function ChatPanel({
   hall = "default",
   openingMessage,
   maxMessageChars = 12000,
+  maxHistoryMessages = 30,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     openingMessage ? [{ role: "assistant", content: openingMessage }] : [],
@@ -39,22 +41,26 @@ export function ChatPanel({
   const [restored, setRestored] = useState(false);
 
   useEffect(() => {
-    try {
-      const saved = window.sessionStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved) as {
-          messages?: ChatMessage[];
-          sessionId?: string | null;
-        };
-        if (Array.isArray(parsed.messages) && parsed.messages.length > 0) {
-          setMessages(parsed.messages);
+    const restoreId = window.setTimeout(() => {
+      try {
+        const saved = window.sessionStorage.getItem(storageKey);
+        if (saved) {
+          const parsed = JSON.parse(saved) as {
+            messages?: ChatMessage[];
+            sessionId?: string | null;
+          };
+          if (Array.isArray(parsed.messages) && parsed.messages.length > 0) {
+            setMessages(parsed.messages);
+          }
+          if (parsed.sessionId) setSessionId(parsed.sessionId);
         }
-        if (parsed.sessionId) setSessionId(parsed.sessionId);
+      } catch {
+        // Malformed or blocked storage should cost the transcript, not the page.
       }
-    } catch {
-      // Malformed or blocked storage should cost the transcript, not the page.
-    }
-    setRestored(true);
+      setRestored(true);
+    }, 0);
+
+    return () => window.clearTimeout(restoreId);
   }, [storageKey]);
 
   useEffect(() => {
@@ -113,7 +119,7 @@ export function ChatPanel({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: nextMessages,
+            messages: nextMessages.slice(-maxHistoryMessages),
             ...(sessionId ? { sessionId } : {}),
             hall,
           }),
@@ -124,7 +130,9 @@ export function ChatPanel({
           const payload = (await response.json().catch(() => ({}))) as {
             error?: string;
           };
-          throw new Error(payload.error ?? `Request failed (${response.status})`);
+          throw new Error(
+            payload.error ?? `Request failed (${response.status})`,
+          );
         }
 
         if (!response.body) {
@@ -189,7 +197,7 @@ export function ChatPanel({
         setStreaming(false);
       }
     },
-    [chatEnabled, streaming, messages, sessionId, hall],
+    [chatEnabled, streaming, messages, sessionId, hall, maxHistoryMessages],
   );
 
   function onSubmit(event: FormEvent) {

@@ -27,11 +27,29 @@
 
 ## Log
 
+### 2026-10-10 — Funded public-mode stream passes
+
+- **Context:** Follow-up release smoke test after Anthropic API credit was added; local production server with `ELLIS_MODE=public`.
+- **Symptom:** Previous smoke test could not generate because the Anthropic workspace had no remaining credit.
+- **Cause:** Billing only; the hardened stream path itself was sound.
+- **Fix:** Ty topped off the Anthropic API account.
+- **Verified:** A fresh anonymous request opened a UUID-bound session, streamed 12 text token events from Haiku, and finished with one valid `done` event and `messageCount: 1`. No generic error event or connection failure occurred.
+- **Notes:** Application runtime is ready for a deployment smoke test. Production remains locked until the intended working-tree scope is committed and deployed.
+
+### 2026-10-10 — Public smoke test reached an unfunded Anthropic account
+
+- **Context:** Public-release security gate; local production build with `ELLIS_MODE=public`.
+- **Symptom:** The API emitted session metadata, then the connection closed before any token arrived. Anthropic returned HTTP 400: the workspace credit balance was too low.
+- **Cause:** The Anthropic account cannot currently fund a generation. The stream iterator raised after the HTTP response had already begun, and the route did not catch errors inside `ReadableStream.start`.
+- **Fix:** Catch upstream iteration failures inside the stream, log only the status code, emit a generic SSE error event, and close cleanly. Production dependencies were also upgraded to Next.js 16.4.0 and audited clean (`npm audit --omit=dev`).
+- **Verified:** Public-mode curl now receives a session event followed by `Ellis could not answer right now` and exits cleanly; forged owner cookie, malformed role, and invalid session tests reject correctly; 39 tests, typecheck, lint, and production build pass.
+- **Notes:** Do not switch production to public until Anthropic credit is added and one real reply completes. The Vercel MCP required by the deploy workflow is not connected in this task.
+
 ### 2026-08-21 — Two secrets were never filled in; IP salt fell back to a repo constant
 
 - **Context:** Applying the Supabase migrations for Ellis's own project. `set -a && . ./.env.local` failed with `parse error near '\n'`.
 - **Symptom:** zsh choked on line 9 of `.env.local`. Auditing every key showed `ELLIS_IP_HASH_SALT` and `CRON_SECRET` both still held the literal placeholder `<secret>` — the angle brackets read as shell redirection, which is what surfaced it.
-- **Cause:** Both were added in the B.12 honesty pass as `<placeholder>` and never generated. Worse than unset: `hashVisitorIp` read `process.env.ELLIS_IP_HASH_SALT || 'ellis-default-salt'`, so a missing salt silently downgraded to a constant visible to anyone reading the repo. IPv4 is 2^32 wide, so a known salt makes every stored hash reversible to a real address — the README promises visitors the opposite. The cron route rejected an *absent* secret but happily accepted `<secret>` as a valid token.
+- **Cause:** Both were added in the B.12 honesty pass as `<placeholder>` and never generated. Worse than unset: `hashVisitorIp` read `process.env.ELLIS_IP_HASH_SALT || 'ellis-default-salt'`, so a missing salt silently downgraded to a constant visible to anyone reading the repo. IPv4 is 2^32 wide, so a known salt makes every stored hash reversible to a real address — the README promises visitors the opposite. The cron route rejected an _absent_ secret but happily accepted `<secret>` as a valid token.
 - **Fix:** Generated 64-char hex for both. Extracted hashing into `src/lib/ellis/memory/hashVisitor.ts` (no DB import) with a guard that treats `<placeholder>` as unset, **throws** in production, and falls back to a per-process random salt in dev so recall breaks visibly instead of leaking quietly. Cron route now rejects placeholders and compares with `timingSafeEqual` behind a length check.
 - **Verified:** `npm test` 32/32, including five new salt-guard cases (the dev-fallback test asserts two fresh imports disagree, which a fixed constant would fail). Cron endpoint returns 401 for absent / wrong / placeholder / short tokens and 200 for the real one, running the decay job against the new project: `{"ok":true,"processed":0}`. `tsc --noEmit` clean.
 - **Notes:** Rotating the salt invalidates existing visitor hashes. Harmless here only because the new Supabase project is empty — on a populated database this would have orphaned every `ellis_visitor_memory` row and every gut bond in `ellis_body`. Both vars must be set in Vercel before production chat will serve at all, which is now deliberate.
@@ -130,11 +148,11 @@ Phase B additions:
 
 ## Known open issues
 
-| ID | Symptom | Status | Owner |
-| --- | --- | --- | --- |
-| DBG-001 | `ellis_usage` table may not exist on GoE yet | Open | Ty — run migration |
-| DBG-002 | Domain `tybuilds.tech` DNS → Vercel | Open | Phase C |
+| ID      | Symptom                                      | Status | Owner              |
+| ------- | -------------------------------------------- | ------ | ------------------ |
+| DBG-001 | `ellis_usage` table may not exist on GoE yet | Open   | Ty — run migration |
+| DBG-002 | Domain `tybuilds.tech` DNS → Vercel          | Open   | Phase C            |
 
 ---
 
-*Append at top of **Log** section.*
+_Append at top of **Log** section._

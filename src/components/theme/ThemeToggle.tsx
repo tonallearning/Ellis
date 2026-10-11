@@ -7,11 +7,11 @@ type Theme = "light" | "dark";
 function getThemeSnapshot(): Theme {
   const fromDom = document.documentElement.dataset.theme;
   if (fromDom === "light" || fromDom === "dark") return fromDom;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "dark";
 }
 
 function getServerSnapshot(): Theme {
-  return "light";
+  return "dark";
 }
 
 function subscribe(onStoreChange: () => void) {

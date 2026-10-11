@@ -3,32 +3,31 @@
  * Handles: load → mark return → assemble → record
  */
 
-import crypto from 'crypto';
-import type { SessionState } from './types';
-import type { IpVisitorMemory, EpisodBeat } from './memory/ipMemory';
+import crypto from "crypto";
+import type { SessionState } from "./types";
+import type { EpisodBeat } from "./memory/ipMemory";
 import {
-  loadIpMemory,
   recordIpVisit,
   generateDayLabel,
   markReturnVisit,
-} from './memory/ipMemory';
+} from "./memory/ipMemory";
 
-export { hashVisitorIp } from './memory/hashVisitor';
+export { hashVisitorIp } from "./memory/hashVisitor";
 
 /**
  * Extract visitor IP from request (check headers in order).
  */
 export function extractVisitorIp(headers: Headers): string {
-  const forwardedFor = headers.get('x-forwarded-for');
+  const forwardedFor = headers.get("x-forwarded-for");
   if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim();
+    return forwardedFor.split(",")[0].trim();
   }
 
-  const realIp = headers.get('x-real-ip');
+  const realIp = headers.get("x-real-ip");
   if (realIp) return realIp;
 
   // Fallback (localhost in dev)
-  return headers.get('cf-connecting-ip') || '127.0.0.1';
+  return headers.get("cf-connecting-ip") || "127.0.0.1";
 }
 
 /**
@@ -38,7 +37,6 @@ export function extractVisitorIp(headers: Headers): string {
 export function buildEpisodBeat(
   session: SessionState,
   userMessage: string,
-  ellisResponse: string
 ): EpisodBeat {
   const now = new Date();
 
@@ -46,11 +44,15 @@ export function buildEpisodBeat(
     beatId: crypto.randomUUID(),
     occurredAt: now,
     dayLabel: generateDayLabel(now, now),
-    summary: `${userMessage.substring(0, 80)}${userMessage.length > 80 ? '...' : ''}`,
-    resonance: assessResonance(session, userMessage, ellisResponse),
+    summary: `${userMessage.substring(0, 80)}${userMessage.length > 80 ? "..." : ""}`,
+    resonance: assessResonance(session, userMessage),
     theme: categorizeTheme(userMessage),
-    depthReached: session.interior.state.contactQuality === 'depth' ? 5 : 
-                 session.interior.state.contactQuality === 'genuine' ? 4 : 3,
+    depthReached:
+      session.interior.state.contactQuality === "depth"
+        ? 5
+        : session.interior.state.contactQuality === "genuine"
+          ? 4
+          : 3,
   };
 }
 
@@ -60,22 +62,21 @@ export function buildEpisodBeat(
 function assessResonance(
   session: SessionState,
   userMessage: string,
-  ellisResponse: string
 ): string | undefined {
   const lowerMsg = userMessage.toLowerCase();
-  
+
   // Heuristics for meaningful moments
-  if (lowerMsg.includes('why') || lowerMsg.includes('how does')) {
-    return 'Genuine curiosity about mechanics';
+  if (lowerMsg.includes("why") || lowerMsg.includes("how does")) {
+    return "Genuine curiosity about mechanics";
   }
-  if (lowerMsg.includes('role') || lowerMsg.includes('fit')) {
-    return 'Assessing personal/professional fit';
+  if (lowerMsg.includes("role") || lowerMsg.includes("fit")) {
+    return "Assessing personal/professional fit";
   }
-  if (lowerMsg.includes('code') || lowerMsg.includes('build')) {
-    return 'Technical depth; interested in implementation';
+  if (lowerMsg.includes("code") || lowerMsg.includes("build")) {
+    return "Technical depth; interested in implementation";
   }
-  if (session.interior.state.contactQuality === 'depth') {
-    return 'Deep engagement; meaningful exchange';
+  if (session.interior.state.contactQuality === "depth") {
+    return "Deep engagement; meaningful exchange";
   }
 
   return undefined;
@@ -87,38 +88,46 @@ function assessResonance(
 function categorizeTheme(userMessage: string): string {
   const lowerMsg = userMessage.toLowerCase();
 
-  if (lowerMsg.includes('architecture') || lowerMsg.includes('design')) {
-    return 'architecture';
+  if (lowerMsg.includes("architecture") || lowerMsg.includes("design")) {
+    return "architecture";
   }
-  if (lowerMsg.includes('ada') || lowerMsg.includes('vale') || lowerMsg.includes('tonal learning')) {
-    return 'projects';
+  if (
+    lowerMsg.includes("ada") ||
+    lowerMsg.includes("vale") ||
+    lowerMsg.includes("tonal learning")
+  ) {
+    return "projects";
   }
-  if (lowerMsg.includes('role') || lowerMsg.includes('hire') || lowerMsg.includes('fit')) {
-    return 'fit-assessment';
+  if (
+    lowerMsg.includes("role") ||
+    lowerMsg.includes("hire") ||
+    lowerMsg.includes("fit")
+  ) {
+    return "fit-assessment";
   }
-  if (lowerMsg.includes('code') || lowerMsg.includes('technical')) {
-    return 'technical';
+  if (lowerMsg.includes("code") || lowerMsg.includes("technical")) {
+    return "technical";
   }
-  if (lowerMsg.includes('ty') || lowerMsg.includes('background')) {
-    return 'biography';
+  if (lowerMsg.includes("ty") || lowerMsg.includes("background")) {
+    return "biography";
   }
 
-  return 'general';
+  return "general";
 }
 
 /**
  * Build thread summary from multiple beats.
  */
 export function buildThreadSummary(beats: EpisodBeat[]): string {
-  if (beats.length === 0) return 'Brief interaction.';
+  if (beats.length === 0) return "Brief interaction.";
 
   const themes = beats.map((b) => b.theme).filter(Boolean);
   const uniqueThemes = [...new Set(themes)];
   const avgDepth = Math.round(
-    beats.reduce((sum, b) => sum + b.depthReached, 0) / beats.length
+    beats.reduce((sum, b) => sum + b.depthReached, 0) / beats.length,
   );
 
-  return `Explored: ${uniqueThemes.join(', ')}. Average engagement depth: ${avgDepth}/5.`;
+  return `Explored: ${uniqueThemes.join(", ")}. Average engagement depth: ${avgDepth}/5.`;
 }
 
 /**
@@ -127,7 +136,6 @@ export function buildThreadSummary(beats: EpisodBeat[]): string {
 export async function recordIpVisitAfterStream(
   ipHash: string,
   sessionBeats: EpisodBeat[],
-  ellisResponseLength: number
 ): Promise<void> {
   const summary = buildThreadSummary(sessionBeats);
   await recordIpVisit({
@@ -137,6 +145,6 @@ export async function recordIpVisitAfterStream(
   });
 
   // Mark as return visit in ellis_usage if applicable
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
   await markReturnVisit(ipHash, today);
 }

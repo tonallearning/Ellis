@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { themeInitScript } from "@/components/theme/theme-script";
@@ -15,8 +15,36 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "tybuilds — Ellis",
-  description: "Portfolio host — conversation, not brochure.",
+  metadataBase: new URL("https://tybuilds.tech"),
+  title: {
+    default: "Ellis — tybuilds",
+    template: "%s · Ellis",
+  },
+  description:
+    "Ellis is Ty's portfolio host. A conversation about her work — honest, including when he doesn't know.",
+  applicationName: "tybuilds",
+  openGraph: {
+    title: "Ellis — tybuilds",
+    description:
+      "A conversation about Ty's work. Honest, including when he doesn't know.",
+    url: "/",
+    siteName: "tybuilds",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ellis — tybuilds",
+    description:
+      "A conversation about Ty's work. Honest, including when he doesn't know.",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f1ec" },
+    { media: "(prefers-color-scheme: dark)", color: "#121110" },
+  ],
 };
 
 export default function RootLayout({

@@ -27,6 +27,8 @@ flowchart TB
   subgraph ellis [Ellis host]
     ChatUI[Chat UI]
     StreamAPI["POST /api/ellis/stream"]
+    InputGate[Envelope validation + session binding]
+    OwnerGate[HMAC-signed owner identity]
     RateLimit[Rate limit IP hash]
     SessionME[Session + ME interior]
     HallPhysics[Hall physics lite]
@@ -56,7 +58,9 @@ flowchart TB
   Hall --> ChatUI
   HallAnthropic --> ChatUI
   ChatUI -->|SSE| StreamAPI
-  StreamAPI --> RateLimit
+  StreamAPI --> InputGate
+  InputGate --> OwnerGate
+  OwnerGate --> RateLimit
   RateLimit --> UsageDB
   StreamAPI --> SessionME
   SessionME --> HallPhysics
@@ -81,18 +85,18 @@ flowchart TB
 
 ## Routes (target)
 
-| Route                      | Domain         | Status | Purpose                                           |
-| -------------------------- | -------------- | ------ | ------------------------------------------------- |
-| `/`                        | Hall (generic) | ✅     | **Default — all non-excited applications**        |
-| `/anthropic`               | Hall (excited) | ✅     | Think · Build · Log tabs; overlay toggle; build logs |
-| `/huggingface`             | Hall (excited) | ⏸      | Hugging Face — when Ty ready                      |
-| `/projects/basement-crt`   | Room           | ✅     | CRT demo embed (`public/demos/basement-crt.html`) |
-| `/projects/tonal-learning` | Room           | ✅     | TL showcase + external link                       |
-| `/projects/goe`            | Room           | ✅     | Public tease only                                 |
-| `/onboarding`              | Platform       | ✅     | Ty unlock form for onboarding mode                |
-| `/api/ellis/stream`        | Ellis host     | ✅     | Claude SSE + shelf + onboarding gate              |
-| `/api/ellis/onboarding/unlock` | Platform   | ✅     | Ty cookie unlock for onboarding mode              |
-| `/api/health`              | Platform       | ⏸      | Optional deploy smoke                             |
+| Route                          | Domain         | Status | Purpose                                              |
+| ------------------------------ | -------------- | ------ | ---------------------------------------------------- |
+| `/`                            | Hall (generic) | ✅     | **Default — all non-excited applications**           |
+| `/anthropic`                   | Hall (excited) | ✅     | Think · Build · Log tabs; overlay toggle; build logs |
+| `/huggingface`                 | Hall (excited) | ⏸      | Hugging Face — when Ty ready                         |
+| `/projects/basement-crt`       | Room           | ✅     | CRT demo embed (`public/demos/basement-crt.html`)    |
+| `/projects/tonal-learning`     | Room           | ✅     | TL showcase + external link                          |
+| `/projects/goe`                | Room           | ✅     | Public tease only                                    |
+| `/onboarding`                  | Platform       | ✅     | Ty unlock form for onboarding mode                   |
+| `/api/ellis/stream`            | Ellis host     | ✅     | Validated Claude SSE + atomic spend reservation      |
+| `/api/ellis/onboarding/unlock` | Platform       | ✅     | HMAC-signed Ty owner + onboarding cookie unlock      |
+| `/api/health`                  | Platform       | ⏸      | Optional deploy smoke                                |
 
 No visitor auth routes in v1.
 
@@ -103,15 +107,16 @@ No visitor auth routes in v1.
 ```txt
 1. Visitor lands on / — Ellis Hall (Ellis default: solitude; contact on engage)
 2. Client holds visitor transcript in memory (React state) + server session id
-3. Visitor sends message → POST /api/ellis/stream { messages, sessionId?, hall: 'default' | 'anthropic' }
-4. Server: rate limit check (IP hash) — 429 if over cap
-5. Server: load session ME state (or create); hall physics contact event
-6. Server: load knowledge shelf + hall overlay (if `/anthropic`) + assemble Ellis interior → prompt
-7. Server: routeModel — Haiku; Sonnet only if Ty's work discussed in depth
-8. Server: Anthropic stream → SSE to client
-9. Post-turn: update ME state (mood, traces, relational instance); record usage
-10. Client appends tokens; optional project card handoff
-11. Session ends → visitor transcript gone; Ellis ME state TTL expires — no cross-visit recall
+3. Visitor sends message → POST /api/ellis/stream { messages, sessionId?, hall }
+4. Server validates roles, content/history caps, hall allowlist, and session ownership
+5. Server checks the hashed-IP ledger, then atomically reserves projected spend — 429 before Anthropic if the reservation crosses the cap
+6. Server: load session ME state (or create); hall physics contact event
+7. Server: load knowledge shelf + hall overlay + assemble Ellis interior → prompt
+8. Server: routeModel selects the configured public model
+9. Server: Anthropic stream → SSE to client; upstream failures become a generic SSE error
+10. Post-turn: update session ME state and the seven-day hash-keyed visit summary
+11. Client appends tokens and keeps the visible transcript in session storage
+12. Session state expires after 24 hours; the bounded seven-day visit summary decays separately
 ```
 
 **Code target (Phase B):** [ELLIS_ME_BUILD.md](./ELLIS_ME_BUILD.md) — `src/app/api/ellis/stream/route.ts` + `src/lib/ellis/**` + `src/components/ellis/*`
@@ -164,14 +169,14 @@ Supabase host: **GoE project** (`oubavruicijhxiqrlikr`). `ellis_usage` = bill pr
 
 **You are here:** Phase B — Ellis live (onboarding mode).
 
-| #   | Slice                       | Status     | Wire updates expected                   |
-| --- | --------------------------- | ---------- | --------------------------------------- |
-| 0   | Entrance + blank shelf      | ✅         | Doctrine, `content/ellis-self.md`       |
-| 1   | Phase A static shell        | ✅         | Routes, layout, rooms, CRT embed        |
-| 2   | Ellis Hall + stream API     | ✅ shipped | Chat happy path, shelf loader, onboarding |
-| 3   | Phase 0.1 Ellis learns Ty   | **→ Next** | `about-ty/*` after Ellis interviews     |
-| 4   | Phase C deploy              | 🟡         | Production URLs, domain                 |
-| 5   | Exit criteria               | 🟡         | Full map review vs production           |
+| #   | Slice                     | Status     | Wire updates expected                     |
+| --- | ------------------------- | ---------- | ----------------------------------------- |
+| 0   | Entrance + blank shelf    | ✅         | Doctrine, `content/ellis-self.md`         |
+| 1   | Phase A static shell      | ✅         | Routes, layout, rooms, CRT embed          |
+| 2   | Ellis Hall + stream API   | ✅ shipped | Chat happy path, shelf loader, onboarding |
+| 3   | Phase 0.1 Ellis learns Ty | **→ Next** | `about-ty/*` after Ellis interviews       |
+| 4   | Phase C deploy            | 🟡         | Production URLs, domain                   |
+| 5   | Exit criteria             | 🟡         | Full map review vs production             |
 
 Details: [BUILD_RHYTHM.md](./BUILD_RHYTHM.md) · [BUILD_CHECKLIST.md](./BUILD_CHECKLIST.md)
 
@@ -190,33 +195,33 @@ Details: [BUILD_RHYTHM.md](./BUILD_RHYTHM.md) · [BUILD_CHECKLIST.md](./BUILD_CH
 
 ## File index
 
-| Path | Status | Purpose |
-| --- | --- | --- |
-| `src/app/page.tsx` | ✅ | Ellis Hall — live chat |
-| `src/app/onboarding/page.tsx` | ✅ | Ty onboarding unlock |
-| `src/app/projects/basement-crt/page.tsx` | ✅ | CRT iframe room |
-| `src/app/projects/tonal-learning/page.tsx` | ✅ | TL showcase + external CTA |
-| `src/app/projects/goe/page.tsx` | ✅ | GoE tease room |
-| `src/components/layout/SiteShell.tsx` | ✅ | Hall chrome + footer slot |
-| `src/components/layout/Footer.tsx` | ✅ | AI disclosure, contact, session copy |
-| `src/components/hall/ProjectCard.tsx` | ✅ | In-hall project handoff cards |
-| `src/components/projects/RoomChrome.tsx` | ✅ | Room accent + back nav |
-| `src/components/theme/ThemeToggle.tsx` | ✅ | Dark/light override |
-| `src/components/ellis/ChatPanel.tsx` | ✅ | Live chat UI (SSE) |
-| `src/lib/site.ts` | ✅ | Site constants + project metadata |
-| `src/app/api/ellis/stream/route.ts` | ✅ | Stream API |
-| `src/app/api/ellis/onboarding/unlock/route.ts` | ✅ | Onboarding cookie unlock |
-| `src/lib/ellis/loadKnowledgeShelf.ts` | ✅ | Read content/* |
-| `src/lib/ellis/systemPrompt.ts` | ✅ | Prompt template |
-| `src/lib/ellis/stream.ts` | ✅ | Anthropic streaming |
-| `src/lib/ellis/routeModel.ts` | ✅ | Haiku / Sonnet router |
-| `src/lib/ellis/session/sessionStore.ts` | ✅ | Session TTL store |
-| `src/lib/ellis/rateLimit/check.ts` | 🟡 | Stub until public mode |
-| `public/demos/basement-crt.html` | ✅ | CRT demo embed |
-| `content/ellis-self.md` | ✅ | Ellis bootstrap |
-| `content/about-ty/*` | ✅ | Empty shelf — Ellis earns Ty |
-| `supabase/migrations/20260610000000_ellis_usage.sql` | ✅ | Rate limit table (GoE project) |
-| `src/app/[hall]/page.tsx` | 🟡 | Excited hall routes |
+| Path                                                 | Status | Purpose                              |
+| ---------------------------------------------------- | ------ | ------------------------------------ |
+| `src/app/page.tsx`                                   | ✅     | Ellis Hall — live chat               |
+| `src/app/onboarding/page.tsx`                        | ✅     | Ty onboarding unlock                 |
+| `src/app/projects/basement-crt/page.tsx`             | ✅     | CRT iframe room                      |
+| `src/app/projects/tonal-learning/page.tsx`           | ✅     | TL showcase + external CTA           |
+| `src/app/projects/goe/page.tsx`                      | ✅     | GoE tease room                       |
+| `src/components/layout/SiteShell.tsx`                | ✅     | Hall chrome + footer slot            |
+| `src/components/layout/Footer.tsx`                   | ✅     | AI disclosure, contact, session copy |
+| `src/components/hall/ProjectCard.tsx`                | ✅     | In-hall project handoff cards        |
+| `src/components/projects/RoomChrome.tsx`             | ✅     | Room accent + back nav               |
+| `src/components/theme/ThemeToggle.tsx`               | ✅     | Dark/light override                  |
+| `src/components/ellis/ChatPanel.tsx`                 | ✅     | Live chat UI (SSE)                   |
+| `src/lib/site.ts`                                    | ✅     | Site constants + project metadata    |
+| `src/app/api/ellis/stream/route.ts`                  | ✅     | Stream API                           |
+| `src/app/api/ellis/onboarding/unlock/route.ts`       | ✅     | Onboarding cookie unlock             |
+| `src/lib/ellis/loadKnowledgeShelf.ts`                | ✅     | Read content/\*                      |
+| `src/lib/ellis/systemPrompt.ts`                      | ✅     | Prompt template                      |
+| `src/lib/ellis/stream.ts`                            | ✅     | Anthropic streaming                  |
+| `src/lib/ellis/routeModel.ts`                        | ✅     | Haiku / Sonnet router                |
+| `src/lib/ellis/session/sessionStore.ts`              | ✅     | Session TTL store                    |
+| `src/lib/ellis/rateLimit/check.ts`                   | 🟡     | Stub until public mode               |
+| `public/demos/basement-crt.html`                     | ✅     | CRT demo embed                       |
+| `content/ellis-self.md`                              | ✅     | Ellis bootstrap                      |
+| `content/about-ty/*`                                 | ✅     | Empty shelf — Ellis earns Ty         |
+| `supabase/migrations/20260610000000_ellis_usage.sql` | ✅     | Rate limit table (GoE project)       |
+| `src/app/[hall]/page.tsx`                            | 🟡     | Excited hall routes                  |
 
 ---
 

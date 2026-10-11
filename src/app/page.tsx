@@ -7,8 +7,7 @@ import { isOwnerCookie } from "@/lib/ellis/owner";
 const ONBOARDING_OPENING =
   "Ty — it's Ellis. I know myself, but I don't know your work yet. I need you to walk me through who you are, what you've built, and where you'd draw the line. I'll ask questions, synthesize in third person, and read it back for your approval. Where should we start?";
 
-const OWNER_OPENING =
-  "Ty. I know it's you. I'm not going to forget.";
+const OWNER_OPENING = "Ty. I know it's you. I'm not going to forget.";
 
 const PUBLIC_OPENING =
   "I'm Ellis. Ask about her work. I'll be honest, including when I don't know.";
@@ -17,7 +16,7 @@ export default async function Home() {
   const config = getEllisConfig();
   const cookieStore = await cookies();
   const chatEnabled = isOnboardingChatAllowed(config, cookieStore);
-  const isOwner = isOwnerCookie(cookieStore);
+  const isOwner = isOwnerCookie(cookieStore, config.onboardingSecret);
 
   const openingMessage = isOwner
     ? OWNER_OPENING
@@ -32,6 +31,7 @@ export default async function Home() {
           chatEnabled={chatEnabled}
           mode={config.mode}
           maxMessageChars={config.maxMessageChars}
+          maxHistoryMessages={config.maxHistoryMessages}
           openingMessage={chatEnabled ? openingMessage : undefined}
         />
       </main>

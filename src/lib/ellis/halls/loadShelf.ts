@@ -3,10 +3,10 @@
  * Server-side only; assembled for prompt injection
  */
 
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync } from "fs";
+import { join } from "path";
 
-const CONTENT_ROOT = join(process.cwd(), 'content');
+const CONTENT_ROOT = join(process.cwd(), "content");
 
 export interface KnowledgeShelf {
   ellisSelf: string;
@@ -24,29 +24,29 @@ export interface KnowledgeShelf {
  */
 function loadEllisSelf(): string {
   try {
-    return readFileSync(join(CONTENT_ROOT, 'ellis-self.md'), 'utf-8');
+    return readFileSync(join(CONTENT_ROOT, "ellis-self.md"), "utf-8");
   } catch (err) {
-    console.error('[SHELF] ellis-self.md not found', err);
-    return '# Ellis\nI am learning who I am.';
+    console.error("[SHELF] ellis-self.md not found", err);
+    return "# Ellis\nI am learning who I am.";
   }
 }
 
 /**
  * Load Ty knowledge (empty until onboarding)
  */
-function loadAboutTy(): KnowledgeShelf['aboutTy'] {
-  const files: Array<[string, keyof KnowledgeShelf['aboutTy']]> = [
-    ['earnest.md', 'earnest'],
-    ['facts.json', 'facts'],
-    ['goe-teach.md', 'goeTeach'],
-    ['philosophy.md', 'philosophy'],
+function loadAboutTy(): KnowledgeShelf["aboutTy"] {
+  const files: Array<[string, keyof KnowledgeShelf["aboutTy"]]> = [
+    ["earnest.md", "earnest"],
+    ["facts.json", "facts"],
+    ["goe-teach.md", "goeTeach"],
+    ["philosophy.md", "philosophy"],
   ];
-  const shelf: KnowledgeShelf['aboutTy'] = {};
+  const shelf: KnowledgeShelf["aboutTy"] = {};
 
   for (const [file, key] of files) {
     try {
-      shelf[key] = readFileSync(join(CONTENT_ROOT, 'about-ty', file), 'utf-8');
-    } catch (err) {
+      shelf[key] = readFileSync(join(CONTENT_ROOT, "about-ty", file), "utf-8");
+    } catch {
       // File not found (expected until onboarding)
     }
   }
@@ -57,11 +57,11 @@ function loadAboutTy(): KnowledgeShelf['aboutTy'] {
 /**
  * Load hall-specific overlay
  */
-function loadHallOverlay(hall: 'default' | string): string | undefined {
-  if (hall === 'default') return undefined;
+function loadHallOverlay(hall: "default" | string): string | undefined {
+  if (hall === "default") return undefined;
 
   try {
-    return readFileSync(join(CONTENT_ROOT, 'halls', `${hall}.md`), 'utf-8');
+    return readFileSync(join(CONTENT_ROOT, "halls", `${hall}.md`), "utf-8");
   } catch (err) {
     console.warn(`[SHELF] Hall overlay not found: ${hall}`, err);
     return undefined;
@@ -72,7 +72,7 @@ function loadHallOverlay(hall: 'default' | string): string | undefined {
  * Assemble full shelf
  */
 export function loadKnowledgeShelf(
-  hall: 'default' | string = 'default'
+  hall: "default" | string = "default",
 ): KnowledgeShelf {
   return {
     ellisSelf: loadEllisSelf(),
@@ -87,35 +87,35 @@ export function loadKnowledgeShelf(
 export function formatShelfForPrompt(shelf: KnowledgeShelf): string {
   const blocks: string[] = [];
 
-  blocks.push('## Ellis (self-knowledge)');
+  blocks.push("## Ellis (self-knowledge)");
   blocks.push(shelf.ellisSelf);
 
   if (shelf.aboutTy.earnest) {
-    blocks.push('\n## About Ty (earnest)');
+    blocks.push("\n## About Ty (earnest)");
     blocks.push(shelf.aboutTy.earnest);
   }
 
   if (shelf.aboutTy.facts) {
-    blocks.push('\n## About Ty (verifiable facts)');
+    blocks.push("\n## About Ty (verifiable facts)");
     blocks.push(shelf.aboutTy.facts);
   }
 
   if (shelf.aboutTy.goeTeach) {
-    blocks.push('\n## GoE (what you may teach)');
+    blocks.push("\n## GoE (what you may teach)");
     blocks.push(shelf.aboutTy.goeTeach);
   }
 
   if (shelf.aboutTy.philosophy) {
-    blocks.push('\n## Philosophy (what you may teach)');
+    blocks.push("\n## Philosophy (what you may teach)");
     blocks.push(shelf.aboutTy.philosophy);
   }
 
   if (shelf.hallOverlay) {
-    blocks.push('\n## This hall (context)');
+    blocks.push("\n## This hall (context)");
     blocks.push(shelf.hallOverlay);
   }
 
-  return blocks.join('\n');
+  return blocks.join("\n");
 }
 
 /**
@@ -124,7 +124,7 @@ export function formatShelfForPrompt(shelf: KnowledgeShelf): string {
  */
 export function validateShelf(shelf: KnowledgeShelf): boolean {
   if (!shelf.ellisSelf || shelf.ellisSelf.length < 50) {
-    console.error('[SHELF] Ellis self-knowledge is missing or too short');
+    console.error("[SHELF] Ellis self-knowledge is missing or too short");
     return false;
   }
 

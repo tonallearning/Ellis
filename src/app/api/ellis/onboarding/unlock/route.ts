@@ -1,20 +1,40 @@
+import { timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getEllisConfig, onboardingCookieName } from "@/lib/ellis/config";
-import { OWNER_COOKIE, ownerCookieOptions } from "@/lib/ellis/owner";
+import {
+  OWNER_COOKIE,
+  createOnboardingCookieValue,
+  createOwnerCookieValue,
+  ownerCookieOptions,
+} from "@/lib/ellis/owner";
 
 function setTyCookies(
   cookieStore: Awaited<ReturnType<typeof cookies>>,
   secure: boolean,
+  secret: string,
 ) {
-  cookieStore.set(onboardingCookieName(), "1", {
+  cookieStore.set(onboardingCookieName(), createOnboardingCookieValue(secret), {
     httpOnly: true,
     sameSite: "lax",
     secure,
     maxAge: 60 * 60 * 24 * 7,
     path: "/",
   });
-  cookieStore.set(OWNER_COOKIE, "1", ownerCookieOptions(secure));
+  cookieStore.set(
+    OWNER_COOKIE,
+    createOwnerCookieValue(secret),
+    ownerCookieOptions(secure),
+  );
+}
+
+function secretsMatch(provided: string, expected: string): boolean {
+  const providedBuffer = Buffer.from(provided);
+  const expectedBuffer = Buffer.from(expected);
+  return (
+    providedBuffer.length === expectedBuffer.length &&
+    timingSafeEqual(providedBuffer, expectedBuffer)
+  );
 }
 
 /**
@@ -35,7 +55,15 @@ export async function POST(request: Request) {
       );
     }
     const cookieStore = await cookies();
-    setTyCookies(cookieStore, false);
+    // Development-only convenience when no secret exists. These cookies are
+    // intentionally not accepted by the signed-cookie verifier.
+    cookieStore.set(onboardingCookieName(), "development", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false,
+      maxAge: 60 * 60 * 24,
+      path: "/",
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -46,12 +74,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (body.secret !== secret) {
+  if (
+    typeof body.secret !== "string" ||
+    body.secret.length > 1024 ||
+    !secretsMatch(body.secret, secret)
+  ) {
     return NextResponse.json({ error: "Invalid secret" }, { status: 401 });
   }
 
   const cookieStore = await cookies();
-  setTyCookies(cookieStore, secure);
+  setTyCookies(cookieStore, secure, secret);
 
   return NextResponse.json({ ok: true });
 }

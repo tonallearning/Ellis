@@ -5,29 +5,45 @@
 
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import Anthropic from "@anthropic-ai/sdk";
 
-import { createSession, getSession, updateSession } from "@/lib/ellis/session/store";
+import {
+  createSession,
+  getSession,
+  updateSession,
+} from "@/lib/ellis/session/store";
 import { loadKnowledgeShelf, validateShelf } from "@/lib/ellis/halls/loadShelf";
-import { isValidHall } from "@/lib/ellis/halls/registry";
 import { routeModel } from "@/lib/ellis/routeModel";
 import { buildSystemPrompt } from "@/lib/ellis/systemPrompt";
-import { assembleEllisInterior, formatEllisInteriorForModel } from "@/lib/ellis/me/assemble";
-import { checkRateLimit, recordUsage, estimateCostUsd } from "@/lib/ellis/rateLimit/check";
+import {
+  assembleEllisInterior,
+  formatEllisInteriorForModel,
+} from "@/lib/ellis/me/assemble";
+import {
+  checkRateLimit,
+  recordUsage,
+  estimateCostUsd,
+} from "@/lib/ellis/rateLimit/check";
 import { getEllisConfig } from "@/lib/ellis/config";
 import { assessContactQuality } from "@/lib/ellis/me/state";
 import {
   hashVisitorIp,
   buildEpisodBeat,
+  extractVisitorIp,
   recordIpVisitAfterStream,
 } from "@/lib/ellis/ipMemoryIntegration";
 import { loadIpMemory } from "@/lib/ellis/memory/ipMemory";
-import { loadBody, saveBody, minutesSinceLastTurn } from "@/lib/ellis/me/body/store";
+import {
+  loadBody,
+  saveBody,
+  minutesSinceLastTurn,
+} from "@/lib/ellis/me/body/store";
 import { applyEvent, type GutEvent } from "@/lib/ellis/me/body/gut";
 import { computeInboundGains, renderBody } from "@/lib/ellis/me/body/membrane";
 import { computeTempoTarget, tick } from "@/lib/ellis/me/body/pulse";
 import { isOwnerCookie, OWNER_MEMORY_KEY } from "@/lib/ellis/owner";
+import { validateChatInput } from "@/lib/ellis/validateChatInput";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,6 +68,8 @@ function sse(data: Record<string, unknown>): string {
 
 export async function POST(request: Request) {
   try {
+    const config = getEllisConfig();
+
     // Step 1: Parse request body
     let body: unknown;
     try {
@@ -60,57 +78,44 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const input = body as {
-      messages?: unknown;
-      sessionId?: string;
-      hall?: string;
-    };
-
-    // Step 2: Validate messages
-    if (
-      !input.messages ||
-      !Array.isArray(input.messages) ||
-      input.messages.length === 0
-    ) {
-      return NextResponse.json({ error: "Messages required" }, { status: 400 });
+    // Steps 2–3: Validate the entire client-controlled envelope before using it.
+    const validated = validateChatInput(body, {
+      maxMessageChars: config.maxMessageChars,
+      maxHistoryMessages: config.maxHistoryMessages,
+    });
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
     }
-
-    const messages = input.messages as Array<{
-      role: "user" | "assistant";
-      content: string;
-    }>;
-
-    // Step 3: Validate hall
-    const hall = (input.hall as string) || "default";
-    if (!isValidHall(hall)) {
-      return NextResponse.json({ error: "Invalid hall" }, { status: 400 });
-    }
+    const { messages, sessionId, hall } = validated.value;
 
     // Step 4: Hash visitor ID
-    const ip = request.headers.get("x-forwarded-for");
+    const ip = extractVisitorIp(request.headers);
     const ua = request.headers.get("user-agent");
     const visitorId = hashVisitorId(ip, ua);
 
     // Step 4.5: Ty is a cookie, not an IP. The house shares a connection.
     const cookieStore = await cookies();
-    const isOwner = isOwnerCookie(cookieStore);
-    const ipHash = hashVisitorIp(ip || "unknown");
+    const isOwner = isOwnerCookie(cookieStore, config.onboardingSecret);
+    const ipHash = hashVisitorIp(ip);
     const memoryKey = isOwner ? OWNER_MEMORY_KEY : ipHash;
     const ipMemory = await loadIpMemory(memoryKey);
 
     // Step 5: Get or create session
-    let session = input.sessionId ? getSession(input.sessionId as string) : null;
+    let session = sessionId ? getSession(sessionId) : null;
+    if (session && (session.visitorId !== visitorId || session.hall !== hall)) {
+      session = null;
+    }
     const isFirstMessage = !session;
     const isReturnVisit = ipMemory && !ipMemory.isExpired;
 
     if (!session) {
-      session = createSession(`session-${Date.now()}-${Math.random()}`, visitorId, hall);
+      session = createSession(`session-${randomUUID()}`, visitorId, hall);
 
       const userMsg = messages[messages.length - 1]?.content || "";
       session.interior.state.contactQuality = assessContactQuality(
         userMsg,
         [],
-        true
+        true,
       );
     }
 
@@ -138,13 +143,13 @@ export async function POST(request: Request) {
       ellisBody.gut = applyEvent(
         ellisBody.gut,
         { type: "refused", visitorId: ipHash },
-        computeInboundGains(ellisBody.gut)
+        computeInboundGains(ellisBody.gut),
       );
       await saveBody(ellisBody);
 
       return NextResponse.json(
         { error: `Rate limit: ${rateLimitStatus.reason}` },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
@@ -153,8 +158,12 @@ export async function POST(request: Request) {
     if (isFirstMessage) {
       bodyEvents.push(
         isReturnVisit
-          ? { type: "returned", visitorId: memoryKey, daysAway: ipMemory?.daysAgo ?? 0 }
-          : { type: "contact_started", visitorId: memoryKey }
+          ? {
+              type: "returned",
+              visitorId: memoryKey,
+              daysAway: ipMemory?.daysAgo ?? 0,
+            }
+          : { type: "contact_started", visitorId: memoryKey },
       );
     }
     bodyEvents.push({
@@ -171,7 +180,7 @@ export async function POST(request: Request) {
       ellisBody.gut = applyEvent(
         ellisBody.gut,
         event,
-        computeInboundGains(ellisBody.gut)
+        computeInboundGains(ellisBody.gut),
       );
     }
 
@@ -196,7 +205,7 @@ export async function POST(request: Request) {
     if (!validateShelf(shelf)) {
       return NextResponse.json(
         { error: "Knowledge shelf error" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -219,7 +228,7 @@ export async function POST(request: Request) {
         sessionDepth: session.interior.relational.depthReached,
         isFirstMessage,
       },
-      session.modelsSeen
+      session.modelsSeen,
     );
 
     // Step 10: Build system prompt
@@ -227,7 +236,7 @@ export async function POST(request: Request) {
 
     // Step 11: Prepare messages with interior context injected
     const allMessages = [
-      ...messages,
+      ...messages.slice(0, -1),
       {
         role: "user" as const,
         content: `[Ellis interior:\n${formatEllisInteriorForModel(interiorContext)}]\n\nVisitor: ${lastUserMessage}`,
@@ -235,7 +244,6 @@ export async function POST(request: Request) {
     ];
 
     // Step 12: Charge the ledger before spending, then call Anthropic
-    const config = getEllisConfig();
     const modelId = model === "sonnet" ? config.modelSonnet : config.modelHaiku;
 
     const promptChars =
@@ -244,15 +252,31 @@ export async function POST(request: Request) {
     const { costUsd, tokenEstimate } = estimateCostUsd(
       model,
       promptChars,
-      MAX_OUTPUT_TOKENS
+      MAX_OUTPUT_TOKENS,
     );
 
-    await recordUsage(
-      memoryKey,
-      costUsd,
-      tokenEstimate,
-      rateLimitStatus.warned || false
-    );
+    if (!isOwner) {
+      // The RPC increment is atomic. Its returned total is the authorization
+      // point that closes the gap between concurrent check-then-spend requests.
+      const reservedTotal = await recordUsage(
+        memoryKey,
+        costUsd,
+        tokenEstimate,
+        rateLimitStatus.warned || false,
+      );
+      if (reservedTotal === null) {
+        return NextResponse.json(
+          { error: "Usage ledger unavailable" },
+          { status: 503 },
+        );
+      }
+      if (reservedTotal > config.dailyBudgetUsd) {
+        return NextResponse.json(
+          { error: "Daily usage limit reached" },
+          { status: 429 },
+        );
+      }
+    }
 
     const client = new Anthropic({
       apiKey: config.anthropicApiKey,
@@ -276,88 +300,101 @@ export async function POST(request: Request) {
 
     // Step 13: Return SSE stream
     const encoder = new TextEncoder();
-    
+
     // Ensure session is not null for closure
     const finalSession = session;
-    
+
     const responseStream = new ReadableStream({
       async start(controller) {
-        // Send metadata
-        controller.enqueue(
-          encoder.encode(
-            sse({
-              type: "session",
-              sessionId: finalSession.sessionId,
-              hall,
-              model,
-              cost: costUsd,
-            })
-          )
-        );
+        try {
+          // Send metadata
+          controller.enqueue(
+            encoder.encode(
+              sse({
+                type: "session",
+                sessionId: finalSession.sessionId,
+                hall,
+                model,
+                cost: costUsd,
+              }),
+            ),
+          );
 
-        let fullResponse = "";
+          let fullResponse = "";
 
-        // Stream tokens
-        for await (const event of anthropicStream) {
-          if (
-            event.type === "content_block_delta" &&
-            event.delta.type === "text_delta"
-          ) {
-            const text = event.delta.text;
-            fullResponse += text;
+          // Stream tokens
+          for await (const event of anthropicStream) {
+            if (
+              event.type === "content_block_delta" &&
+              event.delta.type === "text_delta"
+            ) {
+              const text = event.delta.text;
+              fullResponse += text;
 
-            controller.enqueue(
-              encoder.encode(
-                sse({
-                  type: "token",
-                  text,
-                })
-              )
-            );
+              controller.enqueue(
+                encoder.encode(
+                  sse({
+                    type: "token",
+                    text,
+                  }),
+                ),
+              );
+            }
           }
+
+          // Step 14: Update session after stream completes
+          const updated = updateSession(
+            finalSession.sessionId,
+            lastUserMessage,
+            fullResponse,
+            model,
+            costUsd,
+          );
+
+          const currentSession = updated || finalSession;
+
+          // Record IP visit (build beat from session + response)
+          const beat = buildEpisodBeat(currentSession, lastUserMessage);
+          await recordIpVisitAfterStream(memoryKey, [beat]);
+
+          // Send done event
+          controller.enqueue(
+            encoder.encode(
+              sse({
+                type: "done",
+                sessionId: currentSession.sessionId,
+                messageCount: currentSession.messageCount,
+              }),
+            ),
+          );
+        } catch (err) {
+          const status =
+            err && typeof err === "object" && "status" in err
+              ? String(err.status)
+              : "unknown";
+          console.error(`[ELLIS_UPSTREAM] Stream failed (${status})`);
+          controller.enqueue(
+            encoder.encode(
+              sse({
+                type: "error",
+                message:
+                  "Ellis could not answer right now. Please try again later.",
+              }),
+            ),
+          );
+        } finally {
+          controller.close();
         }
+      },
+    });
 
-        // Step 14: Update session after stream completes
-        if (!finalSession) {
-          throw new Error("Session missing");
-        }
-
-        const updated = updateSession(
-          finalSession.sessionId,
-          lastUserMessage,
-          fullResponse,
-          model,
-          costUsd
-        );
-
-        const currentSession = updated || finalSession;
-
-        // Record IP visit (build beat from session + response)
-        const beat = buildEpisodBeat(currentSession, lastUserMessage, fullResponse);
-        await recordIpVisitAfterStream(memoryKey, [beat], fullResponse.length);
-
-        // Send done event
-        controller.enqueue(
-          encoder.encode(
-            sse({
-              type: "done",
-              sessionId: currentSession.sessionId,
-              messageCount: currentSession.messageCount,
-            })
-          )
-        );
-
-    controller.close();
-  },
-});
-
-return new Response(responseStream, {
-  headers: {
-    "Content-Type": "text/event-stream; charset=utf-8",
-    "Cache-Control": "no-cache, no-transform",
-    Connection: "keep-alive",
-  },
-});
+    return new Response(responseStream, {
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+      },
+    });
   } catch (err) {
     console.error("[ELLIS_STREAM]", err);
 
