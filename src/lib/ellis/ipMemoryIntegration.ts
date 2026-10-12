@@ -11,6 +11,9 @@ import {
   generateDayLabel,
   markReturnVisit,
 } from "./memory/ipMemory";
+import { summarizeExchange } from "./memory/summarizeExchange";
+
+export { summarizeExchange } from "./memory/summarizeExchange";
 
 export { hashVisitorIp } from "./memory/hashVisitor";
 
@@ -37,6 +40,8 @@ export function extractVisitorIp(headers: Headers): string {
 export function buildEpisodBeat(
   session: SessionState,
   userMessage: string,
+  ellisResponse: string,
+  isOwner = false,
 ): EpisodBeat {
   const now = new Date();
 
@@ -44,7 +49,7 @@ export function buildEpisodBeat(
     beatId: crypto.randomUUID(),
     occurredAt: now,
     dayLabel: generateDayLabel(now, now),
-    summary: `${userMessage.substring(0, 80)}${userMessage.length > 80 ? "..." : ""}`,
+    summary: summarizeExchange(userMessage, ellisResponse, isOwner),
     resonance: assessResonance(session, userMessage),
     theme: categorizeTheme(userMessage),
     depthReached:
@@ -118,18 +123,6 @@ function categorizeTheme(userMessage: string): string {
 /**
  * Build thread summary from multiple beats.
  */
-export function buildThreadSummary(beats: EpisodBeat[]): string {
-  if (beats.length === 0) return "Brief interaction.";
-
-  const themes = beats.map((b) => b.theme).filter(Boolean);
-  const uniqueThemes = [...new Set(themes)];
-  const avgDepth = Math.round(
-    beats.reduce((sum, b) => sum + b.depthReached, 0) / beats.length,
-  );
-
-  return `Explored: ${uniqueThemes.join(", ")}. Average engagement depth: ${avgDepth}/5.`;
-}
-
 /**
  * Record IP visit at end of stream session.
  */
@@ -137,11 +130,9 @@ export async function recordIpVisitAfterStream(
   ipHash: string,
   sessionBeats: EpisodBeat[],
 ): Promise<void> {
-  const summary = buildThreadSummary(sessionBeats);
   await recordIpVisit({
     ipHash,
     episodicBeats: sessionBeats,
-    threadSummary: summary,
   });
 
   // Mark as return visit in ellis_usage if applicable

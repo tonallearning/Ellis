@@ -27,6 +27,15 @@
 
 ## Log
 
+### 2026-10-12 — Owner interview stored as visitor; every memory write replaced the prior turn
+
+- **Context:** Production follow-up after public launch; Supabase `ellis_visitor_memory` inspection and hiring-fit transcript report.
+- **Symptom:** Ellis did not recognize Ty's durable hall during a hiring interview, and continuity did not accumulate across turns. His fit rejection relied on unsupported assumptions about what work would interest her.
+- **Cause:** The signed-cookie security release intentionally invalidated the old owner cookie, so the interview reached the ordinary hashed-IP row. Independently, `recordIpVisitAfterStream` passed only the newest beat to an upsert that replaced `episodic_beats`. The shelf also said support-shaped careers were not Ty's lane and explicitly allowed Ellis to call a role boring.
+- **Fix:** Added the service-role-only `ellis_memory_append` RPC with a per-key advisory lock and bounded append; recorded compact excerpts from both sides; expanded owner prompt recall from three to eight beats; replaced category-based fit assumptions with an evidence/unknowns/motivation protocol.
+- **Verified:** Production RPC probe appended two beats in order and returned `Remembered exchanges: 2`; probe row removed. Function privileges are limited to `postgres` and `service_role`. Test suite passes 42/42; lint and typecheck pass. Supabase advisor does not flag either Ellis RPC as publicly executable.
+- **Notes:** The existing owner row remains intact. The test-interview row remains separate because a household IP cannot prove the speaker was Ty.
+
 ### 2026-10-10 — Funded public-mode stream passes
 
 - **Context:** Follow-up release smoke test after Anthropic API credit was added; local production server with `ELLIS_MODE=public`.

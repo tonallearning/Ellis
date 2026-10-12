@@ -38,6 +38,16 @@
 
 ## Log
 
+### 2026-10-12 — Owner continuity accumulates; fit judgments separate evidence from desire
+
+- **Decision:** Keep Ty's durable identity on the signed owner cookie and `owner` memory key rather than the household IP, but make that memory actually cumulative. Every completed exchange now atomically appends a bounded beat containing both sides of the exchange; owner recall carries eight recent beats and survives the visitor decay job. Fit judgments must separate evidence, inference, and unknowns; present work is not treated as the boundary of what Ty may deliberately want next.
+- **Why:** The public-release cookie signing correctly invalidated the old forgeable cookie, so Ty's hiring test was stored as a seven-day visitor. A separate defect meant every turn upserted a one-element JSON array, replacing all prior beats. Fit guidance also promoted a narrow description of Ty's current lane into an unsupported personality claim that some categories would bore her.
+- **System / design impact:** `ellis_memory_append` serializes writes per memory key, retains 200 owner beats / 40 visitor beats, and is executable only by `service_role`. Stored beats now include compact Ty/visitor and Ellis excerpts. Ellis asks about motivation and missing experience before a negative verdict, recognizes deliberate transitions, and states what would change an assessment.
+- **Artifacts:** `20261012132034_accumulate_ellis_memory.sql`, `ipMemory.ts`, `ipMemoryIntegration.ts`, `summarizeExchange.ts`, `assemble.ts`, `systemPrompt.ts`, `philosophy.md`
+- **Phase / slice:** Public follow-up — continuity and fit calibration
+- **Docs updated:** this log, `DEBUG_LOG.md`, `WIRING_MAP.md`, `supabase/README.md`
+- **Open follow-ups:** Ty must unlock once at `/onboarding` on each browser whose old owner cookie predates the signed-cookie release. Do not merge a household-IP visitor row into owner memory automatically; it may contain another household member's conversation.
+
 ### 2026-10-10 — Public release gate: signed owner identity and atomic spend reservation
 
 - **Decision:** Treat the owner and onboarding cookies as authenticated bearer credentials, not boolean flags. Both are now purpose-separated HMAC values derived from the onboarding secret. Public chat validates the complete message envelope server-side, binds sessions to the originating visitor and hall, and uses the atomic Supabase usage increment as the final authorization point before an Anthropic call.

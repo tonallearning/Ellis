@@ -8,12 +8,12 @@ already grown from one to four.
 
 Ellis owns four tables and nothing else lives beside them:
 
-| Table                   | Holds                                                            | Lifetime            |
-| ----------------------- | ---------------------------------------------------------------- | ------------------- |
-| `ellis_usage`           | Per-IP daily spend, for the rate limiter                          | Per UTC day         |
-| `ellis_visitor_memory`  | Episodic beats per visitor, keyed by salted IP hash — except Ty, whose row is `owner` and is skipped by decay | 7 days inactivity; owner indefinite |
-| `ellis_global_traces`   | Compressed patterns left after a visitor memory expires; no PII   | Indefinite          |
-| `ellis_body`            | Ellis's own interior — pulse and gut. One row, never expires      | Indefinite          |
+| Table                  | Holds                                                                                                         | Lifetime                            |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `ellis_usage`          | Per-IP daily spend, for the rate limiter                                                                      | Per UTC day                         |
+| `ellis_visitor_memory` | Episodic beats per visitor, keyed by salted IP hash — except Ty, whose row is `owner` and is skipped by decay | 7 days inactivity; owner indefinite |
+| `ellis_global_traces`  | Compressed patterns left after a visitor memory expires; no PII                                               | Indefinite                          |
+| `ellis_body`           | Ellis's own interior — pulse and gut. One row, never expires                                                  | Indefinite                          |
 
 The split matters: `ellis_visitor_memory` expires so Ellis does not hold onto
 people, while `ellis_body` persists because it holds what meeting them did to
@@ -22,6 +22,11 @@ him. The second contains no visitor content and identifies nobody.
 Every table has RLS enabled with no policies and is revoked from `anon` and
 `authenticated`. Server code reaches them only through
 `SUPABASE_SERVICE_ROLE_KEY`.
+
+Memory writes go through `ellis_memory_append`, a service-role-only RPC. It
+locks one memory key, appends the new beats, and keeps the most recent 200 beats
+for Ty's `owner` row or 40 for a seven-day visitor row. Direct upserts must not
+replace `episodic_beats`; that was the original lost-memory bug.
 
 ## Applying migrations
 
@@ -51,8 +56,8 @@ supabase db push
 
 From the project's **Settings → API**:
 
-| Variable                        | Use                                                       |
-| ------------------------------- | --------------------------------------------------------- |
+| Variable                        | Use                                                        |
+| ------------------------------- | ---------------------------------------------------------- |
 | `NEXT_PUBLIC_SUPABASE_URL`      | Project URL                                                |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Unused today; kept for any future client-safe call         |
 | `SUPABASE_SERVICE_ROLE_KEY`     | **Server only.** Every table above is reached through this |
@@ -74,8 +79,11 @@ select id, pulse->>'state' as pulse_state, gut->>'arousal' as arousal
 from public.ellis_body;
 -- expect exactly one row, id = 'ellis'
 
-select proname from pg_proc where proname = 'ellis_usage_increment';
--- must return a row, or spend is never recorded and the ceiling never binds
+select proname
+from pg_proc
+where proname in ('ellis_usage_increment', 'ellis_memory_append')
+order by proname;
+-- expect both rows: spend must bind and memory must append rather than replace
 ```
 
 That last check is not decorative. The spend gate silently failed open for

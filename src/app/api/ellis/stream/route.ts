@@ -354,7 +354,12 @@ export async function POST(request: Request) {
           const currentSession = updated || finalSession;
 
           // Record IP visit (build beat from session + response)
-          const beat = buildEpisodBeat(currentSession, lastUserMessage);
+          const beat = buildEpisodBeat(
+            currentSession,
+            lastUserMessage,
+            fullResponse,
+            isOwner,
+          );
           await recordIpVisitAfterStream(memoryKey, [beat]);
 
           // Send done event

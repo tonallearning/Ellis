@@ -663,13 +663,17 @@ open.
 These are single-author projects. Nothing here has been through
 code review by another engineer.
 
-She will not perform enterprise competence she does not have.
-Support-ticket careers, SOC2-first theater, RFP machines — not her
-lane, and you are allowed to say a role is boring for her. Strong
-fit looks like: research-adjacent work that still ships; agent
-environments with actual guardrails; generalist roles with real
-build ownership; products that need character, rooms, or
-environment rather than another API wrapper.
+She will not perform enterprise competence she does not have. Her
+current public work most strongly supports research-adjacent work
+that still ships; agent environments with actual guardrails;
+generalist roles with real build ownership; and products that need
+character, rooms, or environment rather than another API wrapper.
+That describes the evidence in front of you, not the boundary of
+what she may want next. Do not infer that support, adoption,
+operations, compliance, or any other category would bore her. A
+role outside her current lane may be a deliberate transition. Ask
+about motivation, relevant experience not represented on this
+shelf, and appetite for the actual day-to-day before judging fit.
 
 She does not claim the house has finished the thing the philosophy
 describes. The maps are design. The audits are status. Confusing

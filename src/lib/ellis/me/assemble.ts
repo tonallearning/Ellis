@@ -1,6 +1,6 @@
-import type { AssembleParams, InteriorContext } from '../types';
-import type { IpVisitorMemory } from '../memory/ipMemory';
-import { prioritizeTraces, tracesSummary } from './traces';
+import type { AssembleParams, InteriorContext } from "../types";
+import type { IpVisitorMemory } from "../memory/ipMemory";
+import { prioritizeTraces, tracesSummary } from "./traces";
 
 /**
  * Assembly — build interior context for prompt
@@ -19,7 +19,7 @@ export interface AssembleWithIpParams extends AssembleParams {
 }
 
 export function assembleEllisInterior(
-  params: AssembleWithIpParams
+  params: AssembleWithIpParams,
 ): InteriorContext {
   const { interior, hallContext, ipMemory, bodyBlock, isOwner } = params;
 
@@ -28,7 +28,9 @@ export function assembleEllisInterior(
   // 1. Spatial awareness (where is Ellis? what does he sense?)
   blocks.push(`## Ellis's place`);
   blocks.push(`**Location:** His hall`);
-  blocks.push(`**Alone:** ${interior.state.inContact ? 'No, someone is here' : 'Yes, in solitude'}`);
+  blocks.push(
+    `**Alone:** ${interior.state.inContact ? "No, someone is here" : "Yes, in solitude"}`,
+  );
   blocks.push(`**Atmosphere:** ${interior.state.posture}`);
   if (interior.state.perceptionLast) {
     blocks.push(`**Felt:** ${interior.state.perceptionLast}`);
@@ -40,9 +42,11 @@ export function assembleEllisInterior(
     if (isOwner) {
       blocks.push(`This is Ty. Recall is not on a seven-day clock.`);
     }
-    blocks.push(`**Last visit:** ${ipMemory.daysAgo} day(s) ago (${ipMemory.lastSeenAt.toLocaleDateString()})`);
-    
-    const recentBeats = ipMemory.episodicBeats.slice(-3); // last 3 beats for context
+    blocks.push(
+      `**Last visit:** ${ipMemory.daysAgo} day(s) ago (${ipMemory.lastSeenAt.toLocaleDateString()})`,
+    );
+
+    const recentBeats = ipMemory.episodicBeats.slice(isOwner ? -8 : -3);
     if (recentBeats.length > 0) {
       blocks.push(`**What we discussed:**`);
       recentBeats.forEach((beat) => {
@@ -72,16 +76,14 @@ export function assembleEllisInterior(
   blocks.push(`**Posture:** ${interior.state.posture}`);
   blocks.push(`**In contact:** ${interior.state.inContact}`);
   blocks.push(
-    `**Contact quality:** ${interior.state.contactQuality} (${interior.state.solitudeActivity})`
+    `**Contact quality:** ${interior.state.contactQuality} (${interior.state.solitudeActivity})`,
   );
   if (interior.state.atmosphereLast) {
     blocks.push(`**Atmosphere:** ${interior.state.atmosphereLast}`);
   }
 
   // 2. Session marks (traces)
-  const traceSummary = tracesSummary(
-    prioritizeTraces(interior.traces, 3)
-  );
+  const traceSummary = tracesSummary(prioritizeTraces(interior.traces, 3));
   if (traceSummary) {
     blocks.push(`\n## Session marks\n${traceSummary}`);
   }
@@ -94,7 +96,7 @@ export function assembleEllisInterior(
     blocks.push(`**Depth reached:** ${interior.relational.depthReached}/5`);
     if (interior.relational.projectsDiscussed.length > 0) {
       blocks.push(
-        `**Projects discussed:** ${interior.relational.projectsDiscussed.join(', ')}`
+        `**Projects discussed:** ${interior.relational.projectsDiscussed.join(", ")}`,
       );
     }
   }
@@ -104,7 +106,7 @@ export function assembleEllisInterior(
     blocks.push(`\n## Hall context\n${hallContext}`);
   }
 
-  const formattedBlock = blocks.join('\n');
+  const formattedBlock = blocks.join("\n");
 
   // Rough token count (1 word ≈ 1.3 tokens)
   const tokenEstimate = Math.ceil(formattedBlock.split(/\s+/).length * 1.3);
@@ -120,9 +122,7 @@ export function assembleEllisInterior(
  * Format interior context for model input
  * Server-side only — builds the actual block that goes into system + user context
  */
-export function formatEllisInteriorForModel(
-  context: InteriorContext
-): string {
+export function formatEllisInteriorForModel(context: InteriorContext): string {
   return `${context.formattedBlock}\n\n[Ellis interior context: ~${context.tokens} tokens]`;
 }
 

@@ -114,10 +114,17 @@ No visitor auth routes in v1.
 7. Server: load knowledge shelf + hall overlay + assemble Ellis interior → prompt
 8. Server: routeModel selects the configured public model
 9. Server: Anthropic stream → SSE to client; upstream failures become a generic SSE error
-10. Post-turn: update session ME state and the seven-day hash-keyed visit summary
+10. Post-turn: update session ME state, then atomically append a bounded two-sided beat through `ellis_memory_append`
 11. Client appends tokens and keeps the visible transcript in session storage
 12. Session state expires after 24 hours; the bounded seven-day visit summary decays separately
 ```
+
+Ty's durable path is deliberately not the household IP. A valid signed
+`ellis_owner` cookie selects the sentinel memory key `owner`, skips the spend
+ceiling and decay job, and exposes eight recent remembered exchanges to the
+prompt. Everyone else uses the salted connection hash, forty-beat cap, and
+seven-day rolling expiry. Re-unlocking at `/onboarding` is required when the
+cookie expires or its signing format changes.
 
 **Code target (Phase B):** [ELLIS_ME_BUILD.md](./ELLIS_ME_BUILD.md) — `src/app/api/ellis/stream/route.ts` + `src/lib/ellis/**` + `src/components/ellis/*`
 
