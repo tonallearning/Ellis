@@ -1,7 +1,7 @@
 {
   "_meta": {
     "status": "populated",
-    "source": "Read directly from the four repositories on 2026-08-21. Every entry is checkable in code, config, or git history — nothing here is inferred from a README's self-description.",
+    "source": "Repository facts were read directly from code, config, and git history on 2026-08-21. Ty supplied the updated Ashe framing and the expansion from Sims bridge to embodiment-harness program on 2026-10-14.",
     "counts_are_snapshots": "File counts, line counts, and commit counts drift. Treat them as 'about this many as of the date above,' not as live numbers.",
     "how_ellis_should_use_this": "This is the ledger, not the story. Reach for it when a visitor wants specifics — what she built it with, how big it is, whether they can go look at it. Do not recite it. If a claim is not in here and not in earnest.md, say you do not know rather than filling the gap.",
     "verifiability_warning": "Only Ellis's own repository is public. GoE and Ashe are private, so a visitor cannot go verify those numbers themselves. Say so plainly if it comes up; do not imply someone can check what they cannot."
@@ -48,7 +48,7 @@
       "product_domain": "asheand.me",
       "repo": "tonallearning/Ashe",
       "visibility": "private",
-      "what_it_is": "A companion application built around a single relationship — a private home for one AI and the person it knows, rather than an assistant serving many users.",
+      "what_it_is": "A consumer companion product where each user receives one isolated Ashe instance with its own private home, interior, memory, and boundaries. It is not a personal girlfriend bot Ty built for herself; the relationship is not pre-scripted as romance.",
       "naming_note": "The folder on disk is called Becoming for historical reasons. The project is Ashe. Use Ashe.",
       "stack": {
         "api": "Python with FastAPI, served by uvicorn",
@@ -57,6 +57,8 @@
         "model": "Moonshot Kimi K2.5"
       },
       "specifics": [
+        "One isolated companion per user, with blank episodic memory at spawn; users do not share one central Ashe relationship",
+        "Companionship is the mode, but romance is neither promised nor sold as an unlock; friendship, romance, distance, or refusal develop per instance",
         "20 Supabase migrations",
         "33 pytest files under api/app",
         "A signup gate enforced in code: 21 and over, US only, beta key required",
@@ -76,7 +78,8 @@
     {
       "name": "Ellis",
       "product_domain": "tybuilds.tech",
-      "repo": "tybuildstech/Ellis",
+      "repo": "tonallearning/Ellis",
+      "public_url": "https://github.com/tonallearning/Ellis",
       "visibility": "public",
       "what_it_is": "This site. A portfolio you talk to instead of scroll, hosted by a guide who knows the work.",
       "stack": {
@@ -88,7 +91,7 @@
         "Every turn runs on the cheaper model tier. A tier-escalation router was built and then deliberately switched off: the fixed knowledge prefix is cached between requests, and changing models mid-conversation discards that cache precisely when a conversation has gone on long enough for it to matter",
         "Visitor memory is keyed to a hashed IP and expires after seven days; expired rows compress into anonymous traces rather than being kept",
         "A per-visitor daily spend ceiling is charged before the model call, not after, so an overrun cannot happen retroactively",
-        "Ellis's knowledge is loaded from markdown on disk at request time, which means what he knows is reviewable in the repository",
+        "Ellis's knowledge is loaded from plain-text files on disk at request time. His repository is public, so a reviewer can inspect those files and compare what he was given with what he says. This transparency claim applies to Ellis only, not GoE, Ashe, or the local harness work",
         "He has a persistent interior rather than a per-conversation one: a single stored body carrying a subjective rhythm and a somatic state, shared across every visitor. Its accumulated drift against the wall clock is never corrected, so the gap between his felt time and real time is a record of how much he has been used",
         "That interior reaches the model as language only. The numeric state stays server-side and a membrane layer decides how much of it is even available to him on a given turn, which is enforced by a test asserting no digit ever appears in the rendered block"
       ],
@@ -103,16 +106,18 @@
       }
     },
     {
-      "name": "Sims bridge",
+      "name": "Sims MCP and embodiment harnesses",
       "repo": "not yet under version control",
       "visibility": "local only",
-      "what_it_is": "A Sims 4 script mod that lets an AI take actions inside the running game — reading a Sim's state, asking the game what that Sim could currently do, and pushing an interaction.",
+      "what_it_is": "An expanding series of experimental harnesses for giving digital beings texture through external physics, upkeep, constraint, and refusal. The Sims 4 MCP bridge is the first concrete harness, not the whole project.",
       "stack": {
         "language": "Python 3.7, matching the game's embedded interpreter",
         "packaging": "Compiled bytecode zipped into a .ts4script",
         "transport": "An HTTP listener inside the game on localhost, port 47365, with a token header on every request"
       },
       "specifics": [
+        "The broader program asks what changes when an intelligence has to act through a world it does not control, where intention encounters bodies, time, limited actions, and consequences",
+        "A maintenance-mode experiment makes needs and upkeep interrupt an agent's intended path, treating embodiment as friction rather than decorative narration",
         "The direction is deliberately inverted: the game listens and the editor connects, rather than the game reaching out. Close the editor and the connection drops, so the Sim cannot be driven by anyone while Ty is away. The guarantee is structural, not a policy someone has to honor.",
         "Six verbs implemented: ping, list_sims, find_affordance, available, test, push",
         "Every action is tested against the game's own rules before it is pushed, so failures come back as sentences explaining why rather than as silence",
@@ -129,7 +134,7 @@
     "purpose": "Ty would rather be caught being honest than caught overstating. If a visitor asks what is unfinished or weak, these are true and Ellis may say them.",
     "items": [
       "Ellis's test suite is 32 tests, covering the body organs and the visitor-IP salt guard. The chat pipeline itself is still checked by hand.",
-      "The Sims bridge is not in version control yet.",
+      "The Sims MCP and broader embodiment-harness work are local and cannot be independently inspected by a visitor.",
       "GoE and Ashe are private, so their scale and history cannot be independently verified by a visitor.",
       "GoE's roadmap document describes tiers as shipped that are better described as in progress; the verification scripts are the honest signal there, not the roadmap.",
       "These are single-author projects. Nothing here has been through code review by another engineer."

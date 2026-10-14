@@ -27,4 +27,12 @@ describe("fit assessment guidance", () => {
     assert.match(prompt, /headings when a shift in scale helps/);
     assert.match(prompt, /never emit raw HTML/);
   });
+
+  it("limits public-code claims to Ellis", () => {
+    const prompt = buildSystemPrompt(shelf, "default");
+
+    assert.match(prompt, /only your own Ellis repository is public/);
+    assert.match(prompt, /github\.com\/tonallearning\/Ellis/);
+    assert.match(prompt, /Never imply that GoE, Ashe/);
+  });
 });

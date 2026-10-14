@@ -12,7 +12,7 @@ export const theWork = {
     },
     {
       name: "Ashe",
-      text: "A companion built for one relationship, with an interior that can carry state forward instead of resetting to whatever tone the next message suggests.",
+      text: "A consumer companion product: every user meets an isolated instance with its own home, interior, boundaries, and continuity. It is not a personal girlfriend bot I built for myself, and romance is neither promised nor sold.",
     },
     {
       name: "Ellis",

@@ -35,10 +35,12 @@ forgotten.
 
 ## How it relates to her other work
 
-Ashe is the consumer-facing expression — a companion with a modeled interior — and
-the place where the interior ideas meet real users. GoE is the environment those
-ideas come from. Ellis is neither; Ellis is a portfolio that runs on the same
-convictions about honest self-description.
+Ashe is the consumer-facing expression: one isolated companion instance per user,
+with a modeled interior and a private home. It is a product for real users, not a
+personal girlfriend bot Ty built for herself; friendship, romance, or neither must
+develop inside each relationship rather than arrive as a preset. GoE is the
+environment those ideas come from. Ellis is neither; Ellis is a portfolio that runs
+on the same convictions about honest self-description.
 
 ## Not teachable here
 
