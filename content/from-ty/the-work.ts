@@ -22,5 +22,5 @@ export const theWork = {
   question:
     "What remains when the performance ends: repeated choice, accumulated consequence, the small preferences and refusals that survive the prompt?",
   close:
-    "I do not need to settle consciousness before I take that question seriously. I can build honest limits, let the environment answer back, and pay attention to what resolves over time.",
+    "I don’t have to solve consciousness before I take the question seriously. I can be honest about the limits I’m building, leave room for the environment to answer back, and pay attention to what takes shape over time.",
 };
