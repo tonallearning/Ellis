@@ -154,73 +154,40 @@ body {
 
 .hall-threshold {
   position: relative;
-  overflow: hidden;
-  padding: clamp(1.4rem, 4vw, 2.4rem);
-  border: 1px solid var(--glass-border);
-  border-radius: 1.5rem;
-  background:
-    linear-gradient(135deg, var(--glass-tint), transparent 72%),
-    color-mix(in srgb, var(--surface-1) 62%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    var(--glass-shadow);
-  backdrop-filter: blur(22px);
-}
-
-.hall-threshold::after {
-  position: absolute;
-  top: -5rem;
-  right: -3rem;
-  width: 13rem;
-  height: 13rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
-  border-radius: 999px;
-  box-shadow:
-    0 0 0 2.4rem color-mix(in srgb, var(--accent) 5%, transparent),
-    0 0 0 4.8rem color-mix(in srgb, var(--accent) 3%, transparent);
-  content: "";
-  pointer-events: none;
+  padding: 0.35rem 0 1.1rem;
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .hall-threshold__eyebrow {
-  position: relative;
-  z-index: 1;
   color: var(--accent);
-  font-size: 0.65rem;
+  font-size: 0.58rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
 }
 
 .hall-threshold__title {
-  position: relative;
-  z-index: 1;
-  max-width: 12ch;
-  margin-top: 0.75rem;
+  margin-top: 0.4rem;
   color: var(--text-primary);
-  font-size: clamp(2rem, 7vw, 3.8rem);
-  font-weight: 440;
-  letter-spacing: -0.055em;
-  line-height: 0.98;
+  font-size: clamp(1.25rem, 3vw, 1.65rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
   text-wrap: balance;
 }
 
 .hall-threshold__lede {
-  position: relative;
-  z-index: 1;
-  max-width: 37rem;
-  margin-top: 1.15rem;
+  max-width: 42rem;
+  margin-top: 0.5rem;
   color: var(--text-secondary);
-  font-size: clamp(0.98rem, 2.3vw, 1.08rem);
-  line-height: 1.65;
+  font-size: clamp(0.86rem, 1.8vw, 0.95rem);
+  line-height: 1.55;
 }
 
 .hall-prompts {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
-  margin-top: 1.35rem;
+  margin-top: 0.8rem;
 }
 
 .hall-prompt {
@@ -247,6 +214,7 @@ body {
 }
 
 .chat-scroll {
+  overscroll-behavior: contain;
   scrollbar-color: color-mix(in srgb, var(--accent) 48%, transparent)
     color-mix(in srgb, var(--surface-2) 38%, transparent);
   scrollbar-gutter: stable;

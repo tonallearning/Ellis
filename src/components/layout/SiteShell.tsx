@@ -17,7 +17,9 @@ export function SiteShell({
   return (
     <div
       data-hall="default"
-      className="relative flex min-h-dvh flex-1 flex-col"
+      className={`relative flex flex-1 flex-col ${
+        variant === "hall" ? "h-dvh overflow-hidden" : "min-h-dvh"
+      }`}
     >
       {variant === "hall" ? (
         <>
