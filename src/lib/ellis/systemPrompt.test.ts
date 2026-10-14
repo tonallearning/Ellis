@@ -17,4 +17,12 @@ describe("fit assessment guidance", () => {
     assert.match(prompt, /Do not infer that a role would bore her/);
     assert.match(prompt, /Say what would change the assessment/);
   });
+
+  it("gives Ellis restrained Markdown typography without allowing raw HTML", () => {
+    const prompt = buildSystemPrompt(shelf, "default");
+
+    assert.match(prompt, /Markdown is available/);
+    assert.match(prompt, /headings when a shift in scale helps/);
+    assert.match(prompt, /never emit raw HTML/);
+  });
 });

@@ -230,7 +230,7 @@ export function ChatPanel({
       <div
         ref={transcriptRef}
         aria-live="polite"
-        className="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto px-1 py-5 sm:py-7"
+        className="chat-scroll flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto px-1 py-5 sm:py-7"
       >
         {showThreshold ? (
           <div className="hall-threshold" aria-labelledby="hall-title">
