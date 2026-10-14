@@ -10,7 +10,7 @@ const ONBOARDING_OPENING =
 const OWNER_OPENING = "Ty. I know it's you. I'm not going to forget.";
 
 const PUBLIC_OPENING =
-  "I'm Ellis. Ask about her work. I'll be honest, including when I don't know.";
+  "I'm Ellis. Ty Bennett built this hall—and me—as a portfolio you can question. Ask about her work, her reasoning, or whether she fits what you're building. I'll show you what I know, name what I don't, and tell you when the fit isn't there.";
 
 export default async function Home() {
   const config = getEllisConfig();
@@ -33,6 +33,7 @@ export default async function Home() {
           maxMessageChars={config.maxMessageChars}
           maxHistoryMessages={config.maxHistoryMessages}
           openingMessage={chatEnabled ? openingMessage : undefined}
+          isOwner={isOwner}
         />
       </main>
     </SiteShell>

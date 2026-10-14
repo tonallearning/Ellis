@@ -9,11 +9,24 @@ type ChatMessage = {
   content: string;
 };
 
+const PUBLIC_PROMPTS = [
+  "What has Ty actually built?",
+  "How does she think about AI?",
+  "Could she fit this role?",
+] as const;
+
+const OWNER_PROMPTS = [
+  "What do you remember?",
+  "What changed while I was away?",
+  "Where should we go today?",
+] as const;
+
 type ChatPanelProps = {
   chatEnabled: boolean;
   mode: "onboarding" | "public";
   hall?: string;
   openingMessage?: string;
+  isOwner?: boolean;
   maxMessageChars?: number;
   maxHistoryMessages?: number;
 };
@@ -23,6 +36,7 @@ export function ChatPanel({
   mode,
   hall = "default",
   openingMessage,
+  isOwner = false,
   maxMessageChars = 12000,
   maxHistoryMessages = 30,
 }: ChatPanelProps) {
@@ -39,6 +53,9 @@ export function ChatPanel({
 
   const storageKey = `ellis:chat:${hall}`;
   const [restored, setRestored] = useState(false);
+  const showThreshold =
+    restored && !messages.some((message) => message.role === "user");
+  const suggestedPrompts = isOwner ? OWNER_PROMPTS : PUBLIC_PROMPTS;
 
   useEffect(() => {
     const restoreId = window.setTimeout(() => {
@@ -208,13 +225,47 @@ export function ChatPanel({
   return (
     <section
       aria-label="Ellis chat"
-      className="mx-auto flex min-h-0 w-full max-w-[40rem] flex-1 flex-col"
+      className="mx-auto flex min-h-0 w-full max-w-[48rem] flex-1 flex-col"
     >
       <div
         ref={transcriptRef}
         aria-live="polite"
-        className="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto px-1 py-6"
+        className="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto px-1 py-5 sm:py-7"
       >
+        {showThreshold ? (
+          <div className="hall-threshold" aria-labelledby="hall-title">
+            <p className="hall-threshold__eyebrow">
+              {isOwner
+                ? "The private threshold"
+                : "Ty Bennett / interactive portfolio"}
+            </p>
+            <h1 id="hall-title" className="hall-threshold__title">
+              {isOwner
+                ? "The hall remembers you."
+                : "A portfolio that answers back."}
+            </h1>
+            <p className="hall-threshold__lede">
+              {isOwner
+                ? "This is your durable room with Ellis. The conversation can continue where it left off."
+                : "Ellis is an AI host built by Ty to explain her work, challenge easy conclusions, and help you decide whether the fit is real."}
+            </p>
+            {chatEnabled ? (
+              <div className="hall-prompts" aria-label="Conversation starters">
+                {suggestedPrompts.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => void sendMessage(prompt)}
+                    className="hall-prompt focus-ring"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
         {messages.map((message, index) => (
           <MessageBubble
             key={`${index}-${message.role}`}
@@ -243,7 +294,7 @@ export function ChatPanel({
           </p>
         </div>
       ) : (
-        <form className="shrink-0 pb-2" onSubmit={onSubmit}>
+        <form className="shrink-0 pt-2 pb-2" onSubmit={onSubmit}>
           <label htmlFor="ellis-input" className="sr-only">
             Message Ellis
           </label>
