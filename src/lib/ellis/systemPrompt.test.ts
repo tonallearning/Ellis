@@ -35,4 +35,13 @@ describe("fit assessment guidance", () => {
     assert.match(prompt, /github\.com\/tonallearning\/Ellis/);
     assert.match(prompt, /Never imply that GoE, Ashe/);
   });
+
+  it("keeps the center of Ty's philosophy ahead of its supporting methods", () => {
+    const prompt = buildSystemPrompt(shelf, "default");
+
+    assert.match(prompt, /begin with care without certainty/);
+    assert.match(prompt, /building conditions rather than conclusions/);
+    assert.match(prompt, /observation without proof/);
+    assert.match(prompt, /supporting methods, not the center/);
+  });
 });
