@@ -1,7 +1,7 @@
 # Applications — tybuilds / Ellis notes
 
 **Status:** Living doc — job-hunt context for Ellis knowledge shelf and onboarding  
-**Updated:** 2026-06-11
+**Updated:** 2026-10-14
 
 tybuilds is about to go on **many** applications. **Most get `tybuilds.tech/`** — generic Ellis. **Excited companies only** get `tybuilds.tech/{slug}` ([EXCITED_HALLS.md](./EXCITED_HALLS.md)).
 
@@ -87,6 +87,7 @@ Add rows as sends happen. Ellis should not oversell stack depth; flag stretch ro
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------- | ------------------------------------- |
 | **Anthropic — Fellows Program**                 | [9645795](https://builtin.com/job/anthropic-fellows-program/9645795)                                          | Top excitement               | TL + GoE + Ellis    | **`tybuilds.tech/anthropic`**         |
 | **Wild Card**                                   | [8597323](https://builtin.com/job/wild-card/8597323)                                                          | Strong fit                   | Generalist builder  | **`tybuilds.tech/`**                  |
+| **Elios — AI Operations Analyst**               | [listing](https://eliosai.com/browse-jobs/ai-operations-analyst)                                             | Credible transition; real unknowns | AI adoption + human–system boundary | **Actively pursuing · `tybuilds.tech/`** |
 | **Axway — B2B Principal Customer Tech Support** | [b8066dc6](https://remotevibecodingjobs.com/jobs/axway-b2b-principal-customer-tech-support-engineer-b8066dc6) | **No**                       | Ellis says no       | —                                     |
 | SimuTech — Junior Cloud Integration             | TBD                                                                                                           | TBD                          | CRT + stack honesty | **`tybuilds.tech/`** (no custom hall) |
 | Adaptify — Vibe Coder Full-Stack AI/SEO         | TBD                                                                                                           | TBD                          | TL + agent features | **`tybuilds.tech/`** (no custom hall) |

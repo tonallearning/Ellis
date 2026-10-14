@@ -16,6 +16,8 @@ describe("fit assessment guidance", () => {
     assert.match(prompt, /deliberate transition into new work/);
     assert.match(prompt, /Do not infer that a role would bore her/);
     assert.match(prompt, /Say what would change the assessment/);
+    assert.match(prompt, /never confuse a recruiter or placement partner/);
+    assert.match(prompt, /Enthusiasm is context, not evidence/);
   });
 
   it("gives Ellis restrained Markdown typography without allowing raw HTML", () => {
