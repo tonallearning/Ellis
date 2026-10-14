@@ -12,7 +12,7 @@ type ChatMessage = {
 const PUBLIC_PROMPTS = [
   "What has Ty actually built?",
   "How does she think about AI?",
-  "Could she fit this role?",
+  "Tell Ellis about the role",
 ] as const;
 
 const OWNER_PROMPTS = [

@@ -32,7 +32,7 @@ export function TheWork() {
           if (event.target === event.currentTarget) close();
         }}
       >
-        <article className="glass-panel w-full max-w-[40rem] max-h-[min(36rem,80dvh)] overflow-y-auto rounded-3xl px-6 py-7 sm:px-8 sm:py-8">
+        <article className="work-note glass-panel w-full max-w-[52rem] overflow-y-auto rounded-3xl px-6 py-7 sm:px-10 sm:py-9">
           <header className="flex items-start justify-between gap-6">
             <div>
               <p className="text-text-secondary text-[0.65rem] tracking-[0.28em] uppercase">
@@ -40,7 +40,7 @@ export function TheWork() {
               </p>
               <h2
                 id="the-work-title"
-                className="text-text-primary mt-2 text-2xl font-medium tracking-tight"
+                className="text-text-primary mt-4 max-w-[17ch] text-[clamp(2rem,6vw,3.4rem)] leading-[1.03] font-medium tracking-[-0.045em]"
               >
                 {theWork.title}
               </h2>
@@ -54,20 +54,52 @@ export function TheWork() {
             </button>
           </header>
 
-          <div className="mt-5 flex flex-col gap-5">
-            {theWork.paragraphs.map((paragraph) => (
+          <div className="mt-8 max-w-[43rem] space-y-4 sm:mt-10">
+            {theWork.lead.map((paragraph, index) => (
               <p
                 key={paragraph}
-                className="text-text-secondary max-w-prose text-[1.05rem] leading-[1.7]"
+                className={
+                  index === 0
+                    ? "text-text-secondary text-[1.05rem] leading-[1.75] sm:text-[1.15rem]"
+                    : "text-text-primary text-xl font-medium tracking-tight sm:text-2xl"
+                }
               >
                 {paragraph}
               </p>
             ))}
           </div>
 
-          <p className="text-text-primary mt-8 max-w-prose text-sm leading-relaxed">
-            {theWork.close}
-          </p>
+          <div className="border-border mt-9 grid border-y sm:grid-cols-3">
+            {theWork.pieces.map((piece, index) => (
+              <section
+                key={piece.name}
+                className="work-piece border-border py-5 sm:px-5 sm:py-6"
+              >
+                <p className="text-text-secondary font-mono text-[0.62rem] tracking-[0.18em] uppercase">
+                  {String(index + 1).padStart(2, "0")}
+                </p>
+                <h3 className="text-text-primary mt-3 text-sm font-semibold">
+                  {piece.name}
+                </h3>
+                <p className="text-text-secondary mt-2 text-sm leading-[1.65]">
+                  {piece.text}
+                </p>
+              </section>
+            ))}
+          </div>
+
+          <blockquote className="text-text-primary mt-9 max-w-[36rem] text-[clamp(1.3rem,3.4vw,1.8rem)] leading-[1.35] tracking-[-0.025em]">
+            {theWork.question}
+          </blockquote>
+
+          <div className="border-border mt-8 flex max-w-[43rem] gap-4 border-t pt-6">
+            <span aria-hidden="true" className="text-accent mt-[0.15rem] text-lg">
+              —
+            </span>
+            <p className="text-text-secondary text-sm leading-[1.7] sm:text-[0.95rem]">
+              {theWork.close}
+            </p>
+          </div>
         </article>
       </dialog>
     </>

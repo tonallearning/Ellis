@@ -1,17 +1,26 @@
-/**
- * Public note from Ty — one thesis, not a project catalog.
- * Ashe, GoE, and Ellis belong in the prose if they earn a sentence.
- * Replace the placeholders. Do not ship filler.
- */
-
 export const theWork = {
   kicker: "From Ty",
-  title: "The work",
-  paragraphs: [
-    "I am interested in what changes when we stop treating an AI system as a prompt that produces an answer and start building the conditions around it. I call those conditions texture: agency, continuity, memory, environment, friction, relational boundaries, and a state that can outlast one exchange. Texture is not a claim that a system is human. It is a way to give behavior context.",
-    "Training can give a model vast knowledge of what people have lived. It does not give one running system a history in which its own actions changed what became possible next. I build systems where an action can meet a world, leave a consequence, and return as a different condition tomorrow. The question is whether those conditions change the character of a system's behavior and thinking.",
-    "The projects test different parts of that question: an agent reaching into an external world; a persistent environment that can resist its inhabitant; a relationship whose boundaries are not infinitely available; and this site, which makes the framework legible. I am not trying to prove consciousness or personhood. I am investigating what persistent structure, external constraint, and accumulated history add to an AI system—and what responsibilities arrive with them.",
+  title: "I build systems that have to live with what happened.",
+  lead: [
+    "Most AI products begin with a human arriving, an agent performing, and the agent disappearing. The session is the life. The prompt is the soul. The output is the proof.",
+    "I build against that shape.",
   ],
+  pieces: [
+    {
+      name: "Gardens of Eridu",
+      text: "A persistent house with laws its residents cannot simply narrate away. Time passes. The world moves. What happened yesterday changes what is possible next.",
+    },
+    {
+      name: "Ashe",
+      text: "A companion built for one relationship, with an interior that can carry state forward instead of resetting to whatever tone the next message suggests.",
+    },
+    {
+      name: "Ellis",
+      text: "The public threshold. He knows my work, remembers a visitor for a bounded time, and helps someone judge whether I fit a role—after they have actually told him what the role is.",
+    },
+  ],
+  question:
+    "What remains when the performance ends: repeated choice, accumulated consequence, the small preferences and refusals that survive the prompt?",
   close:
-    "Give an intelligence a hand. Give it somewhere to stand. Then let the world remember what happened.",
+    "I do not need to settle consciousness before I take that question seriously. I can build honest limits, let the environment answer back, and pay attention to what resolves over time.",
 };
