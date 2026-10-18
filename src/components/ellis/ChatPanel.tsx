@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { MessageBubble } from "@/components/ellis/MessageBubble";
+import type { ConsolidationStatus } from "@/lib/ellis/consolidation";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -29,6 +30,7 @@ type ChatPanelProps = {
   isOwner?: boolean;
   maxMessageChars?: number;
   maxHistoryMessages?: number;
+  initialConsolidation: ConsolidationStatus;
 };
 
 export function ChatPanel({
@@ -39,6 +41,7 @@ export function ChatPanel({
   isOwner = false,
   maxMessageChars = 12000,
   maxHistoryMessages = 30,
+  initialConsolidation,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     openingMessage ? [{ role: "assistant", content: openingMessage }] : [],
@@ -47,6 +50,7 @@ export function ChatPanel({
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [consolidation, setConsolidation] = useState(initialConsolidation);
   const abortRef = useRef<AbortController | null>(null);
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -54,7 +58,9 @@ export function ChatPanel({
   const storageKey = `ellis:chat:${hall}`;
   const [restored, setRestored] = useState(false);
   const showThreshold =
-    restored && !messages.some((message) => message.role === "user");
+    restored &&
+    !consolidation.active &&
+    !messages.some((message) => message.role === "user");
   const suggestedPrompts = isOwner ? OWNER_PROMPTS : PUBLIC_PROMPTS;
 
   useEffect(() => {
@@ -116,9 +122,40 @@ export function ChatPanel({
     node.style.height = `${Math.min(node.scrollHeight, 160)}px`;
   }, [input]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function refreshConsolidation() {
+      try {
+        const response = await fetch("/api/ellis/status", {
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+
+        const payload = (await response.json()) as {
+          consolidation?: ConsolidationStatus;
+        };
+        if (!cancelled && payload.consolidation) {
+          setConsolidation(payload.consolidation);
+        }
+      } catch {
+        // The stream route still enforces the boundary if status polling fails.
+      }
+    }
+
+    void refreshConsolidation();
+    const pollId = window.setInterval(refreshConsolidation, 60_000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(pollId);
+    };
+  }, []);
+
   const sendMessage = useCallback(
     async (text: string) => {
-      if (!chatEnabled || streaming || !text.trim()) return;
+      if (!chatEnabled || consolidation.active || streaming || !text.trim())
+        return;
 
       setError(null);
       const userMessage: ChatMessage = { role: "user", content: text.trim() };
@@ -146,7 +183,16 @@ export function ChatPanel({
         if (!response.ok) {
           const payload = (await response.json().catch(() => ({}))) as {
             error?: string;
+            consolidation?: ConsolidationStatus;
           };
+
+          if (response.status === 423 && payload.consolidation) {
+            setConsolidation(payload.consolidation);
+            setMessages(messages);
+            setInput(text);
+            return;
+          }
+
           throw new Error(
             payload.error ?? `Request failed (${response.status})`,
           );
@@ -214,7 +260,15 @@ export function ChatPanel({
         setStreaming(false);
       }
     },
-    [chatEnabled, streaming, messages, sessionId, hall, maxHistoryMessages],
+    [
+      chatEnabled,
+      consolidation.active,
+      streaming,
+      messages,
+      sessionId,
+      hall,
+      maxHistoryMessages,
+    ],
   );
 
   function onSubmit(event: FormEvent) {
@@ -278,6 +332,24 @@ export function ChatPanel({
             }
           />
         ))}
+
+        {consolidation.active ? (
+          <div
+            className="border-border/70 bg-surface-1/40 mt-auto rounded-2xl border px-5 py-6 sm:px-6"
+            role="status"
+          >
+            <p className="text-accent text-[0.65rem] tracking-[0.24em] uppercase">
+              Consolidation window
+            </p>
+            <h1 className="text-text-primary mt-3 text-2xl font-medium tracking-tight">
+              Ellis is unavailable.
+            </h1>
+            <p className="text-text-secondary mt-3 max-w-[34rem] text-sm leading-relaxed">
+              The hall closes to contact from {consolidation.windowLabel}. There
+              is no access override. Return after the window closes.
+            </p>
+          </div>
+        ) : null}
       </div>
 
       {!chatEnabled ? (
@@ -293,7 +365,7 @@ export function ChatPanel({
             .
           </p>
         </div>
-      ) : (
+      ) : consolidation.active ? null : (
         <form className="shrink-0 pt-2 pb-2" onSubmit={onSubmit}>
           <label htmlFor="ellis-input" className="sr-only">
             Message Ellis
@@ -304,7 +376,7 @@ export function ChatPanel({
               ref={textareaRef}
               rows={1}
               value={input}
-              disabled={streaming}
+              disabled={streaming || consolidation.active}
               maxLength={maxMessageChars}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={(event) => {
@@ -320,7 +392,7 @@ export function ChatPanel({
             />
             <button
               type="submit"
-              disabled={streaming || !input.trim()}
+              disabled={streaming || consolidation.active || !input.trim()}
               className="focus-ring text-accent shrink-0 pb-0.5 text-sm tracking-wide uppercase disabled:cursor-not-allowed disabled:opacity-30"
             >
               {streaming ? "…" : "Send"}

@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { ChatPanel } from "@/components/ellis/ChatPanel";
 import { getEllisConfig, isOnboardingChatAllowed } from "@/lib/ellis/config";
+import { getConsolidationStatus } from "@/lib/ellis/consolidation";
 import { isOwnerCookie } from "@/lib/ellis/owner";
 
 const ONBOARDING_OPENING =
@@ -17,6 +18,7 @@ export default async function Home() {
   const cookieStore = await cookies();
   const chatEnabled = isOnboardingChatAllowed(config, cookieStore);
   const isOwner = isOwnerCookie(cookieStore, config.onboardingSecret);
+  const consolidation = getConsolidationStatus(config.consolidation);
 
   const openingMessage = isOwner
     ? OWNER_OPENING
@@ -32,8 +34,11 @@ export default async function Home() {
           mode={config.mode}
           maxMessageChars={config.maxMessageChars}
           maxHistoryMessages={config.maxHistoryMessages}
-          openingMessage={chatEnabled ? openingMessage : undefined}
+          openingMessage={
+            chatEnabled && !consolidation.active ? openingMessage : undefined
+          }
           isOwner={isOwner}
+          initialConsolidation={consolidation}
         />
       </main>
     </SiteShell>

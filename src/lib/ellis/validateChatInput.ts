@@ -32,6 +32,14 @@ export function validateChatInput(
   }
 
   const candidate = input as Record<string, unknown>;
+  const allowedKeys = new Set(["messages", "sessionId", "hall"]);
+  if (
+    Reflect.ownKeys(candidate).some(
+      (key) => typeof key !== "string" || !allowedKeys.has(key),
+    )
+  ) {
+    return { ok: false, error: "Invalid public chat request" };
+  }
   if (!Array.isArray(candidate.messages) || candidate.messages.length === 0) {
     return { ok: false, error: "Messages required" };
   }

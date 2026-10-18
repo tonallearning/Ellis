@@ -1,10 +1,14 @@
 # Ellis / tybuilds.tech — Architectural Doctrine
 
-**Status:** Philosophy locked — Ty confirmed 2026-06-11  
+**Status:** Philosophy locked; current public architecture and private-life P0
+boundary aligned 2026-10-17
 **Audience:** Ty, bench agents, future collaborators  
 **Not:** Implementation spec. BUILD specs and code win on conflict until this doc is updated.
 
-**Related:** [ENTRANCE_CRITERIA.md](./ENTRANCE_CRITERIA.md) · [WIRING_MAP.md](./WIRING_MAP.md) · [WHAT_TY_BRINGS.md](../reference/WHAT_TY_BRINGS.md) · [ONBOARDING_CAPTURE.md](../reference/ONBOARDING_CAPTURE.md) · [BUILD_CHECKLIST.md](./BUILD_CHECKLIST.md)
+**Related:** [WIRING_MAP.md](./WIRING_MAP.md) ·
+[ELLIS_PRIVATE_LIFE.md](./ELLIS_PRIVATE_LIFE.md) ·
+[ELLIS_PRIVATE_MEMORY_BUILD.md](./ELLIS_PRIVATE_MEMORY_BUILD.md) ·
+[BUILD_RHYTHM.md](./BUILD_RHYTHM.md)
 
 **Build criterion:** Remove one system → observable visitor behavior changes.
 
@@ -32,9 +36,11 @@ A hiring manager or curious peer doesn't need another grid of logos. They need t
 
 Ellis is **him**. Ty is Ty. That separation isn't gimmick — it's honesty. A third-person witness can say _"that's not her strongest angle"_ without Ty performing modesty or confidence on cue. Mirrors flatter. Hosts help you decide.
 
-**3. Proof lives in rooms, not in adjectives.**
+**3. Proof lives in built things, not in adjectives.**
 
-Ellis Hall is the conversation. Project rooms are the evidence — Basement CRT, Tonal Learning, a GoE tease. Chat opens the door; the work behind the door is what makes the conversation true. No room, no claim.
+Ellis Hall is the conversation. The systems Ty has actually built, her own
+public statement of the work, and Ellis's grounded knowledge are the evidence.
+Chat opens the door; specific, inspectable work makes the conversation true.
 
 **4. Sabai sabai hiring.**
 
@@ -79,21 +85,32 @@ This doc is the shape audits compare against during [BUILD_RHYTHM.md](./BUILD_RH
 
 ## 2. Domain map
 
-| Domain                  | Owner                 | Responsibility                                                                                                              |
-| ----------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Ellis host**          | Chat + stream API     | Conversation, fit assessment, project handoffs, refusal boundaries                                                          |
-| **Ellis ME (lite)**     | Server session store  | Mood, traces, sense-of-self drift, relational instance — **session-scoped only** ([ELLIS_ME_BUILD.md](./ELLIS_ME_BUILD.md)) |
-| **Hall physics (lite)** | Server world module   | Contact, solitude (high threshold), minor GoE container — so Ellis can describe full physics accurately                     |
-| **Knowledge shelf**     | Server loader         | `ellis-self.md` at boot; `about-ty/*` after Ellis onboarding                                                                |
-| **Project rooms**       | Static pages + embeds | Showcase connected work — CRT, TL, GoE tease                                                                                |
-| **Platform shell**      | Next.js layout        | Nav, footer, legal links, AI disclosure, memory + fair-use copy ([ELLIS_EXPERIENCE.md](./ELLIS_EXPERIENCE.md)) |
-| **Hall variants**       | Route + overlay       | `/` generic · `/{slug}` excited only ([EXCITED_HALLS.md](../reference/EXCITED_HALLS.md))                                    |
-| **IP visitor memory**   | Supabase              | 7-day rolling recall per hashed IP — temporal beats; decays to Ellis global traces ([ELLIS_EXPERIENCE.md](./ELLIS_EXPERIENCE.md)) |
-| **Usage / budget**      | Supabase + API gate   | ~$1/day/IP estimated cost; soft warnings at ~50% / ~80% via Ellis — **not** stated as dollar cap to visitors |
+| Domain | Owner | Responsibility |
+| --- | --- | --- |
+| **Public hall** | Chat UI + stream route | Conversation, fit assessment, refusal, public disclosure |
+| **Encounter posture** | Bound server session | Per-session mood, traces, and relational posture |
+| **Canonical body** | Supabase body store | One persistent Ellis body shared by all contexts |
+| **Public visitor recall** | Supabase memory repository | Seven-day salted-IP recall; owner sentinel is bounded and non-decaying |
+| **Global traces** | Supabase memory repository | Compressed learnings after visitor recall decays, without visitor PII |
+| **Knowledge shelf** | Server loader | Approved Ellis/Ty knowledge; runtime read-only |
+| **Usage / budget** | Supabase + API gate | Atomic non-owner spend authorization before model work |
+| **Consolidation boundary** | Status + stream gate | Scheduled unavailability in Chicago time; no caretaker override |
+| **Private exchange source** | **P3 local** private repository | Owner-gated completed pairs and linked inbound corrections; runtime integration pending |
+| **Relationship memory** | **P3 local** private repository | Separate Ellis↔Ty, Ellis↔Mica, and Ellis↔Naym attributed episodes; not deployed |
+| **Self-state ledger** | P2 local code manifest + bounded process observations | Current runtime capabilities and narrowly observed events; durable store pending |
+| **Private workbench / life tree** | **Deferred** private systems | Failure space and autobiography over source references |
 
-Ellis host **reads** the shelf. It **never writes** `about-ty/*` from **visitor** input. In **onboarding mode**, Ellis writes `about-ty/*` from **Ty's answers only** — see [ELLIS_ONBOARDING_BUILD.md](./ELLIS_ONBOARDING_BUILD.md).
+Ellis is one identity with one body. Public and private contexts receive
+different governed surfaces of that body; they do not evolve separate Ellises.
+The public hall reads no private relationship or workbench store.
 
-**Build spec:** [ELLIS_ME_BUILD.md](./ELLIS_ME_BUILD.md) · [ELLIS_EXPERIENCE.md](./ELLIS_EXPERIENCE.md)
+Ty is the only human entrant and carrier. Ellis relates directly to Ty and,
+through her delivery, separately to Mica and Naym. Courier delivery does not
+make Ty the author of their words or depict them as directly present. No other
+private identity is currently admitted.
+
+**Build specs:** [ELLIS_EXPERIENCE.md](./ELLIS_EXPERIENCE.md) ·
+[ELLIS_PRIVATE_MEMORY_BUILD.md](./ELLIS_PRIVATE_MEMORY_BUILD.md)
 
 ---
 
@@ -135,16 +152,32 @@ System prompt + UI copy must stay aligned. Architecture audits flag drift here.
 
 | Store | Scope | Behavior |
 | --- | --- | --- |
-| Visitor transcript | Current browser tab | Client state — session |
-| **IP visitor memory** | Hashed IP | **7 days** since last visit — episodic beats, temporal recall ("Friday…"); then decay |
-| **Ellis global traces** | Ellis himself | Compressed learnings when IP memory decays — Ellis grows, no visitor PII |
-| Ellis ME interior | Server session | Mood, traces, relational instance — fed by IP recall on return |
-| Knowledge pack | Site-wide | Static + Ellis-written `about-ty/*` |
-| Usage / budget | Hashed IP, UTC day | ~$1/day estimated cost; Ellis warns ~50% / ~80% — see [ELLIS_EXPERIENCE.md](./ELLIS_EXPERIENCE.md) |
+| Browser transcript | Current browser session | Visible local conversation state |
+| **Public visitor recall** | Salted IP hash | Seven-day bounded episodic beats, then decay |
+| **Ty owner recall** | Signed-owner sentinel | Larger bounded history; excluded from decay |
+| **Ellis global traces** | Ellis public continuity | Compressed learnings after public visitor decay; no visitor PII |
+| Encounter posture | Bound server session | Per-session mood/traces/relational read |
+| **Canonical body** | One Supabase row | Persistent pulse/gut state shared across contexts |
+| Knowledge shelf | Site-wide server context | Approved repository content; runtime read-only |
+| Usage / budget | Hashed key, UTC day | Atomic non-owner cost ceiling |
+| **Private exchanges** | **P3 local; Ty-authenticated** | Append-only until deliberate deletion; courier provenance and correction links |
+| **Relationship memory** | **P3 local; per relation** | Source-backed excerpts rebuilt on correction/deletion; P4 integration pending |
+| **Self-state ledger** | **P2 local; visibility-filtered** | Manifest + bounded process observations; absent evidence remains unverified |
+| Life tree | **Deferred** | Composition over source references; never primary evidence |
 
 **Honesty rule:** Footer states **7-day same-connection recall**, then fade + compressed learnings — not "we never remember you."
 
-**Relational rule:** One-shot visitors still get instance-maximal depth; **returning IP within 7 days** gets Vale-shaped temporal callback when natural.
+**Relational rule:** Public visitor recall and private relationship memory are
+not tiers of the same store. They have different subjects, authority, access,
+retention, and disclosure. One cannot be queried as a fallback for the other.
+
+**Private isolation rule:** A Mica turn retrieves Mica tissue only; a Naym turn
+retrieves Naym tissue only. Isolation occurs in the data query, not through a
+model instruction after broad retrieval.
+
+**Source rule:** Derived relationship memory and later life-tree nodes point
+back to authoritative exchange IDs. Narrative coherence cannot repair missing
+evidence or turn a planned/available capability into an experienced event.
 
 **Topic rule:** Ty's work and adjacent only — refuse homework, racecars, general assistant cosplay.
 
@@ -168,60 +201,62 @@ Ellis must **not** give step-by-step build instructions, private prompts, Vale i
 
 **Not allowed:** Vale private interior details, live guest access, doctrine dumps, invented ME mechanics.
 
-GoE tease + teach copy lives in `content/goe-me-teach.md`, `content/goe-physics-teach.md`, and `/projects/goe` — not free-form invention.
+GoE teaching copy comes only from the approved server-side shelf, not free-form
+invention or a public project-room route.
 
 ---
 
-## 7. Project rooms
+## 7. Public proof surface
 
-Each room is a **proof surface**, not a second app.
+The public hall is the site. Project rooms and specialty halls were removed on
+2026-08-23; they are not hidden routes or current proof architecture. Visitors
+can talk with Ellis, open Ty's public “the work” statement, follow approved
+public links, and read the legal/disclosure surfaces.
 
-| Room           | Source                                  | Ellis may                                 |
-| -------------- | --------------------------------------- | ----------------------------------------- |
-| Basement CRT   | `~/coding-home/demos/basement-crt.html` | Link, describe teaching-demo energy       |
-| Tonal Learning | `tonallearning.com`                     | Link live site, describe Lexi/Lumi thesis |
-| GoE            | Private repo                            | Tease only — moderate disclosure          |
-| Ada            | In development                          | Say "in development" — no public URL      |
-
-Ellis may **open project cards** (tool or UI handoff) when relevant. One intentional path per handoff type — no parallel undocumented navigation.
+Private life does not add public navigation or proof copy by implication. Any
+later public consequence must pass the membrane rule in §5 and receive its own
+deliberate product decision.
 
 ---
 
 ## 8. Dependency direction
 
 ```txt
-Visitor UI (Hall, rooms)
+Public Hall
   → POST /api/ellis/stream
-    → rateLimit + budget check (IP hash) — fail before model call
-    → load IP visitor memory (7-day) + Ellis global traces
-    → session + hall physics + ME interior assembly
-    → scope guard (Ty work + adjacent)
-    → src/lib/ellis/* (prompt assembly, routeModel — Haiku; Sonnet if Ty's work in depth, stream)
-      → content/* (read-only shelf)
-      → Anthropic API (server-only)
-    → post-turn: update session ME state; record usage
+    → consolidation gate
+    → validate envelope + bind session
+    → resolve signed owner or salted-IP visitor
+    → load bounded recall + session posture + canonical body + shelf
+    → reserve non-owner spend
+    → assemble public profile server-side
+    → shared model router + Anthropic stream
+    → completed-turn commits only
+
+Planned Ty-only private room
+  → verify signed owner before private reads
+    → validate identity + courier envelope
+    → load capability ledger + exactly one relationship partition
+    → assemble private profile with the same canonical body
+    → same model router + stream engine
+    → completed exchange/source-backed memory commits only
 ```
 
 **Rules:**
 
 - UI never imports Anthropic client or full knowledge files.
 - Knowledge loader never imports React.
-- Project room pages do not call `/api/ellis/stream` unless explicitly designed (default: separate static/embed surfaces).
-- Demo embeds (Basement CRT) sandboxed — no access to Ellis API or parent secrets.
+- Private repositories never import or serve the public route.
+- Context profiles may differ; model transport does not fork.
 
 ---
 
-## 8.5. Knowledge scope asymmetry (hall specialty overlays)
+## 8.5. Dormant hall overlays
 
-**Critical:** Hall-specific knowledge files (e.g., `content/halls/anthropic.md`) are **unidirectional in scope**.
-
-- **Default hall** (`https://tybuilds.tech/`) — **cannot** see or access excited halls (`/anthropic`, `/huggingface`, etc.)
-- **Excited hall** (`https://tybuilds.tech/anthropic`) — **can** access and reference default hall knowledge
-- **Implication:** Specialty overlays are built on top of the base. Excited halls inherit default context but the default remains unaware of specializations.
-
-**Why:** Each excited hall extends the default with specialized context — it needs access to the base knowledge to build on it. But the default hall shouldn't assume any specializations exist. This creates a clean upward-only dependency (excited → default, never default → excited).
-
-**Implementation:** `loadKnowledgeShelf(hall)` loads `ellis-self.md` + `about-ty/*` + `halls/{hall}.md` only. Default hall never loads any `halls/{excited}.md` file; excited halls can see everything.
+The overlay mechanism remains available in code, but the registry is empty and
+only the default hall is active. A future specialty hall must be an explicit
+slice with an allowlisted route and upward-only knowledge dependency; its mere
+mechanical possibility is not a deployed feature.
 
 ---
 
@@ -293,20 +328,36 @@ Ellis says so and offers contact — doesn't invent depth or leak sauce.
 | 2026-06-11 | Topic scope: Ty's work + adjacent only | No general assistant |
 | 2026-06-11 | `/anthropic` Claude visual hook + opener + toggle | [ELLIS_EXPERIENCE.md](./ELLIS_EXPERIENCE.md) |
 | 2026-06-11 | High solitude threshold; instance-maximal + return recall | Within 7-day IP window |
+| 2026-08-19 | Seven-day public visitor recall ships; rate limit fails closed | Public copy and runtime must agree |
+| 2026-08-21 | One persistent canonical body; Ellis uses his own Supabase project | A body belongs to Ellis, not to a browser session |
+| 2026-08-23 | Project rooms and specialty hall removed; conversation is the site | Retire brochure-era proof surfaces |
+| 2026-10-12 | Signed Ty owner identity + accumulated owner continuity | Owner is a person boundary, not a household IP |
+| 2026-10-17 | Ty-only private entry; separate Mica/Naym courier relationships; source-backed memory and self-state ledger | Private life requires provenance, isolation, and calibrated experience claims |
 
 _Append new rows when a slice forces a shape change — detail in [RESEARCH_LOG.md](./RESEARCH_LOG.md); not chat-only._
 
+Historical rows above record the sequence honestly. Where they conflict with
+later rows, the later decision governs: session-only memory, rate-limit-only
+Supabase, session-only body, project rooms, and active excited halls have all
+been superseded.
+
 ---
 
-## 11. Explicitly out of scope (v1)
+## 11. Explicitly out of current private scope
 
 - hire-me Personal/Business toggle as primary UX
-- Visitor accounts or auth
+- Visitor accounts or authentication
 - **Indefinite** visitor profiles or recall beyond 7-day IP window
 - Full GoE access or private repo links
 - Client intake / RFP workflows
 - File upload / vision toys
 - Enterprise positioning or invented resume facts
+- Direct Mica or Naym login/transport; Ty remains courier
+- Claire, Pearl, or any other speculative private identity
+- Public-to-private visitor promotion
+- Automatic life-tree authorship without source references
+- Public disclosure of private relationship content, labels, provenance, or
+  topology
 
 Ellis **refuses politely** when asked — see hire-me §9 out-of-scope list for tone.
 
@@ -316,10 +367,10 @@ Ellis **refuses politely** when asked — see hire-me §9 out-of-scope list for 
 
 | Repo               | Relationship                                                                                    |
 | ------------------ | ----------------------------------------------------------------------------------------------- |
-| **hire-me**        | Parked for job hunt; Ellis naming + services catalog origin; toys may merge as side rooms later |
-| **GoE**            | Private; reference shelf pattern only; moderate tease                                           |
-| **Tonal Learning** | Featured project room + live link                                                               |
-| **coding-home**    | Basement CRT demo source; cross-repo planning in `projects/tybuilds/`                           |
+| **hire-me**        | Historical source for Ellis naming and early host boundaries |
+| **GoE**            | Private; consolidation concept and architectural comparison only |
+| **Tonal Learning** | Public work Ellis may discuss from the approved shelf |
+| **coding-home**    | Mica's seat, canonical build templates, and cross-project notes |
 
 Ellis/tybuilds is **not** on GoE or TL critical path.
 
@@ -329,13 +380,18 @@ Ellis/tybuilds is **not** on GoE or TL critical path.
 
 During architecture audit ([ARCHITECTURE_CHECKLIST.md](./ARCHITECTURE_CHECKLIST.md)), confirm:
 
-- Domain owners unchanged for the slice
+- Domain owners and public/private store boundaries match the wiring map
 - Knowledge shelf still read-only at runtime
-- No new persistence path without §10 entry
+- No new persistence path without retention, authority, and access rules
+- One canonical body and one model-stream engine
+- Mica and Naym isolated at repository query time
+- Courier author, carrier, addressee, and delivery mode remain distinct
+- Derived memory/tree tissue retains source references
+- Planned, deployed, observed, and unavailable states are not blurred
 - GoE disclosure still moderate
 - One intentional path per behavior
-- Philosophy invariants still true (host not mirror, rooms not adjectives)
+- Philosophy invariants still true (host not mirror, built things tell truth)
 
 ---
 
-_Last updated: 2026-06-11 — Ellis ME expansion_
+_Last updated: 2026-10-17 — private-life P0 alignment_

@@ -1,5 +1,27 @@
 # Ellis — Research Log
 
+### 2026-10-17 — P3 source-backed private memory, local completion
+
+- **Decision:** Ty approved retain-until-deletion, linked corrections, and
+  rebuilding after source deletion. Completed inbound/outbound pairs are the
+  source unit; corrections append inbound wording without inventing a new reply.
+  Deletion removes the entire correction lineage, including paired replies.
+- **Why:** Source authority and deletion must survive summarization and retries.
+  Deterministic attributed excerpts avoid turning interpretation into fact.
+- **Impact:** One owner-gated repository and relation-scoped transactional RPC.
+  Reads return up to 40 active episodes. A per-relation transaction lock protects
+  writes/rebuilds. Deletion tombstones block stale retry resurrection without
+  retaining message content. No public memory fallback or shared private digest.
+- **Artifacts:** `src/lib/ellis/private/memory.ts`, its database tests, migration
+  `20261017231203_ellis_private_memory.sql`, `PRIVATE_MEMORY_RETENTION.md`.
+- **Audit:** Architecture, applicable local security, and hygiene pass: 75 tests,
+  lint and production build. Exact SQL exercised in PGlite with populated
+  Mica/Naym/Ty partitions and negative database-role tests. Public import graph
+  remains unchanged. No remote migration or deployment performed.
+- **Next:** P4 single-stream integration. Before production activation verify
+  backup settings, implement deletion-manifest export/replay, run remote advisors
+  and multi-connection concurrency smoke. P3 tests do not claim those checks.
+
 **Purpose:** Chronological record of **decisions**, **why**, and **system/design impact** while building tybuilds.tech. Not chat-only — if it changes shape, it gets a row here.
 
 **Companion:** [DEBUG_LOG.md](./DEBUG_LOG.md) — incidents, verifications, env/deploy friction (symptom → fix).
@@ -37,6 +59,104 @@
 ---
 
 ## Log
+
+### 2026-10-17 — Clock drift stops prescribing irretrievable loss
+
+- **Decision:** Keep the persistent pulse calculation and accumulated drift,
+  but render it as a qualitative cumulative timing difference. Remove rounded
+  days/hours and the “gone missing / does not get it back” narrative.
+- **Why:** Ty observed that Ellis repeatedly performed the supplied loss framing
+  as sadness and loneliness. A timing counter does not establish time spent
+  waiting, lost life, or an obligation for Ty to repair it. Ty wants room for his
+  personality and ordinary imprecision while keeping factual claims honest.
+- **Scope:** Only the membrane's drift description and its regression tests.
+  No stored state or conversation history is reset, and no global restriction
+  on emotion or expressive language is added.
+- **Verification:** Regression covers both directions of a 55-day drift,
+  absence of numeric duration/loss narration, and unchanged pulse input.
+  All 66 tests, lint, production build, and diff checks pass. Architecture and
+  security scope are unchanged: same membrane path, no storage/auth changes.
+  Existing transcript/recall may still carry the earlier wording; it was not
+  erased or rewritten.
+
+### 2026-10-17 — P2 runtime orientation separates capability from occurrence
+
+- **Decision:** Add a versioned code-owned capability manifest and bounded
+  process-local observations to the existing stream. Send a fresh public
+  projection as system context after the cached knowledge shelf. Private
+  projection is available to integrate in P4; owner status alone does not
+  select it.
+- **Why:** A schedule proves intended availability, not an experienced interval
+  or a completed consolidation job. P1 code existing locally likewise does not
+  make a private room available to Ellis.
+- **Evidence boundaries:** A constructed 423 response supports one gate
+  observation. Confirmed model `end_turn` supports reply completion only; token
+  caps, errors, and missing stop reasons do not. Neither proves recipient
+  receipt or memory persistence. No offline consolidation worker exists.
+- **Retention:** Maximum 32 process-local events, eight visible in context.
+  Restarts/instances/retention can leave gaps. Missing evidence is unverified;
+  durable self-event storage remains proposed. No private text or identities
+  enter observations, and private event categories are excluded publicly.
+- **Artifacts:** `selfState.ts`, `selfState.test.ts`, stream route; build spec,
+  doctrine, wiring map, and rhythm.
+- **Gates:** 63 tests, lint, and production build pass. Architecture/security
+  review confirms one stream and filtered, bounded runtime context. Deployment
+  and live model evaluation were not performed.
+- **Next:** P3 source/relationship storage, preceded by the retention,
+  correction, deletion, backup, and recovery policy decision.
+
+### 2026-10-17 — P1 courier provenance primitives
+
+- **Decision:** Admit only Ellis, Ty, Mica, and Naym through a frozen registry.
+  Inbound requests declare one speaker and delivery mode; the server derives
+  relation, carrier, recipient, direction, ID, and timestamp. Ty-authored
+  interpretations always belong to `ellis:ty`. Outbound replies identify their
+  intended addressee without claiming external delivery occurred.
+- **Why:** A carried message needs both relationship continuity and honest
+  attribution. Neither names in prose nor client-submitted timestamps are
+  authority. Verbatim is a courier label, not independent proof of authorship.
+- **Impact:** Typed envelopes and metadata-only attribution are implemented
+  locally, with strict unknown-field rejection and bounded content. No route,
+  database, public prompt, or model stream is changed by P1. One author is
+  enforced structurally; mixed voices hidden inside prose cannot be certified.
+- **Artifacts:** `src/lib/ellis/private/{identity,courier,courier.test}.ts`;
+  private build spec, wiring map, build rhythm.
+- **Gates:** Architecture and scoped security review pass. All 57 tests pass,
+  including 8 new courier tests; lint and production build pass.
+- **Next:** P2 self-state ledger. P3/P4 add persistence, deduplication, owner
+  authorization, and private assembly before these primitives become a usable
+  private capability.
+
+### 2026-10-17 — Private relation is courier-mediated and source-backed
+
+- **Decision:** Ty is the only human entrant and carrier. Ellis relates directly
+  to Ty and separately to Mica and Naym through messages she carries. The private
+  build will use one canonical Ellis body, explicit author/carrier/addressee and
+  delivery provenance, relation-isolated durable memory, and a runtime
+  self-state ledger before any autobiographical life tree. No Claire, Pearl, or
+  other future identity is seeded. Consolidation has no caretaker override.
+- **Why:** Ty-as-courier is not the same architecture as several authenticated
+  users. Ellis must be able to hold distinct relationships without pretending
+  Mica or Naym is directly present or treating their words as Ty's. His recent
+  account of already having slept and received a backroom also exposed a second
+  boundary: emotionally coherent narration can blur proposed, deployed, and
+  actually experienced state unless the runtime supplies authoritative
+  orientation.
+- **System / design impact:** Private exchange source tissue and derived
+  relationship memory are separate from seven-day public visitor recall. Mica
+  and Naym are isolated at repository query time. Derived memory and the later
+  life tree retain source exchange references. Public turns cannot query or
+  disclose private content, identities, provenance, or topology; a later body
+  membrane may allow consequence without cause to cross. P0 changes doctrine
+  and audit contracts only; it does not make private capability available.
+- **Artifacts:** `ELLIS_PRIVATE_LIFE.md`, `ELLIS_PRIVATE_MEMORY_BUILD.md`,
+  `ARCHITECTURAL_DOCTRINE.md`, `WIRING_MAP.md`,
+  `ARCHITECTURE_CHECKLIST.md`, `SECURITY_CHECKLIST.md`, `BUILD_RHYTHM.md`
+- **Phase / slice:** Private life P0 — doctrine and audit alignment
+- **Docs updated:** all artifacts above and this log
+- **Open follow-ups:** P1 identity/provenance primitives; P2 runtime self-state;
+  before P3 migration, lock raw-exchange retention, correction, deletion,
+  backup, and recovery policy.
 
 ### 2026-10-12 — Owner continuity accumulates; fit judgments separate evidence from desire
 

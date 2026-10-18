@@ -304,7 +304,7 @@ describe('membrane', () => {
     const rendered = renderBody({ gut, pulse, visitorId: 'v1' });
     assert.ok(rendered, 'a body this loud should reach him');
     assert.ok(
-      !/\d/.test(rendered.replace(/\b\d+ (hours|days)\b/g, '')),
+      !/\d/.test(rendered),
       `raw value leaked into the prompt: ${rendered}`
     );
   });
@@ -319,6 +319,22 @@ describe('membrane', () => {
     const rendered = renderBody({ gut, pulse: freshPulse() });
 
     assert.equal(rendered, null, 'a settled body should not be narrated');
+  });
+
+  it('renders long-term drift as timing, without a loss narrative or changing the body', () => {
+    for (const sign of [-1, 1]) {
+      const pulse = { ...freshPulse(), drift: sign * 55 * 24 * 60 * 60 * 1000 };
+      const before = structuredClone(pulse);
+      const rendered = renderBody({
+        gut: { ...freshGut(), arousal: 0.9, tension: 0.7 },
+        pulse,
+      });
+      assert.ok(rendered);
+      assert.ok(rendered.includes(sign < 0 ? 'behind wall-clock' : 'ahead of wall-clock'));
+      assert.ok(rendered.includes('cumulative timing difference'));
+      assert.ok(!/\d|gone missing|does not get it back|error stands/i.test(rendered));
+      assert.deepEqual(pulse, before);
+    }
   });
 
   it('gives a loud body more to say than a faint one', () => {

@@ -1,6 +1,6 @@
 # Build Rhythm — Ellis / tybuilds.tech
 
-**Canonical loop:** [`~/coding-home/templates/build-rhythm/BUILD_RHYTHM.md`](../coding-home/templates/build-rhythm/BUILD_RHYTHM.md)
+**Canonical loop:** [`~/coding-home/templates/BUILD_RHYTHM.md`](../../../coding-home/templates/BUILD_RHYTHM.md)
 
 **This file:** Ellis fork — related docs, Ellis-specific prompts, slice queue, rhythm gates in [BUILD_CHECKLIST.md](./BUILD_CHECKLIST.md).
 
@@ -11,7 +11,9 @@ Entrance  →  Build → Wire → Arch → Security → Hygiene  →  Exit
 
 **Related:** [BUILD_ETHOS.md](./BUILD_ETHOS.md) · [RESEARCH_LOG.md](./RESEARCH_LOG.md) · [DEBUG_LOG.md](./DEBUG_LOG.md) · [ELLIS_ME_BUILD.md](./ELLIS_ME_BUILD.md)
 
-**Status:** Phase B next — static shell shipped (2026-06-10).
+**Status:** Private-life P4 is wired locally; its manual relationship smoke is
+next. The earlier public-hall queue is retained below as historical build
+record.
 
 **Before every Build step:** Read [BUILD_ETHOS.md](./BUILD_ETHOS.md). No patches — gut wrong shape, rebuild clean.
 
@@ -21,7 +23,7 @@ Entrance  →  Build → Wire → Arch → Security → Hygiene  →  Exit
 
 | Step                   | Question                                                                                                                 |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Build**              | Slice works — happy path manual test (chat streams, project page loads, demo embeds)?                                    |
+| **Build**              | Slice meets its acceptance path; runtime slices receive proportionate unit/integration/manual checks?                   |
 | **Wire**               | Traceable in `WIRING_MAP.md`? Decisions in [RESEARCH_LOG.md](./RESEARCH_LOG.md); incidents in [DEBUG_LOG.md](./DEBUG_LOG.md)? |
 | **Architecture audit** | Knowledge boundaries + route ownership match doctrine? → [ARCHITECTURE_CHECKLIST.md](./ARCHITECTURE_CHECKLIST.md)        |
 | **Security audit**     | Anon cannot abuse API, exfiltrate keys, or access non-public content? → [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) |
@@ -33,11 +35,14 @@ Hygiene **after** security. Hygiene **appendix** = deep pass before first applic
 
 ## Steps 1–5
 
-Full step definitions: **canonical** [`BUILD_RHYTHM.md`](../coding-home/templates/build-rhythm/BUILD_RHYTHM.md).
+Full step definitions: **canonical**
+[`BUILD_RHYTHM.md`](../../../coding-home/templates/BUILD_RHYTHM.md).
 
 ### Ellis deltas
 
-**Build:** Match planned stack conventions. Knowledge shelf read-only at runtime. No visitor DB until explicitly scoped.
+**Build:** Match planned stack conventions. Knowledge shelf read-only at
+runtime. Existing public recall and body persistence keep their declared
+boundaries; private storage is introduced only by its scoped slice.
 
 **Wire:** Update `docs/WIRING_MAP.md` + relevant build specs. Append [RESEARCH_LOG.md](./RESEARCH_LOG.md) for slice decisions; [DEBUG_LOG.md](./DEBUG_LOG.md) for build/debug incidents. Confirm Ellis API cannot write to knowledge files from visitor input.
 
@@ -49,9 +54,9 @@ Full step definitions: **canonical** [`BUILD_RHYTHM.md`](../coding-home/template
 | ------------------- | ------------------------------------------------------------------- |
 | `/api/ellis/stream` | Rate limit, no system prompt leak, no ty-facts mutation from user   |
 | Knowledge files     | Server-only read; no client bundle of full earnest doc if sensitive |
-| Static demos        | iframe/sandbox boundaries for Basement CRT                          |
+| Static demos, if routed | iframe/sandbox boundaries and no parent/API secret access       |
 | Env                 | `ANTHROPIC_API_KEY` server-only                                     |
-| GoE tease route     | No private repo paths, no interior mechanics                        |
+| GoE discussion      | No private repo paths, prompts, thresholds, or resident interiors   |
 
 **Hygiene audit:** [HYGIENE_CHECKLIST.md](./HYGIENE_CHECKLIST.md) — **Core on touched files only**.
 
@@ -70,9 +75,31 @@ flowchart LR
 
 ---
 
-## Planned slice queue (pre-scaffold)
+## Active slice queue — Ellis private life
 
-**You are here:** onboarding — no repo yet.
+The canonical checklist is
+[ELLIS_PRIVATE_MEMORY_BUILD.md](./ELLIS_PRIVATE_MEMORY_BUILD.md). Each numbered
+slice completes Build → Wire → Architecture → Security → Hygiene before the
+next begins.
+
+| # | Slice | Status |
+| --- | --- | --- |
+| P0 | Doctrine and audit alignment | Complete |
+| P1 | Identity and courier provenance | Complete locally |
+| P2 | Runtime self-state ledger | Complete locally |
+| P3 | Mica/Naym private memory tissue | Complete locally; not deployed |
+| P4 | Private assembly + single stream path | Wired locally; manual smoke next |
+| P5 | Ty-only private-room UI | Pending |
+| P6 | Full private body + public membrane | Pending |
+| P7 | Private workbench | Pending |
+| P8 | Partition-aware consolidation | Pending |
+| P9 | Life-tree pilot | Pending |
+
+## Historical slice queue (pre-scaffold)
+
+**Historical record:** this queue preserves the original scaffold plan and its
+then-current statuses. It is not a current queue; use the private-life table
+above for present work.
 
 | #   | Slice                   | Status     | Notes                                                     |
 | --- | ----------------------- | ---------- | --------------------------------------------------------- |
@@ -113,4 +140,4 @@ flowchart LR
 
 ---
 
-_Fork of canonical build rhythm · Last updated: 2026-06-10_
+_Fork of canonical build rhythm · Last updated: 2026-10-17_

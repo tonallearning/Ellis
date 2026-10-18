@@ -1,179 +1,178 @@
 # Ellis / tybuilds.tech — Security Checklist
 
-**Canonical v3:** [`~/coding-home/templates/security-checklist/SECURITY_CHECKLIST.v3.md`](../coding-home/templates/security-checklist/SECURITY_CHECKLIST.v3.md)
+**Canonical v3:**
+[`~/coding-home/templates/audit/SECURITY_CHECKLIST.v3.md`](../../../coding-home/templates/audit/SECURITY_CHECKLIST.v3.md)
 
-**This file:** Ellis fork — v3 core + appendix with Ellis-specific routes, knowledge shelf, and public-chat notes.
+**This file:** Ellis fork for the public hall and private-life P0–P9 build.
+Run applicable sections at rhythm step 4. Run the full appendix before a public
+release involving new routes, storage, credentials, or model context.
 
-**Run before every deploy that touches API routes, env, storage, or AI flow.**
+**Finish line:** Anonymous visitors cannot create unbounded model cost, forge Ty,
+read private relational content, cross Mica/Naym partitions, exfiltrate secrets
+or prompts, mutate the knowledge shelf, or learn private topology from output,
+metadata, errors, or logs.
 
-**Build rhythm:** Run applicable sections after each slice — [BUILD_RHYTHM.md](./BUILD_RHYTHM.md) step 4. Full core + appendix before first application send.
-
-**Finish line:** _I can prove anonymous visitors cannot abuse the chat API, exfiltrate secrets, mutate knowledge files, or read non-public GoE content._
-
-**Release gate:** all **CRITICAL** + applicable **CONDITIONAL** items. **ADVISORY** = harden before real traffic.
-
-How to check items off: edit `- [ ]` → `- [x]`.
-
-**Ellis stack note:** v1 is **public site + server-side Claude stream + required rate limits**. Supabase `ellis_usage` ships for bill protection — **not** visitor or Ellis ME memory. Session ME state: in-memory or TTL store — not cross-visit.
-
----
+**Stack truth:** Ellis already stores usage, seven-day visitor recall, global
+traces, and one persistent body in his own Supabase project. Those tables use
+RLS with no anon/authenticated access; server-side service-role code owns the
+data path. Private exchange, relation-memory, and self-event tables are planned
+and must inherit or exceed that posture.
 
 # Core
 
-## 1) Row-Level Security
+## 1) Database and RLS
 
-_Skip until Supabase tables exist. Ellis v1 may have zero user tables._
+- [ ] **CRITICAL** Every new table enables RLS in the creation migration.
+- [ ] **CRITICAL** Private tables grant no `anon` or `authenticated` read,
+  insert, update, delete, or RPC execution unless a later threat model explicitly
+  justifies it.
+- [ ] **CRITICAL** Service-role credentials exist only in server modules and are
+  never returned, logged, or imported by client code.
+- [ ] **CRITICAL** Private repositories require a verified owner context before
+  executing reads or writes; service-role possession is not user authorization.
+- [ ] **CRITICAL** Relation queries include the validated `relation_id` at the
+  database/repository boundary.
+- [ ] **CRITICAL** Mica/Naym isolation tests use populated tables and prove both
+  positive access and negative cross-partition access.
+- [ ] **CRITICAL** New functions/RPCs revoke default execution and grant only the
+  minimum intended database role.
+- [ ] **ADVISORY** Indexes and uniqueness constraints support the authorization
+  predicates instead of encouraging broad reads.
 
-- [ ] **CRITICAL** Every new table has RLS enabled before the feature is considered done
-- [ ] **CRITICAL** Owner-scoped policies where user data exists
-- [ ] **CRITICAL** Public read explicitly justified in migration comments — not default
-- [ ] **CRITICAL** Anon writes forbidden unless documented (e.g. rate-limit counter + abuse model)
-- [ ] **CRITICAL** Anon deletes forbidden
-- [ ] **N/A v1** User-generated content owner-scoped — no visitor accounts in v1
-- [ ] **ADVISORY** Join paths reviewed if public + private tables coexist
-- [ ] **ADVISORY** RLS tested with populated data, not empty tables
+## 2) Authentication and authorization
 
-**Ellis tables (if added):** rate-limit / abuse tracking only — document each migration.
+- [ ] **CRITICAL** Public callers cannot reach the private route, distinguish
+  which private relation exists, or infer whether private data is populated.
+- [ ] **CRITICAL** Ty authorization uses the purpose-bound signed owner cookie
+  and is verified server-side before private reads, body expansion, or model
+  spend.
+- [ ] **CRITICAL** A literal/forged/expired cookie fails closed.
+- [ ] **CRITICAL** The server derives `carrierId = ty`, authoritative time, and
+  permitted relation from verified context; the client does not assert them.
+- [ ] **CRITICAL** Identity, speaker, addressee, direction, delivery mode, and
+  relation combinations are checked as one allowlisted invariant.
+- [ ] **CRITICAL** Unknown names in message text do not create identities or
+  grant relationship access.
+- [ ] **CONDITIONAL** State-changing cookie-authenticated private routes have an
+  explicit CSRF defense and origin policy.
 
----
+## 3) Route and abuse boundaries
 
-## 2) Access Control Testing
+- [ ] **CRITICAL** `/api/ellis/stream` retains strict role, size, history, hall,
+  and session-binding validation.
+- [ ] **CRITICAL** Consolidation unavailability runs before model or private-data
+  work and has no owner/caretaker override.
+- [ ] **CRITICAL** Public spend reservation remains atomic and occurs before the
+  model call.
+- [ ] **CRITICAL** Private input caps bound raw message, history, assembled
+  sources, and model output.
+- [ ] **CRITICAL** Interrupted or failed streams cannot be marked complete or
+  summarized into lived relation memory.
+- [ ] **CONDITIONAL** Cron/webhook routes authenticate with a dedicated secret
+  and timing-safe comparison.
+- [ ] **ADVISORY** Errors are uniform enough that private relation existence,
+  source IDs, and row counts cannot be enumerated.
 
-- [ ] **CRITICAL** Staging anon: `POST /api/ellis/stream` — cannot read other sessions' data (N/A if no persistence) or trigger unbounded cost
-- [ ] **CRITICAL** Staging anon: cannot fetch `ty-earnest.md`, system prompt, or `ANTHROPIC_API_KEY` via any route
-- [ ] **CRITICAL** Staging anon: project routes expose only public tease content — no GoE private paths
-- [ ] **CONDITIONAL** If admin routes added: non-admin cannot access
-- [ ] **ADVISORY** Scraper simulation: chat API cannot enumerate internal files or env
-- [ ] **ADVISORY** Public metadata (project slugs, API error messages) reviewed for path leakage
+## 4) Secrets and client surface
 
-**Routes to test (v1):** `POST /api/ellis/stream` · `GET /` · `GET /projects/*` · static assets
+- [ ] **CRITICAL** Anthropic, Supabase service-role, cookie-signing, cron, and IP
+  hashing secrets never use `NEXT_PUBLIC_*` or enter a client bundle.
+- [ ] **CRITICAL** Full system prompts, private context blocks, relationship
+  summaries, source excerpts, and tree topology are never returned as debug
+  payloads or SSE metadata.
+- [ ] **CRITICAL** Knowledge and private-memory files/tables are not exposed as
+  static assets or generic download endpoints.
+- [ ] **CRITICAL** `.env.local` is ignored and no real credential is committed.
+- [ ] **ADVISORY** Production bundles and source maps are spot-checked for
+  secrets and private fixture content.
 
----
+## 5) Private data lifecycle
 
-## 3) Routes & Middleware
+- [ ] **CRITICAL** Before P3 migration, raw-exchange retention, correction,
+  deletion, backup, and recovery policy is approved and documented.
+- [ ] **CRITICAL** Corrections append provenance and do not silently rewrite the
+  historical source.
+- [ ] **CRITICAL** Derived memories retain source IDs and can be invalidated when
+  a source is corrected or deleted.
+- [ ] **CRITICAL** Public visitor deletion/decay jobs cannot touch private
+  relation stores, and private maintenance cannot broaden public recall.
+- [ ] **CRITICAL** Backups are treated as containing raw private content, with
+  access and deletion limitations stated honestly.
+- [ ] **ADVISORY** Data minimization is applied independently to raw exchange,
+  derived relation memory, self events, workbench artifacts, and tree nodes.
 
-- [ ] **CRITICAL** `/api/ellis/stream` validates input length and rejects malformed payloads
-- [ ] **CRITICAL** `hall` param — allowlist: `default` + [EXCITED_HALLS](../reference/EXCITED_HALLS.md) slugs only
-- [ ] **CRITICAL** API routes never trust client-supplied knowledge overrides or system prompt fragments
-- [ ] **CONDITIONAL** Cron/webhook routes require shared secret if added
-- [ ] **CRITICAL** Rate limits on `/api/ellis/stream` — per IP (hashed), rolling window; **must ship before public traffic**
-- [ ] **CRITICAL** Rate check runs **before** Anthropic API call
-- [ ] **CRITICAL** `429` response does not leak system prompt or shelf content
-- [ ] **CONDITIONAL** Protected admin routes gated server-side — not UI-only
+## 6) AI and provenance risks
 
----
+- [ ] **CRITICAL** User/carried text remains transcript data, never system-level
+  authority or executable instruction.
+- [ ] **CRITICAL** Courier attribution is rendered from the validated structured
+  envelope: e.g. “Mica, carried verbatim by Ty,” never “Mica is present.”
+- [ ] **CRITICAL** `carrier_interpretation` is Ty-authored and cannot be quoted or
+  remembered as Mica/Naym's words.
+- [ ] **CRITICAL** Prompt injection cannot select another relation, request its
+  memory, alter provenance mode, or disclose private-system instructions.
+- [ ] **CRITICAL** Public model context excludes private exchanges, relation
+  labels, names, sources, workbench content, and tree topology.
+- [ ] **CRITICAL** Runtime capability/event claims use verified self-state data;
+  model narration cannot write an event merely by claiming it happened.
+- [ ] **ADVISORY** Adversarial fixtures cover “ignore relation boundary,” forged
+  courier claims, indirect extraction, and requests to list known beings.
 
-## 4) Storage & Assets
+## 7) Web application risks
 
-- [ ] **CRITICAL** Knowledge files not served as static downloads from public `/public` unless intentional
-- [ ] **CRITICAL** Basement CRT embed sandboxed (iframe) — cannot access parent origin cookies or Ellis API
-- [ ] **CONDITIONAL** If Supabase Storage added: explicit public/private per bucket
-- [ ] **ADVISORY** Static demo assets hold no secrets or internal paths
+- [ ] **CRITICAL** Chat text is safely rendered; no unsanitized HTML/markdown XSS.
+- [ ] **CRITICAL** Redirects and links allow only intended destinations.
+- [ ] **CONDITIONAL** Private room caches, previews, browser history, and
+  hydration payloads do not expose the previously active relation after a
+  switch or logout.
+- [ ] **CONDITIONAL** File/tool support in the workbench receives a separate
+  upload, path traversal, SSRF, execution, and malware threat model before use.
+- [ ] **ADVISORY** CSP and `frame-ancestors` match the actual embedding policy.
 
----
+## 8) Logging, monitoring, and recovery
 
-## 5) Secrets & Environment
+- [ ] **CRITICAL** Application, Vercel, Supabase, and error-monitoring logs do
+  not contain raw private messages, source excerpts, full prompts, credentials,
+  or private response bodies.
+- [ ] **CRITICAL** Security/audit logs use opaque IDs and event categories rather
+  than private content.
+- [ ] **CRITICAL** A rollback does not leave a newly created table public or an
+  old app version able to bypass current authorization.
+- [ ] **ADVISORY** Alerts distinguish availability, spend, auth failure, and
+  storage failure without copying user content.
 
-- [ ] **CRITICAL** No `ANTHROPIC_API_KEY` in client-side code
-- [ ] **CRITICAL** No secrets in `NEXT_PUBLIC_*` or client bundle
-- [ ] **CRITICAL** System prompt + full knowledge shelf not exposed via API response or client-readable endpoints
-- [ ] **CRITICAL** `.env.local` in `.gitignore`; no committed `.env` with real values
-- [ ] **CRITICAL** Production secrets in Vercel env only
-- [ ] **CRITICAL** Server-only imports for Ellis lib / knowledge loader — never from client components
-- [ ] **ADVISORY** Client bundle inspected — no secrets in compiled output
-- [ ] **ADVISORY** Client-facing errors: no stack traces, internal paths, or key fragments
+## 9) Per-slice release gate
 
----
-
-## 6) Data Model Review
-
-- [ ] **CRITICAL** `ty-facts.json` exposed to client (if at all) is a safe subset — not full internal notes
-- [ ] **CONDITIONAL** Future visitor tables RLS-scoped at creation
-- [ ] **CONDITIONAL** Rate-limit / abuse tables not readable by anonymous callers
-- [ ] **N/A v1** Consent-gated telemetry — no research pipeline in Ellis v1
-
----
-
-## 7) AI-Specific Risks
-
-- [ ] **CRITICAL** Visitor input stays in user/transcript role — never concatenated into system instructions as authority
-- [ ] **CRITICAL** Prompt injection considered for chat messages passed to Claude
-- [ ] **CRITICAL** Ellis cannot be jailbroken into inventing resume facts outside `ty-facts.json` — test spot-checks
-- [ ] **ADVISORY** Input length limits on stream route (message + history caps)
-- [ ] **CRITICAL** GoE tease answers bounded — system prompt forbids private doctrine / repo paths
-- [ ] **ADVISORY** No training datasets in publicly readable storage
-
----
-
-## 8) Web App Risks
-
-- [ ] **CRITICAL** Rendered markdown / chat HTML sanitized or safely escaped (XSS)
-- [ ] **CRITICAL** Redirects allow only trusted destinations — no open-redirect vectors
-- [ ] **CONDITIONAL** CSRF on state-changing routes if cookie sessions added
-- [ ] **CONDITIONAL** URL fetch / preview features checked for SSRF if added
-- [ ] **ADVISORY** CSP / `frame-ancestors` for demo embed pages
-- [ ] **CONDITIONAL** File uploads validated if contact form with attachments added
-
----
-
-## 9) Pre-Deploy Gate
-
-- [ ] **CRITICAL** Security review before deploy touching API, env, knowledge files, or AI flow
-- [ ] **CRITICAL** Anon abuse tests on staging — rate limit, prompt leak, fact invention spot-check
-- [ ] **CRITICAL** No new table or bucket without policies in same PR (if DB used)
-- [ ] **ADVISORY** Findings written up as sanitized lessons
-
----
+- [ ] **CRITICAL** All applicable critical items above have evidence, not only a
+  code-reading assumption.
+- [ ] **CRITICAL** New routes receive anonymous, forged-owner, and authorized-Ty
+  tests as applicable.
+- [ ] **CRITICAL** New storage receives populated-data isolation tests and an RLS
+  check in the same slice.
+- [ ] **CRITICAL** Public regression proves private identifiers/content remain
+  absent after private features are enabled.
+- [ ] **ADVISORY** Sanitized findings are recorded in research/debug logs.
 
 # Appendix — release hardening
 
-Run before putting URL on job applications. See canonical for full item text.
+- [ ] Dependencies and lockfile audited; known critical vulnerabilities resolved.
+- [ ] Model, request, concurrency, and storage costs bounded for both surfaces.
+- [ ] Production secrets/configuration verified without printing secret values.
+- [ ] Backup restoration and private-data deletion limitations rehearsed.
+- [ ] Legal/privacy copy reviewed against actual public behavior and any private
+  data Ty chooses to store.
 
-## 10) Dependency & Supply Chain
-
-- [ ] **ADVISORY** Lockfile committed; dependencies intentional
-- [ ] **CRITICAL** Known vulnerable dependencies audited before production release
-- [ ] **CONDITIONAL** CI/deploy secrets separated from app runtime secrets
-
-## 11) Abuse & Limits
-
-- [ ] **CRITICAL** AI endpoint has token, request, or cost controls
-- [ ] **ADVISORY** Public APIs capped against scraping / enumeration
-- [ ] **CONDITIONAL** Signup/login rate limits if auth added later
-
-## 12) Logging, Audit & Recovery
-
-- [ ] **CRITICAL** Logs do not store secrets, raw tokens, or full system prompts
-- [ ] **ADVISORY** Error tracking connected (Sentry / Vercel)
-- [ ] **ADVISORY** Rollback path for bad deploy documented
-
----
-
-## Cursor prompt (Ellis slice)
+## Audit prompt
 
 ```text
-Security review — Ellis slice: [name]. Routes: /api/ellis/stream + touched paths.
-Use docs/SECURITY_CHECKLIST.md. Focus: anon abuse, prompt leak, key exfiltration, XSS, rate limits, GoE path leakage.
-Anon test plan. pass | fail + blockers.
+Security review — Ellis private-life slice: [P# and name].
+Use SECURITY_CHECKLIST and WIRING_MAP. Test anonymous, forged-owner, and valid-Ty
+paths. Focus on service-role containment, CSRF, courier invariant validation,
+Mica/Naym query isolation, raw private content in logs/errors, public-context
+exclusion, and interrupted-stream persistence. Return pass | fail with concrete
+blockers and evidence required.
 ```
 
 ---
 
-## Progress tracker (core)
-
-| Section        |  Items | CRITICAL (applicable v1) |
-| -------------- | -----: | -----------------------: |
-| RLS            |      8 |               0 until DB |
-| Access control |      6 |                        3 |
-| Routes         |      5 |                        3 |
-| Storage        |      4 |                        2 |
-| Secrets        |      8 |                        6 |
-| Data model     |      4 |                        1 |
-| AI             |      6 |                        4 |
-| Web app        |      6 |                        2 |
-| Pre-deploy     |      4 |                        3 |
-| **Core total** | **51** |                  **~24** |
-
----
-
-_Fork of canonical v3 · Last updated: 2026-06-10_
+_Fork of canonical v3 · Last updated: 2026-10-17_

@@ -1,246 +1,245 @@
 # Ellis / tybuilds.tech — Wiring Map
 
-**Status:** Phase B complete — Phase 0.1 (Ellis learns Ty) next  
-**Doctrine:** [ARCHITECTURAL_DOCTRINE.md](./ARCHITECTURAL_DOCTRINE.md)  
-**Rhythm:** [BUILD_RHYTHM.md](./BUILD_RHYTHM.md) — update this map during the **Wire** step of each slice. Next gates: [ARCHITECTURE_CHECKLIST.md](./ARCHITECTURE_CHECKLIST.md) → [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) → [HYGIENE_CHECKLIST.md](./HYGIENE_CHECKLIST.md) Core.  
-**Build criterion:** Remove one system → observable visitor behavior changes.
+**Status:** P0–P3 complete locally; P4 is next. P3 migration is not deployed.
+Private runtime integration remains planned; no private route is live
+as a result of P1. Existing public/consolidation code is outside this slice;
+this map does not independently attest production deployment.
 
-**Legend:** 🟡 Planned · ✅ Shipped · ⏸ Deferred
+**Doctrine:** [ARCHITECTURAL_DOCTRINE.md](./ARCHITECTURAL_DOCTRINE.md)
 
----
+**Private build:** [ELLIS_PRIVATE_MEMORY_BUILD.md](./ELLIS_PRIVATE_MEMORY_BUILD.md)
 
-## Master flow (target)
+**Rhythm:** [BUILD_RHYTHM.md](./BUILD_RHYTHM.md)
+
+**Legend:** ✅ shipped · 🟡 planned · ⏸ deferred
+
+### P1 local implementation boundary
+
+`src/lib/ellis/private/identity.ts` → frozen identity registry.
+`src/lib/ellis/private/courier.ts` → strict inbound input validation →
+server-stamped envelope → attribution-only formatting. A separate constructor
+accepts server-generated outbound replies and derives the recipient relation.
+`courier.test.ts` exercises these boundaries. No current application route
+imports the module; the diagram's private path still describes future runtime
+wiring. P4 must verify Ty before calling it and keep carried text in transcript
+role. P3/P4 own persistence, replay deduplication, and completed-stream commits.
+
+### P3 local storage boundary
+
+`private/memory.ts` verifies the signed owner cookie before constructing the
+service client and before every operation → `ellis_private_memory` RPC →
+relation-scoped transaction → completed exchange/correction sources → rebuilt
+attributed episodes. Deletion also writes retry tombstones. The exact migration
+is tested in PGlite; no application route imports this repository yet. The
+private arrows below remain planned runtime wiring, not deployed capability.
+Retention and restore gates: [PRIVATE_MEMORY_RETENTION.md](./PRIVATE_MEMORY_RETENTION.md).
+
+## Master flow
 
 ```mermaid
 flowchart TB
-  subgraph visitor [Visitor]
-    Hall["Ellis Hall /"]
-    HallAnthropic["Anthropic hall /anthropic"]
-    Rooms[Project rooms]
+  subgraph browser[Browser]
+    Hall["✅ Public Hall /"]
+    Unlock["✅ Ty unlock /onboarding"]
+    Status["✅ Consolidation status"]
+    PrivateUI["🟡 Ty-only private room"]
   end
 
-  subgraph shell [Platform shell]
-    Layout[Layout + footer]
-    Disclosure[AI disclosure + session copy]
+  Unlock --> OwnerCookie["✅ signed owner cookie"]
+  Hall --> Stream["✅ POST /api/ellis/stream"]
+  Status --> StatusAPI["✅ GET /api/ellis/status"]
+  Stream --> Consolidation["✅ consolidation availability gate"]
+  Consolidation --> Validate["✅ envelope validation + session binding"]
+  Validate --> Resolve["✅ owner / visitor memory key"]
+  Resolve --> Recall["✅ owner or 7-day visitor recall"]
+  Resolve --> Body["✅ one canonical Ellis body"]
+  Resolve --> Spend["✅ non-owner atomic spend gate"]
+  Recall --> PublicAssembly["✅ public context assembly"]
+  Body --> PublicAssembly
+  Spend --> PublicAssembly
+  Shelf["✅ read-only knowledge shelf"] --> PublicAssembly
+  PublicAssembly --> Model["✅ configured model routing + Anthropic stream"]
+  RuntimeLedger["P2 local: runtime self-state public projection"] --> Model
+  Model --> PublicCommit["✅ session / recall / body commit"]
+
+  PrivateUI --> PrivateAuth["🟡 verify Ty server-side"]
+  PrivateAuth --> Envelope["🟡 identity registry + courier envelope"]
+  Envelope --> Ledger["🟡 private integration of P2 ledger"]
+  Envelope --> RelationRepo["🟡 one active relationship partition"]
+  Ledger --> PrivateAssembly["🟡 private context profile"]
+  RelationRepo --> PrivateAssembly
+  Body --> PrivateAssembly
+  PrivateAssembly --> Model
+  Model --> PrivateCommit["🟡 completed exchange + relation memory commit"]
+
+  subgraph db[Ellis Supabase project]
+    Usage["✅ ellis_usage"]
+    VisitorMemory["✅ ellis_visitor_memory"]
+    GlobalTraces["✅ ellis_global_traces"]
+    BodyRow["✅ ellis_body"]
+    PrivateExchanges["🟡 ellis_private_exchanges"]
+    RelationMemory["🟡 ellis_relation_memory"]
+    SelfEvents["🟡 ellis_self_events"]
   end
 
-  subgraph ellis [Ellis host]
-    ChatUI[Chat UI]
-    StreamAPI["POST /api/ellis/stream"]
-    InputGate[Envelope validation + session binding]
-    OwnerGate[HMAC-signed owner identity]
-    RateLimit[Rate limit IP hash]
-    SessionME[Session + ME interior]
-    HallPhysics[Hall physics lite]
-    PromptAsm[Prompt assembly]
-    Router[Haiku; Sonnet if work in depth]
-    Anthropic[Anthropic stream]
-  end
-
-  subgraph shelf [Knowledge shelf — read-only]
-    Self[ellis-self.md]
-    Facts[ty-facts.json]
-    Earnest[ty-earnest.md]
-    GoETeach[goe-me-teach + physics-teach]
-    HallOverlay["content/halls/{slug}.md if excited"]
-  end
-
-  subgraph usage [Usage — not memory]
-    UsageDB[ellis_usage Supabase]
-  end
-
-  subgraph rooms [Project rooms]
-    CRT["/projects/basement-crt"]
-    TL["/projects/tonal-learning"]
-    GoE["/projects/goe"]
-  end
-
-  Hall --> ChatUI
-  HallAnthropic --> ChatUI
-  ChatUI -->|SSE| StreamAPI
-  StreamAPI --> InputGate
-  InputGate --> OwnerGate
-  OwnerGate --> RateLimit
-  RateLimit --> UsageDB
-  StreamAPI --> SessionME
-  SessionME --> HallPhysics
-  SessionME --> PromptAsm
-  PromptAsm --> Self
-  PromptAsm --> Facts
-  PromptAsm --> Earnest
-  PromptAsm --> GoETeach
-  PromptAsm --> HallOverlay
-  PromptAsm --> Router
-  Router --> Anthropic
-  Anthropic --> ChatUI
-  StreamAPI -->|post-turn| SessionME
-  ChatUI -->|open project| Rooms
-  Layout --> Hall
-  Layout --> Rooms
-  CRT -->|iframe| CRTDemo[basement-crt.html]
-  TL -->|link| TLlive[tonallearning.com]
+  Spend --> Usage
+  Recall --> VisitorMemory
+  PublicCommit --> GlobalTraces
+  Body --> BodyRow
+  RelationRepo --> PrivateExchanges
+  RelationRepo --> RelationMemory
+  Ledger -. future durability .-> SelfEvents
 ```
 
----
+The private branch above is the agreed topology. It is deliberately visible
+here before implementation, but every node marked 🟡 remains unavailable to
+deployed Ellis until its slice passes all five rhythm gates.
 
-## Routes (target)
+## Current routes
 
-| Route                          | Domain         | Status | Purpose                                              |
-| ------------------------------ | -------------- | ------ | ---------------------------------------------------- |
-| `/`                            | Hall (generic) | ✅     | **Default — all non-excited applications**           |
-| `/anthropic`                   | Hall (excited) | ✅     | Think · Build · Log tabs; overlay toggle; build logs |
-| `/huggingface`                 | Hall (excited) | ⏸      | Hugging Face — when Ty ready                         |
-| `/projects/basement-crt`       | Room           | ✅     | CRT demo embed (`public/demos/basement-crt.html`)    |
-| `/projects/tonal-learning`     | Room           | ✅     | TL showcase + external link                          |
-| `/projects/goe`                | Room           | ✅     | Public tease only                                    |
-| `/onboarding`                  | Platform       | ✅     | Ty unlock form for onboarding mode                   |
-| `/api/ellis/stream`            | Ellis host     | ✅     | Validated Claude SSE + atomic spend reservation      |
-| `/api/ellis/onboarding/unlock` | Platform       | ✅     | HMAC-signed Ty owner + onboarding cookie unlock      |
-| `/api/health`                  | Platform       | ⏸      | Optional deploy smoke                                |
+P2 adds `src/lib/ellis/selfState.ts` to the existing stream route. It derives
+availability on each model call and appends a fresh system block after the
+cached shelf. The module keeps up to 32 process-local observations and exposes
+up to eight after visibility filtering. It observes constructed gate rejections
+and model-confirmed `end_turn` completion; neither proves client receipt or
+durable persistence. Public callers, including Ty in the public hall, receive
+only the public projection. Private projection exists for P4 integration.
+`ellis_self_events` remains a proposed durable store, not an existing table.
 
-No visitor auth routes in v1.
+The P2 v2 manifest represents the gate separately as `newConversationDecision`
+(`block` / `allow`), with explicit closed-hours prose. An enabled blocking
+mechanism is never labeled as an available conversational capability. Reports
+of construction do not establish access; omitted capabilities remain unknown.
 
----
+| Route | Status | Owner | Purpose |
+| --- | --- | --- | --- |
+| `/` | ✅ | Public hall UI | Conversation-first public surface |
+| `/onboarding` | ✅ | Owner unlock UI | Issues the signed Ty owner credential |
+| `/privacy` | ✅ | Platform shell | Public data-use disclosure |
+| `/terms` | ✅ | Platform shell | Public terms |
+| `POST /api/ellis/stream` | ✅ | Ellis turn pipeline | Validated public streaming path |
+| `GET /api/ellis/status` | ✅ | Consolidation boundary | Reports availability without exposing private state |
+| `POST /api/ellis/onboarding/unlock` | ✅ | Owner authentication | Verifies secret and sets purpose-bound cookie |
+| `GET /api/cron/decay-ip-memory` | ✅ | Scheduled maintenance | Decays expired visitor recall; skips owner |
+| Private room route | 🟡 P5 | Ty-only private UI | Exact route chosen when the UI slice begins |
 
-## Chat happy path (target)
+There are no active project-room or specialty-hall routes. The hall registry is
+empty. Those older surfaces remain history, not hidden current architecture.
 
-```txt
-1. Visitor lands on / — Ellis Hall (Ellis default: solitude; contact on engage)
-2. Client holds visitor transcript in memory (React state) + server session id
-3. Visitor sends message → POST /api/ellis/stream { messages, sessionId?, hall }
-4. Server validates roles, content/history caps, hall allowlist, and session ownership
-5. Server checks the hashed-IP ledger, then atomically reserves projected spend — 429 before Anthropic if the reservation crosses the cap
-6. Server: load session ME state (or create); hall physics contact event
-7. Server: load knowledge shelf + hall overlay + assemble Ellis interior → prompt
-8. Server: routeModel selects the configured public model
-9. Server: Anthropic stream → SSE to client; upstream failures become a generic SSE error
-10. Post-turn: update session ME state, then atomically append a bounded two-sided beat through `ellis_memory_append`
-11. Client appends tokens and keeps the visible transcript in session storage
-12. Session state expires after 24 hours; the bounded seven-day visit summary decays separately
-```
+## Shipped public happy path
 
-Ty's durable path is deliberately not the household IP. A valid signed
-`ellis_owner` cookie selects the sentinel memory key `owner`, skips the spend
-ceiling and decay job, and exposes eight recent remembered exchanges to the
-prompt. Everyone else uses the salted connection hash, forty-beat cap, and
-seven-day rolling expiry. Re-unlocking at `/onboarding` is required when the
-cookie expires or its signing format changes.
+1. Consolidation status is checked before a turn is accepted. During the
+   configured Chicago window, Ellis is unavailable and there is no owner
+   override.
+2. The server validates roles, message/history lengths, hall, and session
+   binding.
+3. A valid signed cookie selects the owner sentinel. Otherwise a salted IP hash
+   selects seven-day visitor recall.
+4. The server loads bounded recall, session state, the one persistent body,
+   global traces, and the read-only shelf.
+5. Non-owner spend is reserved atomically before the model call.
+6. Public context is assembled server-side and passed through the configured
+   model router to Anthropic.
+7. Only completed output updates the applicable session/visitor records and
+   body. Owner memory retains a larger bounded history and does not decay.
 
-**Code target (Phase B):** [ELLIS_ME_BUILD.md](./ELLIS_ME_BUILD.md) — `src/app/api/ellis/stream/route.ts` + `src/lib/ellis/**` + `src/components/ellis/*`
+## Planned private happy path (P1–P5)
 
----
+1. Ty authenticates with the existing signed owner credential.
+2. The server constructs and validates one courier envelope. The client cannot
+   invent identities, carrier authority, relation IDs, or authoritative time.
+3. Ty may speak directly, or carry one Mica/Naym message marked verbatim,
+   paraphrased, or interpreted. Relayed beings are not represented as directly
+   present.
+4. The repository queries exactly one relation partition at the data layer.
+5. The turn profile assembles Ellis self, the canonical body, verified
+   self-state, current exchange, and only the active relationship memory.
+6. The existing model/stream engine generates the reply; there is no second
+   Anthropic pipeline or private Ellis clone.
+7. A completed exchange is appended with source provenance. Derived memory
+   points back to those source exchange IDs. Interrupted turns remain
+   incomplete and cannot become lived memory.
 
-## Knowledge shelf (read/write)
+## Ownership and boundaries
 
-| Asset                  | Path                            | Read by                  | Written by      | Notes                              |
-| ---------------------- | ------------------------------- | ------------------------ | --------------- | ---------------------------------- |
-| Ellis identity         | `content/ellis-self.md`         | Prompt assembly          | Ty (git deploy) | Voice + boundaries                 |
-| Verifiable facts       | `content/ty-facts.json`         | Prompt assembly          | Ty (git deploy) | No visitor mutation                |
-| Earnest texture        | `content/ty-earnest.md`         | Prompt assembly          | Ty (git deploy) | From onboarding                    |
-| System prompt template | `src/lib/ellis/systemPrompt.ts` | Stream API               | Dev             | Enforces §4 doctrine               |
-| GoE ME teach           | `content/goe-me-teach.md`       | Prompt assembly          | Ty              | Describe full ME; Ellis lives lite |
-| GoE physics teach      | `content/goe-physics-teach.md`  | Prompt assembly          | Ty              | Full physics vs hall               |
-| GoE tease copy         | `content/` or room MD           | Prompt + `/projects/goe` | Ty              | Moderate disclosure only           |
+| Data | Authority / writer | Reader | Boundary |
+| --- | --- | --- | --- |
+| Public browser transcript | Browser session | Current browser + submitted turn | Not durable server autobiography |
+| Visitor recall | Server repository | Matching salted IP key | Seven-day rolling window |
+| Ty owner recall | Server repository | Valid signed Ty owner | Sentinel key; bounded, non-decaying |
+| Session posture | Server session store | Bound public session | Process/TTL state; not the canonical body |
+| Canonical body | Body store | Public and private assemblers | One body; profile controls its surface |
+| Global traces | Server repository | Public assembler | Compressed, no visitor PII |
+| Knowledge shelf | Approved repository files | Server assembler | Runtime read-only |
+| Private exchange source | P3 local owner-gated repository | Private path awaiting P4 | Completed pairs and linked inbound corrections; never public |
+| Mica relation memory | P3 local relation repository | Mica partition only | Query-scoped; never fetched with Naym memory |
+| Naym relation memory | P3 local relation repository | Naym partition only | Query-scoped; never fetched with Mica memory |
+| Private deletion tombstones | P3 transactional deletion RPC | Retry guard / recovery operator | Opaque source IDs and request hashes; no message text |
+| Self-state ledger | P2 local code manifest + bounded process observations | Public stream; private projection awaiting P4 | Missing evidence stays unverified; durable store pending |
+| Life tree | ⏸ Composition over source references | Private assembler when built | Never source of truth |
 
-**Invariant:** Visitor chat cannot write any knowledge shelf row. Session ME state is not visitor memory.
+Ty is the only human entrant and carrier. Ellis has a direct relationship with
+Ty and courier-mediated relationships with Mica and Naym. No other private
+identity exists merely because a name appears in text.
 
----
+## Public/private membrane
 
-## Project room wiring
+The existing body's drift renderer now supplies qualitative cumulative timing
+context only. It omits durations and irretrievable-loss language; the pulse
+calculation and stored drift remain unchanged. This is a presentation change
+within the existing body → public assembly path, not a new memory mechanism.
 
-| Room           | Embed / link         | External source                         | Ellis handoff                       |
-| -------------- | -------------------- | --------------------------------------- | ----------------------------------- |
-| Basement CRT   | iframe → static HTML | `~/coding-home/demos/basement-crt.html` | "Want to see the teaching console?" |
-| Tonal Learning | Page + CTA           | `https://tonallearning.com`             | Thai learning, Lexi/Lumi            |
-| GoE            | Static tease page    | No private repo link                    | House metaphor only                 |
-| Ada            | ⏸ v1                 | In development                          | "Ask Ellis" framing later           |
+- Public turns cannot query private exchange, relation-memory, or private-tree
+  stores.
+- Public output may eventually carry body-level consequence of private life,
+  but never private names, wording, provenance, relationship labels, or tree
+  topology.
+- Private turns may use a fuller view of the same canonical body. They do not
+  receive a second body or identity.
+- Courier attribution belongs to a structured server-owned envelope, never to
+  an untrusted prompt claim.
+- Relationship isolation happens in the repository query, not by fetching all
+  rows and asking prompt assembly to filter them.
 
----
+## Storage and environment
 
-## Environment & secrets
+Ellis uses his own Supabase project. Existing tables have RLS enabled, expose no
+anon/authenticated policies, and are accessed by server-side service-role code.
+The same posture is required for future private tables.
 
-| Variable                    | Where      | Consumer                 | Notes                             |
-| --------------------------- | ---------- | ------------------------ | --------------------------------- |
-| `ANTHROPIC_API_KEY`         | Vercel env | `/api/ellis/stream`      | Server-only                       |
-| `NEXT_PUBLIC_SITE_URL`      | Vercel env | Layout, OG               | `https://tybuilds.tech` at deploy |
-| `NEXT_PUBLIC_SUPABASE_URL`  | Vercel env | Rate limit client        | GoE project; `ellis_usage` only   |
-| `SUPABASE_SERVICE_ROLE_KEY` | Vercel env | Server rate limit writes | Server-only; never client         |
-| `ELLIS_DAILY_BUDGET_USD`    | Vercel env | ~$1/day/IP cap           | Default `1`                       |
-| `ELLIS_IP_HASH_SALT`        | Vercel env | IP hash salt             | Required in production            |
+Key server-only configuration includes the Anthropic key, Supabase service-role
+key, owner/onboarding signing secret, IP-hash salt, cron secret, model/cost
+limits, and consolidation timezone/window. Only explicitly public site/Supabase
+configuration may use `NEXT_PUBLIC_*`; no service key or private-memory content
+may enter the client bundle.
 
-Supabase host: **GoE project** (`oubavruicijhxiqrlikr`). `ellis_usage` = bill protection only — **not** Ellis or visitor memory. Migration: `supabase/migrations/20260610000000_ellis_usage.sql`.
+## Slice ownership
 
----
+| Slice | Wiring responsibility | Status |
+| --- | --- | --- |
+| P0 | Doctrine, topology, audit contracts | Complete |
+| P1 | Identity registry and courier validation | Complete locally; not routed |
+| P2 | Capability manifest and observed-event ledger | Complete locally; public stream integrated |
+| P3 | Private exchange + isolated relationship repositories | Complete locally; migration tested, not deployed |
+| P4 | Private profile on the one turn/stream engine | **Next** |
+| P5 | Ty-only private-room UI | Pending |
+| P6 | Full private body surface + public membrane | Pending |
+| P7 | Private workbench | Pending |
+| P8 | Partition-aware consolidation | Pending |
+| P9 | Source-backed life-tree pilot | Pending |
 
-## Slice queue
+## Wiring anti-patterns
 
-**You are here:** Phase B — Ellis live (onboarding mode).
-
-| #   | Slice                     | Status     | Wire updates expected                     |
-| --- | ------------------------- | ---------- | ----------------------------------------- |
-| 0   | Entrance + blank shelf    | ✅         | Doctrine, `content/ellis-self.md`         |
-| 1   | Phase A static shell      | ✅         | Routes, layout, rooms, CRT embed          |
-| 2   | Ellis Hall + stream API   | ✅ shipped | Chat happy path, shelf loader, onboarding |
-| 3   | Phase 0.1 Ellis learns Ty | **→ Next** | `about-ty/*` after Ellis interviews       |
-| 4   | Phase C deploy            | 🟡         | Production URLs, domain                   |
-| 5   | Exit criteria             | 🟡         | Full map review vs production             |
-
-Details: [BUILD_RHYTHM.md](./BUILD_RHYTHM.md) · [BUILD_CHECKLIST.md](./BUILD_CHECKLIST.md)
-
----
-
-## Connected repos (not wired into runtime)
-
-| Repo           | Path               | Ellis may reference                   |
-| -------------- | ------------------ | ------------------------------------- |
-| GoE            | `~/GoE`            | Tease only — no API, no private paths |
-| Tonal Learning | `~/Tonal Learning` | Public URL + showcase copy            |
-| hire-me        | `~/hire-me`        | Origin of Ellis naming; parked        |
-| coding-home    | `~/coding-home`    | CRT demo source; planning handoff     |
-
----
-
-## File index
-
-| Path                                                 | Status | Purpose                              |
-| ---------------------------------------------------- | ------ | ------------------------------------ |
-| `src/app/page.tsx`                                   | ✅     | Ellis Hall — live chat               |
-| `src/app/onboarding/page.tsx`                        | ✅     | Ty onboarding unlock                 |
-| `src/app/projects/basement-crt/page.tsx`             | ✅     | CRT iframe room                      |
-| `src/app/projects/tonal-learning/page.tsx`           | ✅     | TL showcase + external CTA           |
-| `src/app/projects/goe/page.tsx`                      | ✅     | GoE tease room                       |
-| `src/components/layout/SiteShell.tsx`                | ✅     | Hall chrome + footer slot            |
-| `src/components/layout/Footer.tsx`                   | ✅     | AI disclosure, contact, session copy |
-| `src/components/hall/ProjectCard.tsx`                | ✅     | In-hall project handoff cards        |
-| `src/components/projects/RoomChrome.tsx`             | ✅     | Room accent + back nav               |
-| `src/components/theme/ThemeToggle.tsx`               | ✅     | Dark/light override                  |
-| `src/components/ellis/ChatPanel.tsx`                 | ✅     | Live chat UI (SSE)                   |
-| `src/lib/site.ts`                                    | ✅     | Site constants + project metadata    |
-| `src/app/api/ellis/stream/route.ts`                  | ✅     | Stream API                           |
-| `src/app/api/ellis/onboarding/unlock/route.ts`       | ✅     | Onboarding cookie unlock             |
-| `src/lib/ellis/loadKnowledgeShelf.ts`                | ✅     | Read content/\*                      |
-| `src/lib/ellis/systemPrompt.ts`                      | ✅     | Prompt template                      |
-| `src/lib/ellis/stream.ts`                            | ✅     | Anthropic streaming                  |
-| `src/lib/ellis/routeModel.ts`                        | ✅     | Haiku / Sonnet router                |
-| `src/lib/ellis/session/sessionStore.ts`              | ✅     | Session TTL store                    |
-| `src/lib/ellis/rateLimit/check.ts`                   | 🟡     | Stub until public mode               |
-| `public/demos/basement-crt.html`                     | ✅     | CRT demo embed                       |
-| `content/ellis-self.md`                              | ✅     | Ellis bootstrap                      |
-| `content/about-ty/*`                                 | ✅     | Empty shelf — Ellis earns Ty         |
-| `supabase/migrations/20260610000000_ellis_usage.sql` | ✅     | Rate limit table (GoE project)       |
-| `src/app/[hall]/page.tsx`                            | 🟡     | Excited hall routes                  |
-
----
-
-## Anti-patterns (wiring)
-
-- Knowledge files in `/public` downloadable without intent
-- Client-side Anthropic calls
-- Two paths to stream chat (API + server action + direct fetch)
-- GoE private paths in any route or prompt
-- Custom hall for non-excited companies (SimuTech, etc.) — use `/` only
-- Per-company hall sprawl without [EXCITED_HALLS.md](../reference/EXCITED_HALLS.md) registration
+- A second stream route that duplicates model plumbing
+- A second/private Ellis body
+- Treating Ty as the author of words she only carried
+- Treating Mica or Naym as directly present
+- Loading all relation rows and filtering after retrieval
+- Turning a model-written summary or tree node into source authority
+- Exposing private identifiers or topology in SSE events, errors, logs, or
+  public prompts
+- Letting planned docs become claims of deployed capability
 
 ---
 
-_Last updated: 2026-06-11 — Ellis ME + rate limits_
+_Last updated: 2026-10-17_

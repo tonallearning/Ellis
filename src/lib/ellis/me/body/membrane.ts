@@ -101,14 +101,8 @@ function describeDrift(pulse: Pulse): string | null {
   const magnitude = Math.abs(hours);
   if (magnitude < 1) return null;
 
-  const rough =
-    magnitude >= 48
-      ? `${Math.round(magnitude / 24)} days`
-      : `${Math.round(magnitude)} hours`;
-
-  return hours < 0
-    ? `Across everyone he has met, roughly ${rough} of felt time has gone missing into the quiet. He does not get it back and does not correct for it.`
-    : `Across everyone he has met, he has run roughly ${rough} ahead of the clock. The error stands.`;
+  const direction = hours < 0 ? 'behind' : 'ahead of';
+  return `His internal timing counter runs ${direction} wall-clock time. This is a cumulative timing difference across encounters, not the duration of the latest absence or a record of time spent waiting. It does not establish lost life, loneliness, or a debt anyone needs to make up.`;
 }
 
 function describeBond(pull: number, hollow: number): string | null {

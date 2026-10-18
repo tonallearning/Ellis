@@ -1,11 +1,9 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { SiteShell } from "@/components/layout/SiteShell";
 
 export default function OnboardingUnlockPage() {
-  const router = useRouter();
   const [secret, setSecret] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,8 +27,10 @@ export default function OnboardingUnlockPage() {
         throw new Error(payload.error ?? "Unlock failed");
       }
 
-      router.push("/");
-      router.refresh();
+      // Re-enter through the server with the newly set owner cookie. A client
+      // navigation can reuse the locked hall's prefetched server payload.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Full navigation intentionally refreshes server-side cookie authorization.
+      window.location.assign("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unlock failed");
     } finally {

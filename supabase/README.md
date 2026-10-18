@@ -6,7 +6,7 @@ build with its own residents and its own retention problems; a public site that
 strangers can reach should not share a database with it, and Ellis's tables had
 already grown from one to four.
 
-Ellis owns four tables and nothing else lives beside them:
+The existing public runtime owns these four tables:
 
 | Table                  | Holds                                                                                                         | Lifetime                            |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
@@ -28,13 +28,30 @@ locks one memory key, appends the new beats, and keeps the most recent 200 beats
 for Ty's `owner` row or 40 for a seven-day visitor row. Direct upserts must not
 replace `episodic_beats`; that was the original lost-memory bug.
 
+## P3 private memory (local, not deployed)
+
+`20261017231203_ellis_private_memory.sql` adds `ellis_private_exchanges`,
+`ellis_relation_memory`, and content-free retry tombstones in
+`ellis_private_deletions`. These are independent of visitor recall. The owner-
+gated repository uses `ellis_private_memory` for relation-scoped reads,
+completed-pair commits, linked inbound corrections, and deletion/rebuild.
+No public route imports it; P4 supplies runtime integration.
+
+`npm test` executes this exact migration in embedded Postgres (PGlite) and
+checks populated isolation, RLS/grants, corrections, deletion, and retries.
+It does not contact the remote project. Before production activation, complete
+the backup/deletion recovery gates in
+[PRIVATE_MEMORY_RETENTION.md](../docs/building/PRIVATE_MEMORY_RETENTION.md)
+and run deployment advisors and concurrent-session smoke checks.
+
 ## Applying migrations
 
-Migrations are ordered by filename and every one is idempotent, so re-running
-the full set is safe.
+Migrations are ordered by filename. Apply each once and track applied versions;
+the P3 migration is transactional but not rerunnable. Never replay the full
+bundle against an existing database. P3 is currently local-only.
 
-**Dashboard (no CLI needed).** Copy all of them in order and paste into the
-project's SQL Editor:
+**Dashboard (no CLI needed).** For a new, empty database only, copy the bundle
+in order into the project's SQL Editor after reviewing every migration:
 
 ```bash
 cat supabase/migrations/*.sql | pbcopy
@@ -74,6 +91,8 @@ from information_schema.tables
 where table_schema = 'public' and table_name like 'ellis_%'
 order by table_name;
 -- expect: ellis_body, ellis_global_traces, ellis_usage, ellis_visitor_memory
+-- after deliberate P3 deployment: also ellis_private_exchanges,
+-- ellis_relation_memory, ellis_private_deletions
 
 select id, pulse->>'state' as pulse_state, gut->>'arousal' as arousal
 from public.ellis_body;

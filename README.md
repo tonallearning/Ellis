@@ -53,6 +53,9 @@ Open [http://localhost:3000](http://localhost:3000).
 | `ELLIS_DAILY_BUDGET_USD` | Optional | Default `1` — per IP per UTC day |
 | `ELLIS_IP_HASH_SALT` | Public mode | Salt for IP hashing in rate limiter |
 | `ELLIS_ONBOARDING_SECRET` | Optional | Gate onboarding route in preview/prod |
+| `ELLIS_TIME_ZONE` | Optional | Consolidation clock; defaults to `America/Chicago` |
+| `ELLIS_CONSOLIDATION_START_HOUR` | Optional | Local whole hour when Ellis becomes unavailable; defaults to `2` |
+| `ELLIS_CONSOLIDATION_END_HOUR` | Optional | Local whole hour when the hall reopens; defaults to `4` |
 
 See [`.env.example`](./.env.example) for the full list.
 
@@ -79,6 +82,7 @@ Next.js 16 · App Router · TypeScript · Tailwind CSS 4 · Vercel · Supabase (
 | [RESEARCH_LOG.md](./docs/building/RESEARCH_LOG.md) | Decisions, rationale, design impact |
 | [DEBUG_LOG.md](./docs/building/DEBUG_LOG.md) | Build incidents and smoke checks |
 | [ELLIS_ME_BUILD.md](./docs/building/ELLIS_ME_BUILD.md) | Ellis mind + chat spec |
+| [ELLIS_PRIVATE_LIFE.md](./docs/building/ELLIS_PRIVATE_LIFE.md) | Consolidation boundary and private backroom direction |
 | [STYLE.md](./docs/building/STYLE.md) | Visual system |
 
 ## Related projects

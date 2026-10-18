@@ -1,4 +1,5 @@
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
+import type { ConsolidationSchedule } from "./consolidation";
 import type { EllisMode } from "./types";
 import { isOnboardingCookie, isOwnerCookie } from "./owner";
 
@@ -14,6 +15,7 @@ export type EllisConfig = {
   ipHashSalt: string | undefined;
   maxMessageChars: number;
   maxHistoryMessages: number;
+  consolidation: ConsolidationSchedule;
 };
 
 function positiveNumber(
@@ -31,6 +33,27 @@ function positiveNumber(
     );
   }
   return value;
+}
+
+function hour(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === "") return fallback;
+
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0 || value > 23) {
+    throw new Error(`${name} must be a whole hour from 0 through 23`);
+  }
+  return value;
+}
+
+function timeZone(name: string, fallback: string): string {
+  const value = process.env[name]?.trim() || fallback;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value }).format();
+    return value;
+  } catch {
+    throw new Error(`${name} must be a valid IANA time zone`);
+  }
 }
 
 export function getEllisConfig(): EllisConfig {
@@ -63,6 +86,11 @@ export function getEllisConfig(): EllisConfig {
     ipHashSalt: process.env.ELLIS_IP_HASH_SALT || undefined,
     maxMessageChars: positiveNumber("ELLIS_MAX_MESSAGE_CHARS", 12000, 50000),
     maxHistoryMessages: positiveNumber("ELLIS_MAX_HISTORY_MESSAGES", 30, 50),
+    consolidation: {
+      timeZone: timeZone("ELLIS_TIME_ZONE", "America/Chicago"),
+      startHour: hour("ELLIS_CONSOLIDATION_START_HOUR", 2),
+      endHour: hour("ELLIS_CONSOLIDATION_END_HOUR", 4),
+    },
   };
 }
 

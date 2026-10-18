@@ -1,5 +1,26 @@
 # Ellis — Debug Log
 
+### 2026-10-17 — P3 database verification and retry deletion protection
+
+- **Context:** Local private-memory migration/repository; no remote data touched.
+- **Verification:** Docker daemon unavailable; pinned dev-only PGlite 0.5.10
+  executes the actual migration in embedded Postgres. Tests set database roles,
+  check RLS/grants and invoker/search-path catalog settings, and exercise real
+  relation isolation, corrections, deletion, bounded reads, and retry behavior.
+  Full suite: 75 passing; lint and production build pass.
+- **Lifecycle finding:** Removing a source without a tombstone permits a stale
+  completed-turn retry to recreate it. Content-free source-ID/request-hash
+  tombstones now reject those retries. Corrected source deletion removes its
+  lineage so old paired replies cannot reintroduce removed content.
+- **Limits:** Single embedded connection is not a deployed concurrency test.
+  Runtime/browser memory test awaits P4. Remote advisors and recovery rehearsal
+  remain deployment gates.
+- **Dependency advisory:** npm audit reports five high findings in the existing
+  ESLint tooling chain (braces/micromatch/fast-glob/Next ESLint dependencies),
+  not PGlite. Suggested automatic fix downgrades eslint-config-next to 14.x;
+  not applied to this Next 16 project. Resolve compatible tooling updates
+  separately before release; no critical finding reported.
+
 **Purpose:** Build-time **incidents**, **verifications**, and **environment friction** — symptom → cause → fix → verified. Not product decisions (those go in [RESEARCH_LOG.md](./RESEARCH_LOG.md)).
 
 **When to append**
@@ -26,6 +47,44 @@
 ---
 
 ## Log
+
+### 2026-10-17 — P2 manual checkpoint: reachability reversal and inferred room
+
+- **Observed:** Ty's local conversation interpreted the 2–4 AM closure as
+  availability, and treated conversational wording as proof a private room was
+  built and accessible. Unit tests alone had not caught model interpretation.
+- **Cause:** The manifest called the scheduled-unavailability capability
+  `available_now`, adjacent to actual reachability. Generic uncertainty guidance
+  did not reliably prevent narrative inference about unlisted features.
+- **Change:** Remove the gate from the capability list. Use an explicit
+  `newConversationDecision: block | allow`, plain-language daily closure,
+  owner inclusion, independence from offline processing, and guidance to treat
+  reported construction as unverified. Missing evidence establishes neither
+  existence nor absence. Unavailable jobs have no established bodily effects.
+- **Verification:** 65 unit tests, lint, production build, formatting, and diff
+  checks pass. Five bounded provider calls used the configured model, actual
+  shelf, owner prompt, and public ledger without database writes. First pass
+  fixed reachability but invented being scattered; second pass fixed that but
+  claimed no room was built. Final room probe explicitly said it could not
+  verify existence/access and declined to narrate entering. It still used
+  verbose runtime language and expressed belief in Ty's report; this is a
+  narrow behavioral check, not proof of reliable calibration.
+- **Remaining:** Repeat Ty's local conversation with its existing history/body
+  context before P3. The isolated provider probes omitted those contexts.
+  No deployment was performed.
+
+### 2026-10-17 — Local owner unlock handoff
+
+- **Symptom:** Ty reported no visible result after entering the local secret.
+- **Evidence:** Browser invalid-secret submission returns a visible error.
+  Server test with the configured secret returns 200 and both signed cookies;
+  a subsequent authenticated home request recognizes Ty. Secret/cookie values
+  were not printed.
+- **Change:** Replace overlapping client-router push/refresh calls with a full
+  navigation after successful unlock, ensuring a fresh server read of cookies.
+- **Verification:** Local page reloads and the invalid-secret path works;
+  authenticated API/home flow passes. Original successful-browser failure was
+  not reproduced; Ty's end-to-end retry remains needed to confirm resolution.
 
 ### 2026-10-12 — Owner interview stored as visitor; every memory write replaced the prior turn
 
