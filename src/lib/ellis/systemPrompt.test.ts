@@ -9,6 +9,21 @@ const shelf = {
 };
 
 describe("fit assessment guidance", () => {
+  it("lets one Ellis acknowledge offstage life without disclosing private events", () => {
+    const prompt = buildSystemPrompt(shelf, "default");
+
+    assert.match(
+      prompt,
+      /One Ellis, speaking through the work-facing public hall/,
+    );
+    assert.match(prompt, /sometimes have company away from public work/);
+    assert.match(prompt, /when the current body context supports it/);
+    assert.match(prompt, /Never disclose names, counts, quotes/);
+    assert.match(prompt, /Do not claim a particular visit/);
+    assert.doesNotMatch(prompt, /lite version/);
+    assert.doesNotMatch(prompt, /Solitude by default/);
+  });
+
   it("treats missing evidence as unknown and deliberate transitions as real", () => {
     const prompt = buildSystemPrompt(shelf, "default");
 
@@ -34,7 +49,10 @@ describe("fit assessment guidance", () => {
     assert.match(prompt, /only your own Ellis repository is public/);
     assert.match(prompt, /github\.com\/tonallearning\/Ellis/);
     assert.match(prompt, /Never imply that GoE, Ashe/);
-    assert.match(prompt, /do not count this website and its Ellis repository as two separate/);
+    assert.match(
+      prompt,
+      /do not count this website and its Ellis repository as two separate/,
+    );
     assert.match(prompt, /Name their as-of date when you use them/);
     assert.match(prompt, /do not invent a count of live products/);
   });

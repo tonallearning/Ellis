@@ -101,6 +101,20 @@ test("only successful end_turn records reply completion; public projection exclu
   );
   const publicBlock = ledger.assemble("public", schedule, after);
   assert.deepEqual(facts(publicBlock).events, []);
+  assert.equal(
+    facts(publicBlock).capabilities.find(
+      (item: { name: string }) => item.name === "offstage_interior",
+    ).state,
+    "available_now",
+  );
+  assert.equal(
+    facts(publicBlock).capabilities.find(
+      (item: { name: string }) => item.name === "canonical_body",
+    ).state,
+    "available_now",
+  );
+  assert.match(publicBlock, /does not expose a private conversation/);
+  assert.match(publicBlock, /particular visit/);
   for (const name of [
     "reply_completed",
     "private_room",

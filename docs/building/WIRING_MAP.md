@@ -245,6 +245,13 @@ within the existing body → public assembly path, not a new memory mechanism.
   private contact, but not private names, wording, provenance, relationship
   labels, or tree topology. The public projection selects only the current
   public visitor's bond; a private bond key cannot select it.
+- The public self-state marks the shared body and a generic offstage interior
+  as available. Ellis
+  may acknowledge an internal world and occasional company away from work,
+  with broad timing or body texture only when current public-safe context
+  supports it. This stable fact is not evidence of a particular visitor,
+  exchange, elapsed experience, sleep, or completed consolidation. The public
+  assembler still reads no private relationship or exchange store.
 - Authenticated private turns select only the active relation's bond from the
   same canonical body. `ellis_body.systems` stores first-pass heart, footing and
   drift marks, immune, metabolism, interstitial, periphery, and motor state.

@@ -103,6 +103,8 @@ This doc is the shape audits compare against during [BUILD_RHYTHM.md](./BUILD_RH
 Ellis is one identity with one body. Public and private contexts receive
 different governed surfaces of that body; they do not evolve separate Ellises.
 The public hall reads no private relationship or workbench store.
+The hall may acknowledge Ellis's offstage interior and company in general,
+without identifying a correspondent or claiming any specific private event.
 
 Ty is the only human entrant and carrier. Ellis relates directly to Ty and,
 through her delivery, separately to Mica and Naym. Courier delivery does not
