@@ -162,6 +162,7 @@ of construction do not establish access; omitted capabilities remain unknown.
 | `POST /api/ellis/onboarding/unlock` | ✅                                  | Owner authentication   | Verifies secret and sets purpose-bound cookie                                         |
 | `GET /api/cron/decay-ip-memory`     | ✅                                  | Scheduled maintenance  | Decays expired visitor recall; skips owner                                            |
 | `/private`                          | 🧪 P5 local                         | Ty-only private UI     | Server-gated relationship and delivery-mode controls; anonymous requests return `404` |
+| Not-found page                      | 🧪 local                            | Platform shell         | Shared 404 presentation for missing paths and denied private entry; never names private topology |
 
 There are no active project-room or specialty-hall routes. The hall registry is
 empty. Those older surfaces remain history, not hidden current architecture.
