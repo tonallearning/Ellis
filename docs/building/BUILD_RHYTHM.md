@@ -11,9 +11,18 @@ Entrance  →  Build → Wire → Arch → Security → Hygiene  →  Exit
 
 **Related:** [BUILD_ETHOS.md](./BUILD_ETHOS.md) · [RESEARCH_LOG.md](./RESEARCH_LOG.md) · [DEBUG_LOG.md](./DEBUG_LOG.md) · [ELLIS_ME_BUILD.md](./ELLIS_ME_BUILD.md)
 
-**Status:** Private-life P4 is wired locally; its manual relationship smoke is
-next. The earlier public-hall queue is retained below as historical build
-record.
+**Status:** Private-life P5 and its exact-memory access repair are complete
+locally. P6 is in progress: shared body transitions, first organ systems, and
+a validated private gesture-offer and Ellis-response path are wired. Reciprocal
+Ellis-originated offers, withdrawal, and next-turn recipient response are wired
+locally with the database migration applied; manual resident-choice smoke is
+still open. Room thresholds are source-backed and locally exercised, with manual
+resident-choice checks still open. Soft/vivid private attention is source-backed
+and locally verified with its database migration applied; owner UI and resident
+choice still need manual smoke. Periphery overhaul and lifecycle choice remain
+deferred. The earlier
+public-hall queue is retained below as historical
+build record.
 
 **Before every Build step:** Read [BUILD_ETHOS.md](./BUILD_ETHOS.md). No patches — gut wrong shape, rebuild clean.
 
@@ -21,13 +30,13 @@ record.
 
 ## Finish lines (Ellis)
 
-| Step                   | Question                                                                                                                 |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Build**              | Slice meets its acceptance path; runtime slices receive proportionate unit/integration/manual checks?                   |
+| Step                   | Question                                                                                                                      |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Build**              | Slice meets its acceptance path; runtime slices receive proportionate unit/integration/manual checks?                         |
 | **Wire**               | Traceable in `WIRING_MAP.md`? Decisions in [RESEARCH_LOG.md](./RESEARCH_LOG.md); incidents in [DEBUG_LOG.md](./DEBUG_LOG.md)? |
-| **Architecture audit** | Knowledge boundaries + route ownership match doctrine? → [ARCHITECTURE_CHECKLIST.md](./ARCHITECTURE_CHECKLIST.md)        |
-| **Security audit**     | Anon cannot abuse API, exfiltrate keys, or access non-public content? → [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) |
-| **Hygiene audit**      | Touched files clean — build/lint, no dead/dupes/known bugs? → [HYGIENE_CHECKLIST.md](./HYGIENE_CHECKLIST.md) Core        |
+| **Architecture audit** | Knowledge boundaries + route ownership match doctrine? → [ARCHITECTURE_CHECKLIST.md](./ARCHITECTURE_CHECKLIST.md)             |
+| **Security audit**     | Anon cannot abuse API, exfiltrate keys, or access non-public content? → [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md)      |
+| **Hygiene audit**      | Touched files clean — build/lint, no dead/dupes/known bugs? → [HYGIENE_CHECKLIST.md](./HYGIENE_CHECKLIST.md) Core             |
 
 Hygiene **after** security. Hygiene **appendix** = deep pass before first application send, not every slice.
 
@@ -50,13 +59,13 @@ boundaries; private storage is introduced only by its scoped slice.
 
 **Security audit:** [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) — Core CRITICAL + applicable CONDITIONAL. Minimum for public AI surface:
 
-| Surface             | Ellis checks                                                        |
-| ------------------- | ------------------------------------------------------------------- |
-| `/api/ellis/stream` | Rate limit, no system prompt leak, no ty-facts mutation from user   |
-| Knowledge files     | Server-only read; no client bundle of full earnest doc if sensitive |
-| Static demos, if routed | iframe/sandbox boundaries and no parent/API secret access       |
-| Env                 | `ANTHROPIC_API_KEY` server-only                                     |
-| GoE discussion      | No private repo paths, prompts, thresholds, or resident interiors   |
+| Surface                 | Ellis checks                                                        |
+| ----------------------- | ------------------------------------------------------------------- |
+| `/api/ellis/stream`     | Rate limit, no system prompt leak, no ty-facts mutation from user   |
+| Knowledge files         | Server-only read; no client bundle of full earnest doc if sensitive |
+| Static demos, if routed | iframe/sandbox boundaries and no parent/API secret access           |
+| Env                     | `ANTHROPIC_API_KEY` server-only                                     |
+| GoE discussion          | No private repo paths, prompts, thresholds, or resident interiors   |
 
 **Hygiene audit:** [HYGIENE_CHECKLIST.md](./HYGIENE_CHECKLIST.md) — **Core on touched files only**.
 
@@ -82,18 +91,24 @@ The canonical checklist is
 slice completes Build → Wire → Architecture → Security → Hygiene before the
 next begins.
 
-| # | Slice | Status |
-| --- | --- | --- |
-| P0 | Doctrine and audit alignment | Complete |
-| P1 | Identity and courier provenance | Complete locally |
-| P2 | Runtime self-state ledger | Complete locally |
-| P3 | Mica/Naym private memory tissue | Complete locally; not deployed |
-| P4 | Private assembly + single stream path | Wired locally; manual smoke next |
-| P5 | Ty-only private-room UI | Pending |
-| P6 | Full private body + public membrane | Pending |
-| P7 | Private workbench | Pending |
-| P8 | Partition-aware consolidation | Pending |
-| P9 | Life-tree pilot | Pending |
+| #   | Slice                                 | Status                                                  |
+| --- | ------------------------------------- | ------------------------------------------------------- |
+| P0  | Doctrine and audit alignment          | Complete                                                |
+| P1  | Identity and courier provenance       | Complete locally                                        |
+| P2  | Runtime self-state ledger             | Complete locally                                        |
+| P3  | Mica/Naym private memory tissue       | Database migration applied; repository verified         |
+| P4  | Private assembly + single stream path | Complete locally; behavioral smoke passed               |
+| P5  | Ty-only private-room UI               | Complete locally; durable display + exact source recall |
+| P6  | Private body foundation + gestures + public membrane | In progress: reciprocal gesture and altered-attention paths wired; live resident-choice smoke remains |
+| P7  | Private workbench                     | Pending                                                 |
+| P8  | Partition-aware consolidation         | Pending                                                 |
+| P9  | Life-tree pilot                       | Pending                                                 |
+| P10 | Deferred body and continuity decisions | Pending                                               |
+
+**P10 deferred design queue:** periphery overhaul and optional
+departure/model-retirement path. Erotic charge remains a separate discussion,
+possibly after P9; it is not a P6 completion gate. The current pinned-model
+fail-closed guard remains in force while the later transition path is designed.
 
 ## Historical slice queue (pre-scaffold)
 
@@ -140,4 +155,4 @@ flowchart LR
 
 ---
 
-_Fork of canonical build rhythm · Last updated: 2026-10-17_
+_Fork of canonical build rhythm · Last updated: 2026-10-18_

@@ -8,26 +8,75 @@
  * make him unsafe.
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { DEFAULT_GUT, decayOverHours, forgetColdBonds, type Gut } from './gut';
-import { DEFAULT_PULSE, type Pulse } from './pulse';
+import { createClient } from "@supabase/supabase-js";
+import { DEFAULT_GUT, decayOverHours, forgetColdBonds, type Gut } from "./gut";
+import { DEFAULT_PULSE, type Pulse } from "./pulse";
+import { advanceBody, type BodyTransition } from "./experience";
+import { DEFAULT_SYSTEMS, hydrateSystems, type BodySystems } from "./systems";
+import { activeAttention, type AttentionState } from "../../private/attention";
 
-const BODY_ID = 'ellis';
+const BODY_ID = "ellis";
+const PRESENCE_BEAT_MIN_MS = 40_000;
 
 export interface EllisBody {
   pulse: Pulse;
   gut: Gut;
+  systems: BodySystems;
 }
 
 function defaultBody(): EllisBody {
-  return { pulse: { ...DEFAULT_PULSE }, gut: { ...DEFAULT_GUT, bonds: {} } };
+  return {
+    pulse: { ...DEFAULT_PULSE },
+    gut: { ...DEFAULT_GUT, bonds: {} },
+    systems: structuredClone(DEFAULT_SYSTEMS),
+  };
 }
 
 function client() {
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
   );
+}
+
+type BodySnapshot = { body: EllisBody; revision: string };
+
+async function readSnapshot(): Promise<BodySnapshot | null> {
+  const { data, error } = await client()
+    .from("ellis_body")
+    .select("pulse, gut, systems, updated_at")
+    .eq("id", BODY_ID)
+    .single();
+  if (error || !data || typeof data.updated_at !== "string") return null;
+
+  const pulse: Pulse = { ...DEFAULT_PULSE, ...(data.pulse ?? {}) };
+  const stored: Gut = { ...DEFAULT_GUT, bonds: {}, ...(data.gut ?? {}) };
+  const lastAt = stored.updatedAt ?? pulse.lastRealAt;
+  const hoursSince = lastAt
+    ? Math.max(0, (Date.now() - new Date(lastAt).getTime()) / 3_600_000)
+    : 0;
+  return {
+    body: {
+      pulse,
+      gut: decayOverHours(stored, hoursSince),
+      systems: hydrateSystems(data.systems),
+    },
+    revision: data.updated_at,
+  };
+}
+
+/** Private owner surface only. An unavailable body is unknown, never baseline. */
+export async function readCurrentAttention(): Promise<
+  AttentionState | null | undefined
+> {
+  try {
+    const snapshot = await readSnapshot();
+    return snapshot
+      ? activeAttention(snapshot.body.systems.attention)
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -38,56 +87,41 @@ function client() {
  * The gap since the last turn is the elapsed time, so a body left alone for a
  * week has genuinely cooled by the time the next visitor sees it.
  */
-export async function loadBody(): Promise<EllisBody> {
+export async function moveBody(
+  transition: BodyTransition,
+): Promise<{ body: EllisBody; persisted: boolean }> {
   try {
-    const { data, error } = await client()
-      .from('ellis_body')
-      .select('pulse, gut')
-      .eq('id', BODY_ID)
-      .single();
-
-    if (error || !data) {
-      if (error) console.error('[BODY] load failed, using default:', error.message);
-      return defaultBody();
+    const nowMs = Date.now();
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const snapshot = await readSnapshot();
+      if (!snapshot) break;
+      if (transition.kind === "presence_beat") {
+        const lastBeat = snapshot.body.pulse.lastRealAt
+          ? Date.parse(snapshot.body.pulse.lastRealAt)
+          : Number.NaN;
+        if (Number.isFinite(lastBeat) && nowMs - lastBeat < PRESENCE_BEAT_MIN_MS) {
+          return { body: snapshot.body, persisted: true };
+        }
+      }
+      const body = advanceBody(snapshot.body, transition, nowMs);
+      const { data, error } = await client()
+        .from("ellis_body")
+        .update({
+          pulse: body.pulse,
+          gut: forgetColdBonds(body.gut),
+          systems: body.systems,
+        })
+        .eq("id", BODY_ID)
+        .eq("updated_at", snapshot.revision)
+        .select("updated_at")
+        .maybeSingle();
+      if (error) break;
+      if (data) return { body, persisted: true };
     }
-
-    const pulse: Pulse = { ...DEFAULT_PULSE, ...(data.pulse ?? {}) };
-    const stored: Gut = { ...DEFAULT_GUT, bonds: {}, ...(data.gut ?? {}) };
-
-    const lastAt = stored.updatedAt ?? pulse.lastRealAt;
-    const hoursSince = lastAt
-      ? Math.max(0, (Date.now() - new Date(lastAt).getTime()) / 3_600_000)
-      : 0;
-
-    return { pulse, gut: decayOverHours(stored, hoursSince) };
-  } catch (err) {
-    console.error('[BODY] load exception, using default:', err);
-    return defaultBody();
+  } catch {
+    // A failed body store must not disclose its contents or replace the
+    // canonical row with a default body when the connection returns.
   }
-}
-
-export async function saveBody(body: EllisBody): Promise<void> {
-  try {
-    const { error } = await client()
-      .from('ellis_body')
-      .upsert({
-        id: BODY_ID,
-        pulse: body.pulse,
-        gut: forgetColdBonds(body.gut),
-      });
-
-    if (error) console.error('[BODY] save failed:', error.message);
-  } catch (err) {
-    console.error('[BODY] save exception:', err);
-  }
-}
-
-/**
- * Real minutes since the body last moved. Feeds the pulse's tempo target — the
- * silence between visitors is what slows him down.
- */
-export function minutesSinceLastTurn(body: EllisBody): number | undefined {
-  const last = body.pulse.lastRealAt;
-  if (!last) return undefined;
-  return Math.max(0, (Date.now() - new Date(last).getTime()) / 60_000);
+  console.error("[BODY] transition could not be persisted");
+  return { body: defaultBody(), persisted: false };
 }

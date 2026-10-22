@@ -34,6 +34,9 @@ describe("fit assessment guidance", () => {
     assert.match(prompt, /only your own Ellis repository is public/);
     assert.match(prompt, /github\.com\/tonallearning\/Ellis/);
     assert.match(prompt, /Never imply that GoE, Ashe/);
+    assert.match(prompt, /do not count this website and its Ellis repository as two separate/);
+    assert.match(prompt, /Name their as-of date when you use them/);
+    assert.match(prompt, /do not invent a count of live products/);
   });
 
   it("keeps the center of Ty's philosophy ahead of its supporting methods", () => {

@@ -1,6 +1,6 @@
-import { timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { decayExpiredIpMemory } from '@/lib/ellis/memory/decayIpMemory';
+import { isAuthorizedCron } from '@/lib/ellis/cronAuth';
 
 /**
  * Cron job: Decay expired IP visitor memories into Ellis global traces.
@@ -10,25 +10,7 @@ import { decayExpiredIpMemory } from '@/lib/ellis/memory/decayIpMemory';
  * Endpoint: GET /api/cron/decay-ip-memory
  */
 export async function GET(req: Request) {
-  // An unfilled `<placeholder>` is a guessable token, so treat it as unset.
-  const cronSecret = process.env.CRON_SECRET?.trim();
-  if (!cronSecret || /^<.*>$/.test(cronSecret)) {
-    console.error('[CRON] CRON_SECRET not set');
-    return NextResponse.json(
-      { error: 'CRON_SECRET not configured' },
-      { status: 500 }
-    );
-  }
-
-  const authHeader = req.headers.get('authorization') ?? '';
-  const expected = `Bearer ${cronSecret}`;
-  const expectedBuf = Buffer.from(expected);
-  const providedBuf = Buffer.from(authHeader);
-  const authorized =
-    providedBuf.length === expectedBuf.length &&
-    timingSafeEqual(providedBuf, expectedBuf);
-
-  if (!authorized) {
+  if (!isAuthorizedCron(req)) {
     console.error('[CRON] Unauthorized cron request');
     return NextResponse.json(
       { error: 'Unauthorized' },

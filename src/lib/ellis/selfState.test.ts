@@ -43,7 +43,7 @@ test("only an active gate and actual 423 response support a blocked-request even
   assert.equal(state.consolidationCompleted, "unverified");
 });
 
-test("only the wired private relationship memory becomes available", () => {
+test("wired private capabilities are available without claiming the unfinished full stack", () => {
   const block = createSelfStateLedger().assemble("private", schedule, after);
   const state = facts(block);
   assert.equal(
@@ -54,6 +54,18 @@ test("only the wired private relationship memory becomes available", () => {
   );
   for (const name of [
     "private_room",
+    "initial_private_body_organs",
+    "resident_chosen_room_actions",
+    "structured_gesture_response",
+    "private_altered_attention",
+  ]) {
+    assert.equal(
+      state.capabilities.find((item: { name: string }) => item.name === name)
+        .state,
+      "available_now",
+    );
+  }
+  for (const name of [
     "expanded_private_body",
     "private_workbench",
     "life_tree",

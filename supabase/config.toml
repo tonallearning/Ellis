@@ -1,7 +1,7 @@
-# Ellis migrations target the GoE Supabase project (shared Postgres; isolated ellis_usage table).
-# project_id matches ~/GoE/supabase/config.toml
+# Ellis migrations target Ellis's dedicated Supabase project.
+# Keep this aligned with NEXT_PUBLIC_SUPABASE_URL in .env.local.
 
-project_id = "oubavruicijhxiqrlikr"
+project_id = "ogzdqxazjeutzvnkpypn"
 
 [db]
 major_version = 17

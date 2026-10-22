@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { isOwnerCookie } from "../owner";
 import { isCorrespondentId, type PrivateRelationId } from "./identity";
 import type { PrivateExchangeEnvelope } from "./courier";
+import { parseRoomGate, type RoomGate } from "./roomActions";
+import { parsePendingGestureOffer, type PendingGestureOffer } from "./gestures";
 
 type CookieStore = Parameters<typeof isOwnerCookie>[0];
 export type PrivateMemoryRpc = {
@@ -26,6 +28,14 @@ export type PrivateSource = {
   model_build: string | null;
   corrects_id: string | null;
   created_at: string;
+};
+export type OwnerHistorySource = {
+  id: string;
+  occurred_at: string;
+  fidelity: "legacy_excerpt" | "exact_public_turn";
+  summary: string;
+  exact_inbound: string | null;
+  exact_outbound: string | null;
 };
 
 function assertRelation(
@@ -74,11 +84,17 @@ export function createPrivateMemoryRepository(
     authorize();
     assertRelation(relation);
     try {
-      const { data, error } = await db.rpc("ellis_private_memory", {
-        p_relation: relation,
-        p_action: action,
-        p_payload: payload,
-      });
+      const { data, error } =
+        action === "read_sources"
+          ? await db.rpc("ellis_private_sources", {
+              p_relation: relation,
+              p_limit: 40,
+            })
+          : await db.rpc("ellis_private_memory", {
+              p_relation: relation,
+              p_action: action,
+              p_payload: payload,
+            });
       if (error) throw new Error("Private storage failure");
       return data;
     } catch {
@@ -88,11 +104,57 @@ export function createPrivateMemoryRepository(
   }
 
   return {
+    async pendingGesture(
+      relation: PrivateRelationId,
+    ): Promise<PendingGestureOffer | null> {
+      authorize();
+      assertRelation(relation);
+      try {
+        const { data, error } = await db.rpc("ellis_private_pending_gesture", {
+          p_relation: relation,
+        });
+        if (error) throw new Error("Pending gesture unavailable");
+        return parsePendingGestureOffer(data);
+      } catch {
+        throw new Error("Pending gesture unavailable");
+      }
+    },
+    async gate(relation: PrivateRelationId): Promise<RoomGate> {
+      authorize();
+      assertRelation(relation);
+      try {
+        const { data, error } = await db.rpc("ellis_private_room_gate", {
+          p_relation: relation,
+        });
+        if (error) throw new Error("Private gate unavailable");
+        return parseRoomGate(data);
+      } catch {
+        throw new Error("Private gate unavailable");
+      }
+    },
+    async readOwnerHistory(): Promise<OwnerHistorySource[]> {
+      authorize();
+      try {
+        const { data, error } = await db.rpc("ellis_owner_history_read", {
+          p_limit: 500,
+        });
+        if (error) throw new Error("Owner history unavailable");
+        return (data as { sources: OwnerHistorySource[] }).sources;
+      } catch {
+        throw new Error("Private memory operation failed");
+      }
+    },
     async read(relation: PrivateRelationId): Promise<PrivateEpisode[]> {
       const result = (await call(relation, "read")) as {
         episodes: PrivateEpisode[];
       };
       return result.episodes;
+    },
+    async readSources(relation: PrivateRelationId): Promise<PrivateSource[]> {
+      const result = (await call(relation, "read_sources")) as {
+        sources: PrivateSource[];
+      };
+      return result.sources;
     },
     async source(
       relation: PrivateRelationId,

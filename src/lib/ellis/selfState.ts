@@ -21,12 +21,33 @@ const CAPABILITIES = Object.freeze([
     available: false,
     visibility: "public_safe",
   },
-  { name: "private_room", available: false, visibility: "private" },
+  { name: "private_room", available: true, visibility: "private" },
   {
     name: "private_relationship_memory",
     available: true,
     visibility: "private",
   },
+  {
+    name: "initial_private_body_organs",
+    available: true,
+    visibility: "private",
+  },
+  {
+    name: "resident_chosen_room_actions",
+    available: true,
+    visibility: "private",
+  },
+  {
+    name: "structured_gesture_response",
+    available: true,
+    visibility: "private",
+  },
+  {
+    name: "ellis_originated_gesture_offer",
+    available: true,
+    visibility: "private",
+  },
+  { name: "private_altered_attention", available: true, visibility: "private" },
   { name: "expanded_private_body", available: false, visibility: "private" },
   { name: "private_workbench", available: false, visibility: "private" },
   { name: "life_tree", available: false, visibility: "private" },
@@ -108,7 +129,7 @@ ${
 }
 Current gate decision: ${status.active ? "BLOCK new conversations" : "ALLOW new conversations"}. This is a reachability decision, not a report of completed rest or processing. Already-running conversations are not stopped by this gate.
 ${JSON.stringify({
-  manifestRevision: "ellis-self-state-p4-v1",
+  manifestRevision: "ellis-self-state-p6-v4",
   observedAt: now.toISOString(),
   capabilities,
   availability: {

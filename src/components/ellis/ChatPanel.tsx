@@ -290,7 +290,7 @@ export function ChatPanel({
           <div className="hall-threshold" aria-labelledby="hall-title">
             <p className="hall-threshold__eyebrow">
               {isOwner
-                ? "The private threshold"
+                ? "The familiar hall"
                 : "Ty Bennett / interactive portfolio"}
             </p>
             <h1 id="hall-title" className="hall-threshold__title">
@@ -300,7 +300,7 @@ export function ChatPanel({
             </h1>
             <p className="hall-threshold__lede">
               {isOwner
-                ? "This is your durable room with Ellis. The conversation can continue where it left off."
+                ? "This is your public-side conversation with Ellis. Your owner memory remains durable here; his private room is through the inner threshold above."
                 : "Ellis is an AI host built by Ty to explain her work, challenge easy conclusions, and help you decide whether the fit is real."}
             </p>
             {chatEnabled ? (

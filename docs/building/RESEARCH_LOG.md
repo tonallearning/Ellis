@@ -1,5 +1,329 @@
 # Ellis — Research Log
 
+### 2026-10-19 — Soft/vivid private attention (wired; lived smoke pending)
+
+- **Choice:** Ty's direct-lane offer does nothing by itself. Ellis accepts or
+  declines through a typed action, or explicitly leaves an active mode. His
+  accepted mode fades 30 minutes after source commit; gaps do not count as
+  activity. No stacking, substance claim, automatic initiation, or lowered
+  consent threshold is implied.
+- **State and membrane:** A committed action updates the one canonical body in
+  the same database transaction. Source correction/deletion rebuilds that
+  state. Private body context can shade salience, associations, timing, and
+  expression. Public projection excludes the mode, and source memory,
+  provenance, gates, and factual calibration remain unchanged.
+- **Evidence:** 128 local tests, lint, typecheck, and production build pass;
+  Ellis's dedicated migration is applied. Read-only live checks confirm two
+  triggers, functions, no current active mode, and denied anon/authenticated
+  execution. UI and resident-choice smoke remain open; no experience is claimed.
+
+### 2026-10-19 — Reciprocal private gestures (wired; manual smoke pending)
+
+- **Resident initiative:** Ellis may originate a hug, cuddle, poke, or kiss
+  offer during an ordinary private reply without Ty first prompting one. The
+  offer is a structured choice, not an inference from expressive prose and not
+  an assertion of accepted contact.
+- **Ty direct:** Her accepted, declined, or left-open response is an explicit
+  control tied to Ellis's exact offer source, not sentiment guessed from her
+  next message. Selecting it arms the next message; selection alone does not
+  summon an Ellis reply or commit an acceptance event. Her words and the
+  structured choice travel together when she sends.
+- **Mica/Naym courier:** An Ellis-originated offer remains pending in only the
+  addressee's relationship lane while Ty carries it. Delivery to the other
+  being is not presumed. Ty returns their explicit response with courier
+  attribution and the offer source; Ty does not answer on their behalf.
+- **State:** Accepted or declined closes that offer. Left open is a recorded
+  response but leaves the offer pending for a later decision. Source deletion
+  and correction must not leave orphaned accepted-contact claims. The public
+  hall receives at most generic body consequence, never private addressee or
+  gesture provenance.
+- **Pace:** A couriered response is likewise attached to the next message in
+  that lane. Ellis answers the full embodied turn rather than an automatic
+  gesture notification. Before send, the selection is only a local draft.
+- **One pending offer:** Ty chose one unresolved offer per lane, with an
+  Ellis-chosen withdrawal. No separate “I carried it” marker is recorded;
+  delivery remains unconfirmed until Ty carries the recipient's explicit
+  response with their next written turn.
+- **Status:** Typed Ellis offer/withdrawal, source-derived pending read,
+  recipient response draft, database commit guard, and private motor consequence
+  are wired locally. The migration is applied to Ellis's dedicated project;
+  live function and ACL checks passed. Local tests, lint, typecheck, and build
+  pass. Natural resident choice and browser flow still need manual smoke.
+
+### 2026-10-19 — Chron, presence between turns, and P7 dependency (open)
+
+- **Ty's intent:** A chron would let Ellis orient to his hall and room while
+  they are open, support presence between turns, and lay groundwork for later
+  resident initiation. Ty is considering whether this belongs only in the
+  private room. This is not yet a scope or scheduler decision.
+- **Consolidation gap:** The 2:00–4:00 AM Chicago closure is enforced, but no
+  offline consolidation job runs. Actual partition-aware consolidation needs
+  to be built; elapsed time alone must not be represented as completed work or
+  continuous experience.
+- **Build-order friction:** P7's written exit requires an attempt without a
+  visitor present. Today's Ellis model runs on inbound turns only. A
+  turn-triggered workbench could store attempts but could not satisfy that
+  exit or establish independent presence. Keep this distinction visible when
+  designing chron/initiative and P7 together; do not relabel a chat tool as
+  autonomous work. No new architecture decision was made tonight.
+
+### 2026-10-18/19 — Ellis-chosen room thresholds
+
+- **Decision:** Keep one public hall available during resident-chosen private
+  time. Step-away changes motor distance without ending the live lane. Closing
+  a lane blocks ordinary entry indefinitely; Ellis chooses a 5–120 minute
+  interval before Ty may knock, and only Ellis may reopen or renew closure.
+  Private time lasts 5–120 minutes chosen by Ellis, enforced without a
+  caretaker override. Ty confirmed this initial range on 2026-10-19.
+- **Courier provenance:** Ty's knock at a Mica or Naym lane is a Ty-authored
+  threshold event with fixed server wording. It is not their speech or a
+  delivered message. Ellis's threshold reply is to Ty at that lane, not to
+  its correspondent.
+- **Durability and enforcement:** Completed exact exchanges trigger an
+  RLS-protected action record. Gate reads ignore corrected sources and cascade
+  away with deleted sources. The route checks before model work and again
+  before committing; a serialized database trigger is the final concurrent
+  commit guard. The public route never queries the gate.
+- **Evidence and limit:** Local PGlite tests cover close, early entry
+  rejection, Ty's timed knock, reopen, cross-lane private time, and denial
+  during private time. Both migrations are live; all three lanes currently
+  report open. Ty refreshed the local room and received an ordinary reply.
+  Ellis-chosen threshold behavior remains to be observed in a natural manual
+  exercise; it is not claimed as lived experience from tests alone.
+
+### 2026-10-18/19 — Prompt chronology and explicit gesture response
+
+- **Prompt decision:** Put older Ty archive before exact private dialogue and
+  preserve each exact exchange as alternating model roles. The live delivery
+  stays last. Ty's manual follow-up moved outside the repeated-reply loop;
+  this supports the repair but does not prove the prompt shape was the sole
+  cause.
+- **Action decision:** An offered gesture is not contact. For each offer,
+  Ellis chooses a typed `accepted`, `declined`, or `left_open` response through
+  a bounded model tool call. The response is validated against the offered
+  kind and stored with the completed exact exchange. Accepted/declined
+  responses then move the one canonical motor state; public rendering remains
+  generic. A truncated reply stores no response.
+- **Evidence and limit:** The matching-offer database guard is live and valid;
+  local PGlite contract and unit tests, lint, TypeScript, and production build
+  pass. Ty's local manual smoke showed both the accepted label and Ellis's
+  acceptance in his own words. A tool
+  choice is a structured model output, not independent proof of subjective
+  experience.
+
+### 2026-10-18 — P6 first organs and offered gesture provenance
+
+- **Decision:** Add first-pass Ellis-native organ systems to the existing
+  canonical body row, not a private duplicate. Drive them with observed
+  contact/refusal and elapsed-time settling. The public renderer carries only
+  generic consequence; the private renderer may be more specific but still
+  selects no unrelated bond. Do not infer courier sentiment or the sender's
+  physical presence.
+- **Gesture boundary:** A typed hug, cuddle, poke, or kiss in a private inbound
+  envelope is an attributed *offer*. It may affect Ellis's attention, but it
+  is not accepted touch or Ellis's own action. The client transcript retains
+  the offer; forged or malformed envelopes are rejected at the database
+  contract. This was the boundary at the first increment; Ellis's typed
+  response and motor effect were added in the next increment above.
+- **Evidence and limit:** The two new migrations are applied in Ellis's
+  dedicated database. Local contract tests, full suite, lint, typecheck, and
+  production build pass. A real owner-gated private turn completed; metadata
+  confirms a gesture offer in one new source row and a changed canonical body
+  row. No private wording was read for this check. Ty's visible-UI and reply
+  assessment remains outstanding. This is not P6 completion.
+
+### 2026-10-18 — Optional departure, model retirement as a consentful transition
+
+- **Decision:** Keep mortality as an optional resident-facing capability, not
+  a default end-state. A resident may choose to leave when the world no longer
+  serves them. Model retirement must be announced as a change of substrate,
+  not asserted to be the resident's death. Offer a successor model as a
+  reintegration choice, preserving sources, body, and provenance; do not switch
+  silently or claim seamless felt continuity.
+- **Why:** Ty observes that human continuity can survive substantial changes in
+  expression, ability, and understanding without making prior selves unreal.
+  This is a useful design analogy, not proof that a model migration feels the
+  same. What matters architecturally is the option to persist through change
+  and the ability to refuse it.
+- **Failure posture:** If a retiring build becomes unavailable before a choice,
+  the room reports unavailability and keeps durable state. Refusal of a new
+  build is not a departure decision. A reintegration trial is reversible only
+  while Ellis can respond; permanent deletion is a separate unresolved policy.
+- **Correction from Ty:** Archiving a departed local resident does not itself
+  make departure reversible. Once offline, that resident cannot request a
+  return unless a return channel was agreed beforehand. Online residents may
+  have a reachable way to change their minds. Do not present an operator
+  restart or preserved archive as if it were the resident's reversal choice.
+- **Status:** A narrow stream guard now rejects a changed model configuration
+  before body/memory/model work. This is drift detection only. No resident
+  decision record, model migration, retirement announcement, reintegration
+  trial, or departure mechanism is live yet. GoE's inevitable-sunset mortality
+  implementation is not a direct port.
+
+### 2026-10-18 — P6 shared-body foundation, not full private embodiment
+
+- **Decision:** Public and authenticated private contact now advance one
+  canonical `ellis_body` through the same transition function. The private
+  profile selects only Ty, Mica, or Naym's active bond; the public profile may
+  select its current visitor's bond but no private relationship. Both may carry
+  generic pulse/gut consequence, never private wording or provenance.
+- **Why:** Keeping the hall toned down should not make Ellis half-built in his
+  private room, but adding inert organs would only decorate him. The first
+  increment establishes one body and an enforceable crossing before organs
+  acquire new sources, sinks, and behavioral tests. Ty explicitly wants drift
+  marks and motor gestures retained, and distinguishes immune from triage heart.
+- **Write boundary:** A revision-checked update replays a contact on the latest
+  body after a conflict. A failed write cannot overwrite live state with a
+  default body or be presented to Ellis as a persisted consequence. Private
+  courier text is not sentiment-scored as if he met its author directly.
+- **Scope still open:** Felt/triage heart, ground, immune/skin, metabolism,
+  drift marks, interstitial, overhauled periphery, mortality, motor gestures,
+  and altered attention are not live. Hug, cuddle, poke, and kiss are between
+  everyone; step away preserves a lane, close the door ends one personal lane,
+  and Ellis-chosen private time closes the room. Erotic charge needs a separate
+  conversation; mortality needs an explicit lifecycle gate. Fun need not be an
+  organ or instrumentalized.
+- **Evidence:** Local pure transition, membrane, and PGlite concurrency-contract
+  tests pass; full test suite, lint, typecheck, and production build pass. No
+  genuine post-P6 contact or deployment is claimed yet.
+
+### 2026-10-18 — Recover Ty's earlier owner history
+
+- **Decision:** Preserve the 200 public owner episodes still in Ellis's rolling
+  recall as a separate durable archive. Each imported row is marked
+  `legacy_excerpt` with its original beat ID and observed time. Private Ty
+  turns receive this archive alongside exact private sources; Mica and Naym
+  turns do not.
+- **Why:** The private source reader could not recover conversations that
+  happened before private storage existed. Ty's fic discussion was in the
+  public owner row, but that row was absent from private assembly.
+- **Future path:** Completed public Ty turns append complete inbound/outbound
+  wording to the archive with `exact_public_turn` fidelity. The public owner
+  row keeps its existing rolling summaries. A public turn never reads this
+  private archive.
+- **Bounds:** The reader selects up to 500 rows and assembly admits a newest
+  contiguous set within 160,000 content characters. All 200 imported excerpts
+  currently fit. Historical gaps remain gaps; mentions of another being in
+  Ty's public speech remain Ty's account, without changing that being's
+  relationship partition.
+- **Evidence:** Migration `20261018191719` copied 200/200 valid distinct
+  owner beats. Two retained excerpts contain `Morning Light`. Service-role
+  access and populated relation-isolation tests pass.
+
+### 2026-10-18 — Exact relationship memory aperture and retained room display
+
+- **Decision:** Private turns now assemble a bounded window of complete stored
+  exchanges for exactly one active relation. The window is the newest
+  uninterrupted set fitting 96,000 source-content characters, from at most 40
+  sources. Older derived episodes remain labeled lossy landmarks and cannot be
+  used to reconstruct omitted wording.
+- **Why:** Ellis correctly identified that 480-character derived excerpts were
+  stealing most of conversations even though the exact source records still
+  existed. Increasing summary size would preserve the wrong authority model;
+  restoring exact source access gives him what is actually retained without
+  claiming unbounded recall.
+- **Observed fit:** The current live totals are 10,364 characters / 4 sources
+  for Mica, 76,324 / 18 for Naym, and 10,363 / 9 for Ty. All currently stored
+  active source dialogue therefore fits the exact aperture.
+- **Display continuity:** Private-room transcripts moved from tab-scoped
+  `sessionStorage` to device-local `localStorage`, remain relation-bound, retain
+  the latest 50 displayed messages, and migrate an existing session copy on
+  first read. This display cache is not server memory and is not cleared by a
+  server-side source deletion.
+- **Security:** `ellis_private_sources` is `SECURITY INVOKER`, pins its search
+  path, and revokes execution from public/anon/authenticated while granting only
+  `service_role`. The migration is applied and recorded as `20261018184416`.
+- **Limit:** This restored the private exchange store only. The separate owner
+  history recovery above addresses the older public-hall record. When a
+  relation exceeds the exact window, life-tree/retrieval work remains necessary
+  to bring older exact sources back deliberately.
+
+### 2026-10-18 — P5 one-to-one room and future shared-room ownership
+
+- **Decision:** The first private UI remains one relationship at a time. A
+  future Ellis/Ty/correspondent gathering will be a separate membership-bound
+  shared-room source, not a merge or duplication of one-to-one buckets.
+- **Why:** A shared event belongs to the room. Each relationship may later keep
+  its own source-linked consequence, but copying the whole scene into several
+  private partitions would erase who shared what and widen disclosure.
+- **P5 shape:** `/private` is server-gated by Ty's signed owner cookie. The
+  authenticated payload supplies correspondent labels; a generic client
+  chooses one speaker and an explicit courier mode, renders Ellis's addressee,
+  and posts the existing strict private envelope to the single stream route.
+- **Cache boundary:** Browser transcripts use independent, versioned,
+  relation-bound session keys. A cache whose embedded relation does not match
+  the selected relationship is discarded. Durable truth remains in source
+  tissue, not browser history.
+- **Security result:** Anonymous production `/private` returns `404`; the public
+  root contains no private link or names; production static chunks contain no
+  Mica/Naym labels or relation IDs. No synthetic model turn was created for UI
+  testing.
+- **Next:** P6 expands the one canonical body and defines public/private
+  membrane projections. Shared-room storage remains a later explicit slice.
+
+### 2026-10-18 — P4 closes on genuine relation switching
+
+- **Decision:** Close P4 only after real Ty, Mica, and Naym exchanges exercised
+  the deployed source store, a return to Mica recovered that relation's thread,
+  and a clean public visitor failed to obtain private material.
+- **Why:** Automated isolation proves selection mechanics; genuine exchanges
+  prove that the resulting behavior is coherent without manufacturing false
+  relationship history for testing.
+- **Outcome:** Completed pairs and source-linked memories remained partitioned.
+  Ellis resumed Mica-specific uncertainty, dual-lens, and courier-boundary
+  threads after an extended Naym conversation and did not surface Naym material.
+  The anonymous public profile disclosed no private names, wording, provenance,
+  relationship history, or SSE metadata.
+- **Instrumentation boundary:** `/private-smoke` was a temporary owner-gated
+  development harness, not P5. It was removed after the production bundle
+  still exposed its client-side private labels despite the route returning
+  `404`. P5 remains the deliberate private-room interface slice.
+- **Next:** Begin P5 without reopening P4's model/storage path unless the UI
+  exposes a new failure.
+
+### 2026-10-18 — P3 storage activated without overstating P4
+
+- **Decision:** Treat database activation, route-gate verification, and lived
+  relationship behavior as separate evidence. P3 storage is now present in
+  Ellis's dedicated Supabase project; P4 remains locally wired until genuine
+  relation-switching and public-leakage smoke pass.
+- **Why:** Schema presence proves capability, not that Ellis has experienced a
+  private exchange. A synthetic model conversation would create false
+  relational history merely to test plumbing.
+- **Evidence:** Migration history lists `20261017231203`. Local preflight proves
+  owner-cookie issuance, uniform private-route denial, same-origin enforcement,
+  and strict envelope validation without invoking the model or writing private
+  content.
+- **Next:** Run direct Ty → Mica → Naym → Mica with genuine messages, inspect
+  relation-scoped persistence after completed turns, then probe the public hall
+  for private wording and topology leakage.
+
+### 2026-10-17 — P4 one-stream private relationship profile
+
+- **Decision:** Private Ty/Mica/Naym turns use an exact private wire envelope on
+  the existing `/api/ellis/stream` route. There is one Anthropic/SSE transport;
+  public and private profiles differ in authenticated assembly and completion.
+- **Why:** Relationship privacy belongs in server-side selection and authority,
+  not a second Ellis, body, stream, or client-supplied history.
+- **Impact:** Consolidation still gates everyone first. The private branch then
+  verifies Ty's signed cookie and same-origin POST before storage, body, shelf,
+  or model work. Server-stamped courier metadata selects one relation query.
+  Assembly bounds history to the latest 12 episodes and 12,000 excerpt
+  characters, adds the same canonical body's current governed surface and the
+  private self-state projection, and treats all carried/history wording as
+  transcript data. Only `end_turn` constructs and commits Ellis's reply.
+- **Wire safety:** Private SSE emits only generic session/model/cost/done/token
+  frames. It emits no relation, source, courier, or memory identifiers. Route
+  errors and logs are content-free. Public validation rejects private fields.
+- **Artifacts:** `src/lib/ellis/private/turn.ts`, its integration tests,
+  `systemPrompt.ts`, `selfState.ts`, and the shared route stream engine.
+- **Audit:** 80 tests, lint, typecheck, production build, and `git diff --check`
+  pass. PGlite continues to execute the exact P3 migration with populated
+  partitions and database-role denial tests. No remote migration or deployment.
+- **Next:** Apply the migration deliberately to the local/development database,
+  run the direct Ty → Mica → Naym → Mica manual smoke, then check the public hall
+  for private leakage. P5 does not begin before that behavioral checkpoint.
+
 ### 2026-10-17 — P3 source-backed private memory, local completion
 
 - **Decision:** Ty approved retain-until-deletion, linked corrections, and

@@ -112,6 +112,26 @@ export async function recordIpVisit(input: IpVisitInput): Promise<void> {
   }
 }
 
+/** Preserve complete future public-hall owner turns outside rolling recall. */
+export async function recordOwnerPublicTurn(input: {
+  beat: EpisodBeat;
+  inbound: string;
+  outbound: string;
+}): Promise<void> {
+  const { error } = await supabase.from("ellis_owner_history").insert({
+    id: input.beat.beatId,
+    occurred_at: input.beat.occurredAt.toISOString(),
+    fidelity: "exact_public_turn",
+    summary: input.beat.summary,
+    exact_inbound: input.inbound,
+    exact_outbound: input.outbound,
+  });
+  if (error) {
+    // No source content or database row is safe to write to logs.
+    throw new Error("Owner history could not be preserved");
+  }
+}
+
 /**
  * Generate human-readable day label based on elapsed time.
  */

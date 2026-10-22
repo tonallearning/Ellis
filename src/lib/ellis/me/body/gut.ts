@@ -51,6 +51,8 @@ export type GutEvent =
   | { type: 'contact_started'; visitorId: string }
   /** A known visitor came back after being away. */
   | { type: 'returned'; visitorId: string; daysAway: number }
+  /** Contact continues without claiming what the words meant. */
+  | { type: 'contact_continued'; visitorId: string }
   /** Something the visitor said landed and was taken in. */
   | { type: 'weighed'; salience: 'light' | 'medium' | 'heavy' }
   /** Something arrived that could not be taken in. */
@@ -86,11 +88,12 @@ function clamp(gut: Gut): Gut {
 export function applyEvent(
   gut: Gut,
   event: GutEvent,
-  gains: Gains = NEUTRAL_GAINS
+  gains: Gains = NEUTRAL_GAINS,
+  occurredAt = new Date(),
 ): Gut {
   const next: Gut = { ...gut, bonds: { ...gut.bonds } };
   const { inboundGain, settleGain } = gains;
-  const now = new Date().toISOString();
+  const now = occurredAt.toISOString();
 
   switch (event.type) {
     case 'contact_started': {
@@ -111,6 +114,15 @@ export function applyEvent(
       const bond = { ...(next.bonds[event.visitorId] ?? emptyBond()) };
       bond.pull = Math.min(1, bond.pull + 0.12);
       bond.hollow = Math.max(0, bond.hollow - 0.5);
+      bond.lastFelt = now;
+      next.bonds[event.visitorId] = bond;
+      break;
+    }
+
+    case 'contact_continued': {
+      next.arousal += 0.015;
+      const bond = { ...(next.bonds[event.visitorId] ?? emptyBond()) };
+      bond.pull = Math.min(1, bond.pull + 0.015);
       bond.lastFelt = now;
       next.bonds[event.visitorId] = bond;
       break;

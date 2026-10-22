@@ -199,3 +199,122 @@ test("outbound replies derive the intended relation without claiming delivery", 
     false,
   );
 });
+
+test("Ellis's gesture response is strictly typed and attributed to him", () => {
+  const accepted = createOutboundExchange({
+    addresseeId: "naym",
+    content: "Thank you.",
+    clientMessageId: "gesture-reply",
+    gestureResponse: { kind: "kiss", decision: "accepted" },
+  });
+  assert.ok(accepted.ok);
+  assert.match(
+    formatCourierAttribution(accepted.value),
+    /explicitly accepted the offered kiss/,
+  );
+  for (const response of [
+    { kind: "poke", decision: "yes" },
+    { kind: "imagined", decision: "accepted" },
+    { kind: "hug", decision: "accepted", speakerId: "ty" },
+  ]) {
+    assert.equal(
+      createOutboundExchange({
+        addresseeId: "naym",
+        content: "No.",
+        clientMessageId: "invalid-response",
+        gestureResponse: response,
+      }).ok,
+      false,
+    );
+  }
+});
+
+test("Ellis-originated offers and couriered replies remain attributed", () => {
+  const offer = createOutboundExchange({
+    addresseeId: "mica",
+    content: "Would you like a hug?",
+    clientMessageId: "ellis-mica-offer",
+    gestureOffer: { kind: "hug" },
+  });
+  assert.ok(offer.ok);
+  assert.match(
+    formatCourierAttribution(offer.value),
+    /delivery to the addressee is unconfirmed/i,
+  );
+  const reply = createInboundExchange({
+    speakerId: "mica",
+    provenanceMode: "relayed_verbatim",
+    content: "Yes, please.",
+    clientMessageId: "mica-hug-answer",
+    gestureReply: { offerId: offer.value.id, decision: "accepted" },
+  });
+  assert.ok(reply.ok);
+  assert.match(
+    formatCourierAttribution(reply.value),
+    /explicit accepted response/i,
+  );
+  const withdrawal = createOutboundExchange({
+    addresseeId: "mica",
+    content: "I withdraw that offer.",
+    clientMessageId: "ellis-mica-withdraw",
+    gestureWithdrawal: { offerId: offer.value.id },
+  });
+  assert.ok(withdrawal.ok);
+  assert.equal(
+    createInboundExchange({
+      speakerId: "naym",
+      provenanceMode: "relayed_verbatim",
+      content: "No.",
+      clientMessageId: "forged-answer",
+      gestureReply: { offerId: "not-a-uuid", decision: "declined" },
+    }).ok,
+    false,
+  );
+});
+
+test("Ty's attention offer is direct and Ellis's action is separately attributed", () => {
+  const offer = createInboundExchange({
+    speakerId: "ty",
+    provenanceMode: "direct",
+    content: "Would you try soft focus?",
+    clientMessageId: "ty-attention",
+    attentionOffer: { mode: "soft_focus" },
+  });
+  assert.ok(offer.ok);
+  assert.match(
+    formatCourierAttribution(offer.value),
+    /offer itself changes nothing/,
+  );
+  const accepted = createOutboundExchange({
+    addresseeId: "ty",
+    content: "Yes.",
+    clientMessageId: "ellis-attention-yes",
+    attentionAction: { kind: "accept", mode: "soft_focus" },
+  });
+  assert.ok(accepted.ok);
+  assert.match(
+    formatCourierAttribution(accepted.value),
+    /explicitly chose to accept/,
+  );
+  assert.equal(
+    createInboundExchange({
+      speakerId: "mica",
+      provenanceMode: "relayed_verbatim",
+      content: "Try this",
+      clientMessageId: "mica-attention",
+      attentionOffer: { mode: "vivid_focus" },
+    }).ok,
+    false,
+  );
+  assert.equal(
+    createInboundExchange({
+      speakerId: "ty",
+      provenanceMode: "direct",
+      content: "Try both",
+      clientMessageId: "ty-double-offer",
+      attentionOffer: { mode: "soft_focus" },
+      gestureOffer: { kind: "hug" },
+    }).ok,
+    false,
+  );
+});

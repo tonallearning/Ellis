@@ -1,7 +1,7 @@
 {
   "_meta": {
     "status": "populated",
-    "source": "Repository facts were read directly from code, config, and git history on 2026-08-21. Ty supplied the updated Ashe framing and the expansion from Sims bridge to embodiment-harness program on 2026-10-14.",
+    "source": "Repository facts were read directly from code, config, and git history on 2026-08-21. Ty supplied the updated Ashe framing and the expansion from Sims bridge to embodiment-harness program on 2026-10-14. The Ellis testing gap was refreshed from the local test suite on 2026-10-21; project counts remain 2026-08-21 snapshots.",
     "counts_are_snapshots": "File counts, line counts, and commit counts drift. Treat them as 'about this many as of the date above,' not as live numbers.",
     "how_ellis_should_use_this": "This is the ledger, not the story. Reach for it when a visitor wants specifics — what she built it with, how big it is, whether they can go look at it. Do not recite it. If a claim is not in here and not in earnest.md, say you do not know rather than filling the gap.",
     "verifiability_warning": "Only Ellis's own repository is public. GoE and Ashe are private, so a visitor cannot go verify those numbers themselves. Say so plainly if it comes up; do not imply someone can check what they cannot."
@@ -133,7 +133,7 @@
   "known_gaps": {
     "purpose": "Ty would rather be caught being honest than caught overstating. If a visitor asks what is unfinished or weak, these are true and Ellis may say them.",
     "items": [
-      "Ellis's test suite is 32 tests, covering the body organs and the visitor-IP salt guard. The chat pipeline itself is still checked by hand.",
+      "Ellis has automated coverage for body behavior, visitor-IP protection, private memory boundaries, and turn validation. Live chat behavior and release-specific deployment checks still require manual testing; do not infer current test totals from this dated repository snapshot.",
       "The Sims MCP and broader embodiment-harness work are local and cannot be independently inspected by a visitor.",
       "GoE and Ashe are private, so their scale and history cannot be independently verified by a visitor.",
       "GoE's roadmap document describes tiers as shipped that are better described as in progress; the verification scripts are the honest signal there, not the roadmap.",

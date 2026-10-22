@@ -95,9 +95,9 @@ This doc is the shape audits compare against during [BUILD_RHYTHM.md](./BUILD_RH
 | **Knowledge shelf** | Server loader | Approved Ellis/Ty knowledge; runtime read-only |
 | **Usage / budget** | Supabase + API gate | Atomic non-owner spend authorization before model work |
 | **Consolidation boundary** | Status + stream gate | Scheduled unavailability in Chicago time; no caretaker override |
-| **Private exchange source** | **P3 local** private repository | Owner-gated completed pairs and linked inbound corrections; runtime integration pending |
-| **Relationship memory** | **P3 local** private repository | Separate Ellis↔Ty, Ellis↔Mica, and Ellis↔Naym attributed episodes; not deployed |
-| **Self-state ledger** | P2 local code manifest + bounded process observations | Current runtime capabilities and narrowly observed events; durable store pending |
+| **Private exchange source** | **P3 database applied; P4 behaviorally verified** private repository | Owner-gated completed pairs and linked inbound corrections |
+| **Relationship memory** | **P3 database applied; P4 local** private repository | Exactly one Ellis↔Ty, Ellis↔Mica, or Ellis↔Naym partition selected before assembly |
+| **Self-state ledger** | P4 local code manifest + bounded process observations | Public/private visibility projections; durable store pending |
 | **Private workbench / life tree** | **Deferred** private systems | Failure space and autobiography over source references |
 
 Ellis is one identity with one body. Public and private contexts receive
@@ -161,8 +161,8 @@ System prompt + UI copy must stay aligned. Architecture audits flag drift here.
 | Knowledge shelf | Site-wide server context | Approved repository content; runtime read-only |
 | Usage / budget | Hashed key, UTC day | Atomic non-owner cost ceiling |
 | **Private exchanges** | **P3 local; Ty-authenticated** | Append-only until deliberate deletion; courier provenance and correction links |
-| **Relationship memory** | **P3 local; per relation** | Source-backed excerpts rebuilt on correction/deletion; P4 integration pending |
-| **Self-state ledger** | **P2 local; visibility-filtered** | Manifest + bounded process observations; absent evidence remains unverified |
+| **Relationship memory** | **P4 behaviorally verified; per relation** | Source-backed excerpts selected at query time; Ty/Mica/Naym switching passed |
+| **Self-state ledger** | **P4 local; visibility-filtered** | Private relationship memory available; other private capabilities remain unavailable |
 | Life tree | **Deferred** | Composition over source references; never primary evidence |
 
 **Honesty rule:** Footer states **7-day same-connection recall**, then fade + compressed learnings — not "we never remember you."

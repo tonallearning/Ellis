@@ -28,17 +28,35 @@ locks one memory key, appends the new beats, and keeps the most recent 200 beats
 for Ty's `owner` row or 40 for a seven-day visitor row. Direct upserts must not
 replace `episodic_beats`; that was the original lost-memory bug.
 
-## P3 private memory (local, not deployed)
+## Private memory (database applied; application path local)
 
 `20261017231203_ellis_private_memory.sql` adds `ellis_private_exchanges`,
 `ellis_relation_memory`, and content-free retry tombstones in
 `ellis_private_deletions`. These are independent of visitor recall. The owner-
 gated repository uses `ellis_private_memory` for relation-scoped reads,
 completed-pair commits, linked inbound corrections, and deletion/rebuild.
-No public route imports it; P4 supplies runtime integration.
+P4 imports it through the existing stream route only after owner and origin
+checks. Ty applied the migration to Ellis's dedicated project on 2026-10-18;
+the migration ledger records `20261017231203`. P5 adds a local server-gated
+private-room UI over the P4 path; neither application slice has been deployed.
 
-`npm test` executes this exact migration in embedded Postgres (PGlite) and
-checks populated isolation, RLS/grants, corrections, deletion, and retries.
+`20261018184416_private_memory_source_reads.sql` adds the service-role-only
+`ellis_private_sources` reader. It returns at most 40 active exact sources from
+one named relation, in source chronology. The application then admits the
+newest contiguous sources fitting its 96,000-character exact-memory aperture
+and uses older derived episodes only as labeled lossy landmarks. The live
+migration ledger records `20261018184416`.
+
+`20261018191719_owner_history_recovery.sql` preserves the 200 surviving
+public-owner episode summaries before rolling recall can evict them. The
+`ellis_owner_history` archive marks each imported beat `legacy_excerpt`;
+future completed public Ty turns can append exact pairs. Only the owner-gated
+private Ty profile reads this archive. RLS is enabled, and table and reader
+execution are limited to `service_role`.
+
+`npm test` executes all three private/recovery migrations in embedded Postgres
+(PGlite) and checks populated isolation, RLS/grants, exact reads, excerpt
+fidelity, corrections, deletion, and retries.
 It does not contact the remote project. Before production activation, complete
 the backup/deletion recovery gates in
 [PRIVATE_MEMORY_RETENTION.md](../docs/building/PRIVATE_MEMORY_RETENTION.md)
@@ -48,7 +66,8 @@ and run deployment advisors and concurrent-session smoke checks.
 
 Migrations are ordered by filename. Apply each once and track applied versions;
 the P3 migration is transactional but not rerunnable. Never replay the full
-bundle against an existing database. P3 is currently local-only.
+bundle against an existing database. P3 is already recorded as applied on
+Ellis's dedicated project.
 
 **Dashboard (no CLI needed).** For a new, empty database only, copy the bundle
 in order into the project's SQL Editor after reviewing every migration:
@@ -100,9 +119,15 @@ from public.ellis_body;
 
 select proname
 from pg_proc
-where proname in ('ellis_usage_increment', 'ellis_memory_append')
+where proname in (
+  'ellis_usage_increment',
+  'ellis_memory_append',
+  'ellis_private_memory',
+  'ellis_private_sources'
+)
 order by proname;
--- expect both rows: spend must bind and memory must append rather than replace
+-- expect all four rows: public writes bind, private writes stay transactional,
+-- and exact private-source reads remain a separate service-only path
 ```
 
 That last check is not decorative. The spend gate silently failed open for

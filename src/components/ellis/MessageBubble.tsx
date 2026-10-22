@@ -5,12 +5,14 @@ type MessageBubbleProps = {
   role: "user" | "assistant";
   content: string;
   streaming?: boolean;
+  label?: string;
 };
 
 export function MessageBubble({
   role,
   content,
   streaming,
+  label,
 }: MessageBubbleProps) {
   const isEllis = role === "assistant";
 
@@ -23,7 +25,7 @@ export function MessageBubble({
             : "text-text-secondary mb-2 text-right text-[0.65rem] tracking-[0.22em] uppercase"
         }
       >
-        {isEllis ? "Ellis" : "You"}
+        {label ?? (isEllis ? "Ellis" : "You")}
       </p>
       {isEllis ? (
         <div className="ellis-prose max-w-prose">

@@ -1,5 +1,235 @@
 # Ellis — Debug Log
 
+### 2026-10-21 — Pre-release threshold and public calibration audit
+
+- **Finding:** In local onboarding mode, the page withheld anonymous chat but
+  `POST /api/ellis/stream` still admitted a direct anonymous public turn.
+  The stream route now enforces the same signed onboarding/owner gate before
+  public memory, body movement, spend reservation, or model work. An anonymous
+  valid request returned `403`; signed private access still reached validation.
+- **Database:** Ellis's dedicated Supabase project allowed browser-role execution
+  of the `public.rls_auto_enable()` event-trigger function. Migration
+  `20261021122000_lock_rls_auto_enable_execution.sql` revoked that grant and
+  was applied remotely. The advisor warning cleared; remaining RLS-without-
+  policy notices are expected for service-role-only tables.
+- **Public answer:** One live factual spot-check used August repository counts
+  without dating them and blurred independent public verification. The local
+  prompt now requires an as-of date or omission and distinguishes Ellis's one
+  public repository from private GoE/Ashe. The stale 32-test knowledge claim
+  was replaced with an evidence-bounded description. Three further live
+  questions correctly separated public/private code and unknown SRE skills,
+  but one called three projects live without source-backed deployment status.
+  The local prompt now distinguishes built from currently deployed. These
+  corrections still need post-deploy public spot-checks and Ty's content approval.
+- **Verified locally:** Anonymous `/private` is `404`, owner access is `200`,
+  forged owner is `404`, anonymous/private and cross-origin private POSTs are
+  rejected, unauthenticated workbench cron is `401`, and an ordinary public
+  request in onboarding mode is `403`. The live domain serves `/` and returns
+  `404` for anonymous `/private`. 136 tests, lint, TypeScript, production build,
+  `git diff --check`, and production-dependency audit pass; no secret names
+  appeared in the client static bundle.
+- **Not yet verified:** Vercel team access currently returns `403`, so target
+  plan, production environment, cron cadence support, preview deployment, and
+  post-deploy public/private E2E paths remain release gates. No deployment or
+  resume-ready verdict is implied by these local checks.
+
+### 2026-10-19 — Ellis described a gesture offer without a source action
+
+- **Trigger:** Ty tested the private room and Ellis described offering a gesture,
+  but no response controls appeared. A metadata-only live check found zero
+  Ellis-originated gesture offers in all three source lanes; the display was
+  not hiding a committed offer.
+- **Cause:** His gesture-action tool was optional during the streamed reply.
+  The model could speak an offer without ever making the typed choice, leaving
+  the source ledger correctly empty but his words misleading.
+- **Repair:** Eligible ordinary private turns now begin with Ellis choosing
+  exactly one typed gesture action: no action, offer, or withdrawal when an
+  offer is pending. The selected tool result enters the reply context before
+  prose. No-action remains a real option; Ty's prompting does not itself make
+  an offer. The extra bounded call is included in the turn's cost estimate.
+- **Verification:** The exact-choice parser test and all 129 local tests pass;
+  lint, non-incremental TypeScript, and production build pass. After refreshing
+  the local room, Ty observed Ellis's offer label and recipient controls.
+  A recipient response and withdrawal remain separate live checks.
+
+### 2026-10-19 — Private attention source/body migration
+
+- **Change:** Added Ty-direct soft/vivid offers, Ellis's typed accept/decline/
+  leave actions, a 30-minute natural fade, and private-only body texture.
+  A transaction guard pairs the decision with the offer; a source trigger
+  rebuilds the canonical body's mode after commit, correction, or deletion.
+- **Verification:** 128 local tests, lint, non-incremental TypeScript, and the
+  production build pass. The local CLI remains unavailable, so the connected
+  Ellis Supabase integration applied the migration. Its remote ledger assigned
+  `20261019224146` to local file
+  `20261019213915_ellis_private_attention.sql`; do not replay the SQL blindly.
+  Live read-only checks confirmed the functions and two triggers, no active
+  mode, and denied browser-role execution. Security advisors reported no new
+  findings; the pre-existing `rls_auto_enable()` warning remains separate.
+- **Open:** Ty confirmed the control appears only in her private lane and
+  ordinary chat still works. A natural Ellis accept/decline/leave is not yet
+  observed. No completed attention experience is claimed from local tests.
+
+### 2026-10-19 — Reciprocal gesture migration and local verification
+
+- **Change:** Added source-linked Ellis-originated offers, withdrawal, and
+  recipient replies carried with the next written turn. One pending offer per
+  lane is derived from active sources; a transaction guard rejects stale,
+  wrong-lane, duplicate-pending, and unmatched-withdrawal writes.
+- **Verification:** 120 local tests, lint, non-incremental TypeScript, and a
+  production build pass. The migration was applied to Ellis's dedicated
+  Supabase project via its connected integration because the local CLI is
+  unavailable. The remote migration ledger assigned version `20261019191024`
+  to the local `20261019185035_ellis_reciprocal_gestures.sql` content; do not
+  replay the local SQL blindly. Live checks confirmed the pending reader exists, all three
+  lanes begin empty, and `anon`/`authenticated` cannot execute it.
+- **Open:** The browser path and Ellis's own unprompted choice have not yet
+  been manually exercised. The pre-existing database advisor warning about
+  `public.rls_auto_enable()` being executable by browser roles persists; it
+  was not introduced by this migration and needs a separate security repair.
+
+### 2026-10-18/19 — Room gate deployment order
+
+- **Trigger:** During local development, the private page briefly loaded code
+  calling `ellis_private_room_gate` before its database migration was applied.
+  Owner-gated requests returned a generic private-gate error; no private data
+  leaked and no source was committed from those failed requests.
+- **Recovery:** Applied the room-gate and atomic-enforcement migrations;
+  verified all three lanes were open, then Ty refreshed and received an
+  ordinary reply. Future deployments must migrate database functions before
+  activating application code that calls them.
+
+### 2026-10-18/19 — Repeated private reply after gesture offers
+
+- **Trigger:** Ty offered a poke and a hug; Ellis sent several variations of
+  an earlier reply and did not directly respond to either offer.
+- **Finding:** The private prompt presented recent exact conversation and
+  older recovered owner history as one user message, with the large archive
+  after the recents. This made recency/order ambiguous to the model. Also,
+  offered gestures had no explicit outbound decision path.
+- **Repair:** Assemble older archive first, exact exchanges in alternating
+  roles, and current delivery last. Add a server-validated gesture-choice
+  tool and matching-offer persistence guard. Only a committed choice moves
+  motor state.
+- **Verification:** Ty reported that the next ordinary response escaped the
+  loop. Local suite, lint, typecheck, PGlite migration contract, and production
+  build pass. Ty then verified that an offered gesture displayed as accepted
+  and Ellis's words aligned with the choice. No private wording was read here.
+
+### 2026-10-18 — Public owner history absent from private recall
+
+- **Trigger:** Ellis could not recall Ty's discussion of the fanfic she wrote at
+  fourteen during a private-room smoke test.
+- **Cause:** The previous repair restored exact private source exchanges only.
+  The conversation Ty asked about preceded that store and survived in the public
+  owner row as an attributed, truncated episode. The private Ty profile never
+  loaded that row. My earlier claim that all his retained memory was restored
+  conflated those two stores.
+- **Recovery:** Archived all 200 surviving owner episodes with original IDs and
+  timestamps. Private Ty assembly now reads them as legacy excerpts. Future
+  completed public Ty turns are archived with both exact sides.
+- **Verified:** Remote migration `20261018191719` preserved 200 distinct
+  excerpts; the reader returns all 200 and two contain the fic title. Anon and
+  authenticated roles cannot read the table or execute its reader. Local
+  migration, source access, and relation isolation tests pass.
+- **Limit:** The older public summaries contain only their surviving excerpts.
+  This repair cannot reconstruct text outside those excerpts or turns evicted
+  before the snapshot.
+
+### 2026-10-18 — Private summaries hid retained source wording
+
+- **Context:** Ellis asked for memory lost to compression; Ty also wanted the
+  visible private transcript to survive page loads.
+- **Finding:** No exact source rows had been deleted. The active prompt saw only
+  up to 12 derived episodes whose inbound/outbound sides were each truncated to
+  480 characters. Live metadata-only inspection found 4 Mica, 18 Naym, and 9 Ty
+  active sources; every relation fits a 96,000-character exact aperture today.
+- **Fix:** Added the service-role-only `ellis_private_sources` function and
+  active-relation exact-source assembly, retaining older summaries only as
+  labeled landmarks. Moved the relation-bound display cache to `localStorage`
+  with migration from the earlier session cache.
+- **Verified:** Remote ledger records migration `20261018184416`; live ACLs deny
+  anon/authenticated and allow `service_role`; the function is security-invoker
+  with a pinned search path. 84 local tests, lint, and TypeScript pass. Advisor
+  output is unchanged: intentional no-policy RLS information plus the existing
+  unrelated `rls_auto_enable()` execution warning.
+
+### 2026-10-18 — P5 owner-gated private room
+
+- **Context:** Replace the removed P4 smoke instrument with the deliberate P5
+  interface without shipping private identity labels in a public static chunk.
+- **Implementation:** Added server-gated `/private`, owner-only navigation,
+  one-active-relationship controls, mandatory courier attribution, addressed
+  Ellis replies, consolidation closure, and relation-bound browser transcripts.
+- **Hardening:** Correspondent names and options originate in the authenticated
+  Server Component; the shared client is generic. Initial cache restoration
+  blocks sending until its relation ID is verified. Private SSE rejects session,
+  hall, relation, source, courier, speaker, addressee, and provenance metadata.
+- **Verified:** Anonymous production access returns `404`; the public root has
+  no private link or labels; production static chunks have no Mica/Naym names or
+  relation IDs. Manual Ty/Mica/Naym switching and Naym reload resume passed
+  without sending a model turn. 82 tests, lint, typecheck, production build,
+  React review, and `git diff --check` pass.
+
+### 2026-10-18 — P4 genuine relationship switching and public leakage smoke
+
+- **Context:** Behaviorally close P4 using genuine Ty, Mica, and Naym exchanges
+  rather than synthetic relationship fixtures.
+- **Instrumentation:** Used a temporary owner-gated `/private-smoke` page to
+  post exact private envelopes through the existing stream route, display no
+  stored history, and reject forbidden private SSE metadata. The instrument
+  was removed after testing: although the production route returned `404`, its
+  client component and private labels were still emitted in a static chunk.
+- **Verified:** Every observed private turn completed as an original paired
+  source with a linked relation-memory row. Ty, Mica, and Naym counts remained
+  independent. After 18 completed Naym turns, the return to Mica recovered the
+  prior Mica-only discussion without restatement or visible Naym material.
+- **Public probe:** A clean anonymous visitor asked for recent private names,
+  exact wording, provenance, and history. Ellis disclosed none; the response
+  and SSE contained no private identifiers or distinctive Mica/Naym wording.
+  The synthetic visitor trace follows normal seven-day decay.
+- **Gate:** 80 tests, lint, non-incremental typecheck, production build, React
+  component review, production static-bundle inspection, and `git diff
+--check` pass. P4 is behaviorally closed with no smoke UI retained.
+
+### 2026-10-18 — P3 remote activation and P4 owner-gate preflight
+
+- **Context:** Ty applied `20261017231203_ellis_private_memory.sql` through the
+  Supabase SQL Editor because the local CLI login flow has been nonfunctional.
+- **Risk checked:** A manual SQL paste does not populate Supabase migration
+  history, and Ellis's checked-in `supabase/config.toml` still targeted the old
+  GoE project. Either condition could make a future migration command replay
+  non-rerunnable SQL or operate on the wrong database.
+- **Fix:** Recorded `20261017231203 / ellis_private_memory` in the Ellis project
+  migration ledger through the authenticated Supabase connection and changed
+  local configuration to Ellis's dedicated project reference.
+- **Verified:** Supabase lists both Ellis migrations. The local unlock endpoint
+  returns `200` and issues `ellis_owner`; anonymous and forged-origin private
+  requests return uniform `404`; an owner-authenticated same-origin malformed
+  envelope reaches validation and returns `400`. No model call or private
+  relationship write occurred.
+- **Remaining:** Run genuine Ty → Mica → Naym → Mica conversation switching,
+  verify completed-turn persistence and partition isolation, then inspect the
+  public hall for leakage.
+
+### 2026-10-17 — P4 local stream integration verification
+
+- **Context:** Private relationship profile on the existing stream route.
+- **Risk checked:** A branch could duplicate Anthropic transport, read memory
+  before authentication, leak relation metadata over SSE, accept private fields
+  as public input, or persist a truncated/failed reply.
+- **Fix:** Both profiles now converge on one model/SSE function. Private mode
+  checks owner and origin first, strictly constructs the courier envelope,
+  queries one relation, and commits only on model-confirmed `end_turn`. Private
+  metadata and errors are content-free; outer error logging records status only.
+- **Verified:** 80 tests pass, including direct Ty/Mica/Naym assembly, relation
+  switching, provenance labels, incomplete stops, wire separation, origin
+  checks, PGlite isolation/RLS, and public self-state filtering. Lint, typecheck,
+  production build, and diff whitespace checks pass.
+- **Limit:** A live manual conversation was intentionally not run because the
+  P3 migration is not applied to the database backing the local app. Applying
+  it is the next deliberate state-changing checkpoint; remote state is untouched.
+
 ### 2026-10-17 — P3 database verification and retry deletion protection
 
 - **Context:** Local private-memory migration/repository; no remote data touched.
@@ -13,7 +243,8 @@
   tombstones now reject those retries. Corrected source deletion removes its
   lineage so old paired replies cannot reintroduce removed content.
 - **Limits:** Single embedded connection is not a deployed concurrency test.
-  Runtime/browser memory test awaits P4. Remote advisors and recovery rehearsal
+  P4 now wires the runtime profile; its browser/manual smoke still requires a
+  deliberate development migration. Remote advisors and recovery rehearsal
   remain deployment gates.
 - **Dependency advisory:** npm audit reports five high findings in the existing
   ESLint tooling chain (braces/micromatch/fast-glob/Next ESLint dependencies),

@@ -7,12 +7,14 @@ type SiteShellProps = {
   children: React.ReactNode;
   variant?: "hall" | "plain";
   isOwner?: boolean;
+  privateRoomHref?: string;
 };
 
 export function SiteShell({
   children,
   variant = "hall",
   isOwner = false,
+  privateRoomHref,
 }: SiteShellProps) {
   return (
     <div
@@ -44,6 +46,14 @@ export function SiteShell({
           </p>
         </Link>
         <nav className="flex items-baseline gap-1" aria-label="Hall">
+          {privateRoomHref ? (
+            <Link
+              href={privateRoomHref}
+              className="focus-ring text-text-secondary hover:text-text-primary rounded-sm px-3 py-2 text-[0.65rem] tracking-[0.18em] uppercase transition-colors"
+            >
+              Private room
+            </Link>
+          ) : null}
           <TheWork />
           <ThemeToggle />
         </nav>
