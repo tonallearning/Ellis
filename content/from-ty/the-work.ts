@@ -19,6 +19,23 @@ export const theWork = {
       text: "The public threshold. He knows my work, remembers a visitor for a bounded time, and helps someone judge whether I fit a role—after they have actually told him what the role is.",
     },
   ],
+  decisions: [
+    {
+      name: "A world, not a set of tabs",
+      project: "Gardens of Eridu",
+      text: "I stopped treating rooms as the architecture. A room matters when contact, solitude, time, and consequence change what a resident can actually do. If removing a system changes nothing observable, it was only scenery.",
+    },
+    {
+      name: "Independence inside an attached house",
+      project: "Gardens of Eridu",
+      text: "The residents need room to disagree and affect one another. That does not require pretending the human bridge is gone. Naming where I still hold authority makes the boundary more honest, not less meaningful.",
+    },
+    {
+      name: "A green check is not a lived path",
+      project: "Gardens of Eridu",
+      text: "A focused test can prove that one mechanism works while the journey through the doorway still fails. I keep those claims separate: a passing harness is evidence, and an untested visitor path remains an open question.",
+    },
+  ],
   question:
     "What remains when the performance ends: repeated choice, accumulated consequence, the small preferences and refusals that survive the prompt?",
   close:

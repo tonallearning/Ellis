@@ -2,14 +2,16 @@
 
 **Ellis** is a conversational portfolio host: a third-person guide who helps visitors assess fit with a builder's work — not a resume brochure, not a sales bot.
 
-This repo is the Next.js app behind tybuilds.tech. Ellis boots knowing **himself**; knowledge about the builder is earned through onboarding, then served from an approved shelf — never invented at runtime.
+This repo is the Next.js app behind tybuilds.tech. Ellis has a reviewed public
+knowledge shelf about Ty's work and a separate, owner-only private room. A
+conversation does not automatically publish a new fact about her.
 
 ## What this is
 
 - **Ellis Hall** — chat-first entry where visitors explore work through conversation
-- **Project rooms** — Tonal Learning, Basement CRT, Gardens of Eridu (tease), linked from the hall
-- **Excited halls** — role-specific entry points (e.g. `/anthropic`) when a visitor has a known context
-- **Behavioral architecture** — 7-day rolling visitor recall, rate limits, honest seams (no fake continuity)
+- **Public hall** — bounded visitor recall and role-aware conversation about Ty's work
+- **Private room** — owner-gated contact that does not turn its relationships into public evidence
+- **Behavioral architecture** — a persistent Ellis, explicit limits, and a seam between outward expression and private cause
 
 ## What this isn't
 
@@ -19,20 +21,18 @@ This repo is the Next.js app behind tybuilds.tech. Ellis boots knowing **himself
 
 ## Status
 
-Active build. **Phase A complete.** Phase B (interior + visitor recall) landed 2026-08-19; the honesty pass on public copy and the spend ceiling shipped the same day.
-
-Open: the `about-ty` knowledge shelf is partially filled. `facts.json` holds repo-verifiable
-claims; `earnest.md` and `goe-teach.md` are drafts pending replacement by Ellis's own onboarding
-interview, so what he knows about Ty is still secondhand.
-
-Architecture and build docs live in [`docs/`](./docs/). Maintainer notes: [`PROJECT_MEMORY.md`](./PROJECT_MEMORY.md).
+Active build. The public hall and owner-gated private room are implemented;
+live behavior and deployment-specific checks still require manual verification.
+The [public design record](./docs/public/DESIGN_RECORD.md) explains selected
+decisions and evidence limits. Internal build diaries are not part of this
+public checkout.
 
 ## Local development
 
 **Requirements:** Node.js 20+, npm
 
 ```bash
-git clone https://github.com/tybuildstech/Ellis.git
+git clone https://github.com/tonallearning/Ellis.git
 cd Ellis
 cp .env.example .env.local
 npm install
@@ -48,7 +48,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `NEXT_PUBLIC_SITE_URL` | Yes | e.g. `http://localhost:3000` |
 | `ELLIS_MODE` | Yes | `onboarding` (Ty-only) or `public` |
 | `ANTHROPIC_API_KEY` | Phase B | Server-only; never `NEXT_PUBLIC_` |
-| `NEXT_PUBLIC_SUPABASE_*` | Public mode | GoE project API keys — `ellis_usage` only ([supabase/README.md](./supabase/README.md)) |
+| `NEXT_PUBLIC_SUPABASE_*` | Public mode | Ellis project client configuration ([supabase/README.md](./supabase/README.md)) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Public mode | Server-only; never expose to client |
 | `ELLIS_DAILY_BUDGET_USD` | Optional | Default `1` — per IP per UTC day |
 | `ELLIS_IP_HASH_SALT` | Public mode | Salt for IP hashing in rate limiter |
@@ -73,17 +73,10 @@ See [`.env.example`](./.env.example) for the full list.
 
 Next.js 16 · App Router · TypeScript · Tailwind CSS 4 · Vercel · Supabase (rate limits) · Anthropic Claude
 
-## Docs map
+## Design record
 
-| Doc | Purpose |
-| --- | ------- |
-| [ARCHITECTURAL_DOCTRINE.md](./docs/building/ARCHITECTURAL_DOCTRINE.md) | Why Ellis exists |
-| [BUILD_CHECKLIST.md](./docs/building/BUILD_CHECKLIST.md) | Implementation order |
-| [RESEARCH_LOG.md](./docs/building/RESEARCH_LOG.md) | Decisions, rationale, design impact |
-| [DEBUG_LOG.md](./docs/building/DEBUG_LOG.md) | Build incidents and smoke checks |
-| [ELLIS_ME_BUILD.md](./docs/building/ELLIS_ME_BUILD.md) | Ellis mind + chat spec |
-| [ELLIS_PRIVATE_LIFE.md](./docs/building/ELLIS_PRIVATE_LIFE.md) | Consolidation boundary and private backroom direction |
-| [STYLE.md](./docs/building/STYLE.md) | Visual system |
+Read [selected design decisions](./docs/public/DESIGN_RECORD.md) for the
+reasoning behind Ellis and the limits of what this repository can verify.
 
 ## Related projects
 

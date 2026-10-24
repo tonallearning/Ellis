@@ -4,17 +4,24 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { MessageBubble } from "@/components/ellis/MessageBubble";
 import type { ConsolidationStatus } from "@/lib/ellis/consolidation";
+import {
+  isPublicExpression,
+  type PublicExpression,
+} from "@/lib/ellis/publicExpression";
 
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
+  expression?: PublicExpression;
 };
 
 const PUBLIC_PROMPTS = [
   "What has Ty actually built?",
   "How does she think about AI?",
-  "Tell Ellis about the role",
+  "Share a role",
 ] as const;
+
+const ROLE_DRAFT = "Here's the role I'm considering Ty for: ";
 
 const OWNER_PROMPTS = [
   "What do you remember?",
@@ -222,6 +229,7 @@ export function ChatPanel({
               sessionId?: string;
               text?: string;
               message?: string;
+              expression?: unknown;
             };
 
             if (payload.type === "session" && payload.sessionId) {
@@ -240,6 +248,21 @@ export function ChatPanel({
               });
             } else if (payload.type === "error" && payload.message) {
               throw new Error(payload.message);
+            } else if (
+              payload.type === "done" &&
+              isPublicExpression(payload.expression)
+            ) {
+              setMessages((prev) => {
+                const copy = [...prev];
+                const last = copy[copy.length - 1];
+                if (last?.role === "assistant" && last.content) {
+                  copy[copy.length - 1] = {
+                    ...last,
+                    expression: payload.expression as PublicExpression,
+                  };
+                }
+                return copy;
+              });
             }
           }
         }
@@ -309,7 +332,14 @@ export function ChatPanel({
                   <button
                     key={prompt}
                     type="button"
-                    onClick={() => void sendMessage(prompt)}
+                    onClick={() => {
+                      if (!isOwner && prompt === "Share a role") {
+                        setInput((current) => current || ROLE_DRAFT);
+                        textareaRef.current?.focus();
+                        return;
+                      }
+                      void sendMessage(prompt);
+                    }}
                     className="hall-prompt focus-ring"
                   >
                     {prompt}
@@ -325,6 +355,11 @@ export function ChatPanel({
             key={`${index}-${message.role}`}
             role={message.role}
             content={message.content}
+            expression={
+              isPublicExpression(message.expression)
+                ? message.expression
+                : undefined
+            }
             streaming={
               streaming &&
               index === messages.length - 1 &&

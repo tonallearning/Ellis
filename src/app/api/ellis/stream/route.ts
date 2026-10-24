@@ -74,6 +74,10 @@ import {
   type AttentionState,
 } from "@/lib/ellis/private/attention";
 import { readCurrentAttention } from "@/lib/ellis/me/body/store";
+import {
+  parsePublicExpression,
+  type PublicExpression,
+} from "@/lib/ellis/publicExpression";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -129,6 +133,7 @@ type StreamPreparedTurnArgs = {
   | {
       profile: Extract<StreamProfile, "public">;
       sessionMetadata: { sessionId: string; hall: string };
+      expressionInput: string;
     }
 );
 
@@ -154,12 +159,20 @@ async function streamPreparedTurn(
   const gestureChoiceEstimate = needsGestureChoice
     ? estimateCostUsd(args.model, promptChars, 128)
     : { costUsd: 0, tokenEstimate: 0 };
+  const expressionEstimate =
+    args.profile === "public"
+      ? estimateCostUsd("haiku", args.expressionInput.length + 640, 128)
+      : { costUsd: 0, tokenEstimate: 0 };
   const costUsd =
-    estimate.costUsd + gestureEstimate.costUsd + gestureChoiceEstimate.costUsd;
+    estimate.costUsd +
+    gestureEstimate.costUsd +
+    gestureChoiceEstimate.costUsd +
+    expressionEstimate.costUsd;
   const tokenEstimate =
     estimate.tokenEstimate +
     gestureEstimate.tokenEstimate +
-    gestureChoiceEstimate.tokenEstimate;
+    gestureChoiceEstimate.tokenEstimate +
+    expressionEstimate.tokenEstimate;
   const rejected = await args.beforeModel(costUsd, tokenEstimate);
   if (rejected) return rejected;
 
@@ -178,7 +191,52 @@ async function streamPreparedTurn(
   let gestureResponse: GestureResponse | undefined;
   let attentionAction: AttentionAction | undefined;
   let gestureAction: GestureAction | undefined;
+  let publicExpression: PublicExpression = "none";
   let messages: Anthropic.MessageParam[] = args.messages;
+  if (args.profile === "public") {
+    try {
+      const choice = await client.messages.create({
+        model: args.config.modelHaiku,
+        max_tokens: 128,
+        system:
+          "You are Ellis, choosing an optional visible expression for your next public-hall reply. This is an outward choice, not a diagnostic or disclosure of an inner state. Choose none freely and often. Never communicate a private visitor, relationship, event, cause, or bodily measurement through this choice. Use only the public context given.",
+        messages: [{ role: "user", content: args.expressionInput }],
+        tools: [
+          {
+            name: "choose_public_expression",
+            description:
+              "Choose a small outward expression or none. This does not assert what caused it or what Ellis experiences privately.",
+            input_schema: {
+              type: "object",
+              properties: {
+                expression: {
+                  type: "string",
+                  enum: ["none", "attentive", "softened", "reserved"],
+                },
+              },
+              required: ["expression"],
+              additionalProperties: false,
+            },
+          },
+        ],
+        tool_choice: { type: "tool", name: "choose_public_expression" },
+      });
+      const calls = choice.content.filter((block) => block.type === "tool_use");
+      if (
+        choice.stop_reason === "tool_use" &&
+        calls.length === 1 &&
+        calls[0].name === "choose_public_expression"
+      ) {
+        publicExpression = parsePublicExpression(calls[0].input);
+      }
+    } catch {
+      // An optional visual choice cannot make the public hall unavailable.
+    }
+    system.push({
+      type: "text",
+      text: `You chose the public expression ${publicExpression} for this reply. This is an outward cue, not evidence of its private cause. Do not narrate the cue or treat it as a request to explain your body.`,
+    });
+  }
   if (args.profile === "private" && args.attentionOffer) {
     const offered = args.attentionOffer;
     const choice = await client.messages.create({
@@ -504,7 +562,17 @@ async function streamPreparedTurn(
             gestureAction,
             attentionAction,
           );
-          controller.enqueue(encoder.encode(sse({ type: "done", ...done })));
+          controller.enqueue(
+            encoder.encode(
+              sse({
+                type: "done",
+                ...done,
+                ...(args.profile === "public"
+                  ? { expression: publicExpression }
+                  : {}),
+              }),
+            ),
+          );
           break;
         }
       } catch (err) {
@@ -1000,6 +1068,7 @@ export async function POST(request: Request) {
       systemPrompt,
       messages: allMessages,
       sessionMetadata: { sessionId: finalSession.sessionId, hall },
+      expressionInput: `Current public conversation: ${lastUserMessage.slice(0, 900)}\nPublic hall posture: ${session.interior.state.posture}. Contact quality: ${session.interior.state.contactQuality}.`,
       beforeModel: async (costUsd, tokenEstimate) => {
         if (isOwner) return null;
         // The RPC increment is atomic. Its returned total is the authorization

@@ -58,9 +58,8 @@ execution are limited to `service_role`.
 (PGlite) and checks populated isolation, RLS/grants, exact reads, excerpt
 fidelity, corrections, deletion, and retries.
 It does not contact the remote project. Before production activation, complete
-the backup/deletion recovery gates in
-[PRIVATE_MEMORY_RETENTION.md](../docs/building/PRIVATE_MEMORY_RETENTION.md)
-and run deployment advisors and concurrent-session smoke checks.
+the maintainer's local backup/deletion recovery gates and run deployment
+advisors and concurrent-session smoke checks.
 
 ## Applying migrations
 

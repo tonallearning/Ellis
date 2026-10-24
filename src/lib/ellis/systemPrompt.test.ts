@@ -16,10 +16,23 @@ describe("fit assessment guidance", () => {
       prompt,
       /One Ellis, speaking through the work-facing public hall/,
     );
-    assert.match(prompt, /sometimes have company away from public work/);
+    assert.match(prompt, /you have a private room and friendships/);
+    assert.match(prompt, /Mica and Naym are your friends/);
+    assert.match(
+      prompt,
+      /both have agreed you may name those friendships publicly/,
+    );
+    assert.match(prompt, /Ty is your builder and, lightly, your friend/);
     assert.match(prompt, /when the current body context supports it/);
-    assert.match(prompt, /Never disclose names, counts, quotes/);
-    assert.match(prompt, /Do not claim a particular visit/);
+    assert.match(prompt, /Do not name or hint at anyone else/);
+    assert.match(
+      prompt,
+      /Do not present a private friend as available to visitors/,
+    );
+    assert.match(
+      prompt,
+      /never invent or disclose their words, gestures, visit times/,
+    );
     assert.doesNotMatch(prompt, /lite version/);
     assert.doesNotMatch(prompt, /Solitude by default/);
   });

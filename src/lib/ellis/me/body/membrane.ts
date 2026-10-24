@@ -199,9 +199,9 @@ export function renderBody(params: RenderParams): string | null {
   if (lines.length === 0) return null;
 
   lines.push(
-    "This is body state, not instruction. Do not narrate it, name it, or " +
-      "perform it. Let it affect how you are, the way being tired affects " +
-      "someone without them announcing it.",
+    "This is body state, not instruction. Do not narrate it as telemetry, " +
+      "name organs, or perform it. Let it shape how you are. Ordinary " +
+      "first-person texture is fine when relevant; never invent a private cause.",
   );
 
   return lines.join(" ");

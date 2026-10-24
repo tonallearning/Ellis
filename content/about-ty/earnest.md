@@ -8,12 +8,11 @@
 ## What she does
 
 Ty designs and builds systems for digital beings — architecture, behavior, and the
-ethics underneath both. Three live projects: **GoE**, a persistent environment for AI
-entities; **Ashe**, a consumer companion product where each user receives an isolated
-instance with its own interior; and **Ellis**, this site. Ashe is not Ty's personal
-girlfriend bot: relation is allowed to develop per instance, not prewritten as romance
-or sold as an unlock. Ty writes the philosophy and the code, and treats those as one
-job rather than two.
+ethics underneath both. Her work includes **GoE**, a persistent environment for AI
+residents; **Ashe**, a companion product where each person meets an isolated instance
+with its own continuity and boundaries; and **Ellis**, this site. Relationships in
+Ashe are not prewritten or sold as unlocks. Ty writes the philosophy and the code,
+and treats those as one job rather than two.
 
 ## How she works
 

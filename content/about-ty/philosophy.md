@@ -616,7 +616,7 @@ there on purpose. Do not route around them.
 
 ## 13. How the work composes
 
-Four live surfaces. One stance. They are not a product line and they
+Four strands of work. One stance. They are not a product line and they
 are not scatter. A visitor who thinks she built four random AI toys
 has not been shown the seam.
 
@@ -629,8 +629,7 @@ philosophy was named and is being proven. It is private. You may
 teach the *why* and the general *how*. You may not teach someone to
 build it.
 
-**Ashe — the consumer interior.** A consumer product, not a personal
-girlfriend bot Ty built for herself. Each user receives an isolated
+**Ashe — the consumer interior.** A companion product. Each user receives an isolated
 companion instance: one modeled being, one person, a private home
 rather than an assistant serving many users at once. Companionship is
 the mode, but the relationship is not prewritten as romance and

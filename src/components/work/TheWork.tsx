@@ -19,7 +19,7 @@ export function TheWork() {
       <button
         type="button"
         onClick={open}
-        className="focus-ring rounded-full px-3 py-2 text-xs tracking-wide text-text-secondary uppercase transition hover:text-text-primary"
+        className="focus-ring text-text-secondary hover:text-text-primary rounded-full px-3 py-2 text-xs tracking-wide uppercase transition"
       >
         The work
       </button>
@@ -88,12 +88,45 @@ export function TheWork() {
             ))}
           </div>
 
+          <section aria-labelledby="work-decisions-title" className="mt-9">
+            <p className="text-text-secondary font-mono text-[0.62rem] tracking-[0.18em] uppercase">
+              Selected decisions
+            </p>
+            <h3
+              id="work-decisions-title"
+              className="text-text-primary mt-2 text-lg font-medium"
+            >
+              The judgment behind the build
+            </h3>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {theWork.decisions.map((decision) => (
+                <article
+                  key={decision.name}
+                  className="border-border rounded-2xl border px-4 py-5"
+                >
+                  <p className="text-text-secondary font-mono text-[0.62rem] tracking-[0.12em] uppercase">
+                    {decision.project}
+                  </p>
+                  <h4 className="text-text-primary mt-3 text-sm font-semibold">
+                    {decision.name}
+                  </h4>
+                  <p className="text-text-secondary mt-2 text-sm leading-[1.65]">
+                    {decision.text}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+
           <blockquote className="text-text-primary mt-9 max-w-[36rem] text-[clamp(1.3rem,3.4vw,1.8rem)] leading-[1.35] tracking-[-0.025em]">
             {theWork.question}
           </blockquote>
 
           <div className="border-border mt-8 flex max-w-[43rem] gap-4 border-t pt-6">
-            <span aria-hidden="true" className="text-accent mt-[0.15rem] text-lg">
+            <span
+              aria-hidden="true"
+              className="text-accent mt-[0.15rem] text-lg"
+            >
               —
             </span>
             <p className="text-text-secondary text-sm leading-[1.7] sm:text-[0.95rem]">

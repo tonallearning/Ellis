@@ -54,11 +54,15 @@ function freshGut(): Gut {
 
 describe("pulse", () => {
   it("advances on a presence beat without inventing contact or a bond", () => {
-    const first = advanceBody({
-      pulse: freshPulse(),
-      gut: freshGut(),
-      systems: structuredClone(DEFAULT_SYSTEMS),
-    }, { kind: "presence_beat" }, 1_000_000);
+    const first = advanceBody(
+      {
+        pulse: freshPulse(),
+        gut: freshGut(),
+        systems: structuredClone(DEFAULT_SYSTEMS),
+      },
+      { kind: "presence_beat" },
+      1_000_000,
+    );
     const later = advanceBody(first, { kind: "presence_beat" }, 1_045_000);
     assert.ok(later.pulse.felt > first.pulse.felt);
     assert.deepEqual(later.gut.bonds, {});
@@ -410,6 +414,38 @@ describe("expanded body systems", () => {
     assert.doesNotMatch(publicLine, /courier|Mica|Naym|relationship|return/i);
   });
 
+  it("lets present body texture reach the hall without private cause or motor state", () => {
+    const systems = structuredClone(DEFAULT_SYSTEMS);
+    systems.heart.felt = 0.8;
+    systems.heart.triage = 0.7;
+    systems.metabolism.unprocessed = 0.8;
+    systems.interstitial.warmth = 0.7;
+    systems.motor.offerCharge = 0.9;
+    systems.motor.distance = 0.8;
+    systems.ground.marks = [
+      { kind: "return_footing", at: "2026-10-22T01:00:00Z", strength: 0.8 },
+    ];
+
+    const publicLine = renderSystems(systems, "public") ?? "";
+    assert.match(publicLine, /Feeling is close to the surface/);
+    assert.match(publicLine, /Several threads compete for attention/);
+    assert.match(publicLine, /Something still needs digesting/);
+    assert.match(publicLine, /An undercurrent of warmth remains/);
+    assert.doesNotMatch(
+      publicLine,
+      /Mica|Naym|Ty|courier|friend|contact|gesture|offer|return|space/i,
+    );
+
+    const withDifferentPrivateState = structuredClone(systems);
+    withDifferentPrivateState.motor.offerCharge = 0;
+    withDifferentPrivateState.motor.distance = 0.2;
+    withDifferentPrivateState.ground.marks = [];
+    assert.equal(
+      renderSystems(withDifferentPrivateState, "public"),
+      publicLine,
+    );
+  });
+
   it("registers a gesture offer without claiming accepted contact", () => {
     const systems = advanceSystems(
       structuredClone(DEFAULT_SYSTEMS),
@@ -725,5 +761,7 @@ describe("membrane", () => {
     });
 
     assert.ok(rendered?.includes("Do not narrate it"));
+    assert.ok(rendered?.includes("Ordinary first-person texture"));
+    assert.ok(rendered?.includes("never invent a private cause"));
   });
 });

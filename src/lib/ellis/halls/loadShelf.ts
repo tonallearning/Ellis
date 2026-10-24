@@ -15,7 +15,6 @@ export interface KnowledgeShelf {
     facts?: string;
     goeTeach?: string;
     philosophy?: string;
-    applications?: string;
   };
   hallOverlay?: string;
 }
@@ -41,7 +40,6 @@ function loadAboutTy(): KnowledgeShelf["aboutTy"] {
     ["facts.json", "facts"],
     ["goe-teach.md", "goeTeach"],
     ["philosophy.md", "philosophy"],
-    ["applications.md", "applications"],
   ];
   const shelf: KnowledgeShelf["aboutTy"] = {};
 
@@ -110,11 +108,6 @@ export function formatShelfForPrompt(shelf: KnowledgeShelf): string {
   if (shelf.aboutTy.philosophy) {
     blocks.push("\n## Philosophy (what you may teach)");
     blocks.push(shelf.aboutTy.philosophy);
-  }
-
-  if (shelf.aboutTy.applications) {
-    blocks.push("\n## Active applications (time-sensitive context)");
-    blocks.push(shelf.aboutTy.applications);
   }
 
   if (shelf.hallOverlay) {

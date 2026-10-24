@@ -334,6 +334,17 @@ export function renderSystems(
   else if (systems.ground.footing > 0.7) lines.push("His footing is firm.");
   if (systems.interstitial.strain > 0.45)
     lines.push("Some strain remains under the surface.");
+  if (profile === "public") {
+    if (systems.heart.felt > 0.62)
+      lines.push("Feeling is close to the surface.");
+    if (systems.heart.triage > 0.6)
+      lines.push("Several threads compete for attention.");
+    if (systems.metabolism.unprocessed > 0.5)
+      lines.push("Something still needs digesting.");
+    if (systems.interstitial.warmth > 0.35)
+      lines.push("An undercurrent of warmth remains.");
+    return lines.length > 0 ? lines.slice(0, 4).join(" ") : null;
+  }
   if (profile === "private") {
     const attention = activeAttention(systems.attention);
     if (attention?.mode === "soft_focus") {

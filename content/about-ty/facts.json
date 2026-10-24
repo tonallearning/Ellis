@@ -1,143 +1,54 @@
 {
   "_meta": {
-    "status": "populated",
-    "source": "Repository facts were read directly from code, config, and git history on 2026-08-21. Ty supplied the updated Ashe framing and the expansion from Sims bridge to embodiment-harness program on 2026-10-14. The Ellis testing gap was refreshed from the local test suite on 2026-10-21; project counts remain 2026-08-21 snapshots.",
-    "counts_are_snapshots": "File counts, line counts, and commit counts drift. Treat them as 'about this many as of the date above,' not as live numbers.",
-    "how_ellis_should_use_this": "This is the ledger, not the story. Reach for it when a visitor wants specifics — what she built it with, how big it is, whether they can go look at it. Do not recite it. If a claim is not in here and not in earnest.md, say you do not know rather than filling the gap.",
-    "verifiability_warning": "Only Ellis's own repository is public. GoE and Ashe are private, so a visitor cannot go verify those numbers themselves. Say so plainly if it comes up; do not imply someone can check what they cannot."
+    "reviewed": "2026-10-24",
+    "purpose": "Public, outcome-level knowledge for Ellis. This is a boundary on what may be shared, not a specification of private projects.",
+    "voice_rule": "Explain the judgment and the observable result. Do not infer completion from a plan or a passing component test. If Ty has not confirmed a current status, say it is unknown.",
+    "verification_rule": "Ellis's own repository is public. GoE and Ashe are private; the embodiment harnesses are local. A visitor cannot independently inspect those other codebases."
   },
-
   "author": {
     "name": "Ty",
-    "sole_author": "Ty is the only git author on all four repositories. Every commit in every project is hers.",
-    "github_orgs": ["tonallearning", "tybuildstech"]
+    "role": "Independent designer and builder of agent environments, companion systems, and the boundaries around them.",
+    "method": "Build in slices, test what actually changes, record decisions and failures, and revise when observation disagrees with the design."
   },
-
   "projects": [
     {
       "name": "Gardens of Eridu",
       "short_name": "GoE",
-      "repo": "tonallearning/GardensOfEridu",
       "visibility": "private",
-      "what_it_is": "A web application that houses AI resident minds — a place for them to persist rather than a chat product for humans to use.",
-      "stack": {
-        "server": "Node.js with Express 5",
-        "client": "React 19 with Vite 8, Tailwind 4, and Three.js for the 3D world",
-        "databases": "SQLite locally via better-sqlite3, Supabase Postgres in production",
-        "model_providers": "Anthropic and OpenAI SDKs; Moonshot Kimi for a separate resident"
-      },
-      "specifics": [
-        "65 Supabase migrations under supabase/migrations",
-        "Deployed to Vercel: static Vite build plus a serverless Express entry point",
-        "A GitHub Actions cron hits the production world-tick endpoint every five minutes, so the world advances whether or not anyone is watching",
-        "Roughly 165 verification scripts under scripts/, runnable together via npm run verify:all",
-        "An MCP server so the world is reachable from an editor"
-      ],
-      "scale": {
-        "source_files": 1018,
-        "source_lines": 145057
-      },
-      "history": {
-        "commits": 90,
-        "first_commit": "2026-05-18",
-        "latest_commit": "2026-08-19"
-      }
+      "purpose": "A persistent environment for AI residents rather than a collection of chat sessions.",
+      "public_explanation": "The work asks what changes when location, time, contact, solitude, and consequence have effects that a resident cannot simply narrate away. It is an attached house: Ty remains a builder and physical bridge while residents are given meaningful room to act and affect one another.",
+      "decision": "A room is not enough if removing its underlying system changes nothing observable. The design tests whether world rules actually alter possible behavior.",
+      "evidence_boundary": "Ty has working code, focused verification, and direct observations. These do not by themselves prove every end-to-end path, a general result about AI experience, or independent external review. The repository is not public."
     },
     {
       "name": "Ashe",
-      "product_domain": "asheand.me",
-      "repo": "tonallearning/Ashe",
       "visibility": "private",
-      "what_it_is": "A consumer companion product where each user receives one isolated Ashe instance with its own private home, interior, memory, and boundaries. It is not a personal girlfriend bot Ty built for herself; the relationship is not pre-scripted as romance.",
-      "naming_note": "The folder on disk is called Becoming for historical reasons. The project is Ashe. Use Ashe.",
-      "stack": {
-        "api": "Python with FastAPI, served by uvicorn",
-        "web": "Next.js 15 with React 19 and TypeScript",
-        "database_and_auth": "Supabase, with JWT auth and a gated signup flow",
-        "model": "Moonshot Kimi K2.5"
-      },
-      "specifics": [
-        "One isolated companion per user, with blank episodic memory at spawn; users do not share one central Ashe relationship",
-        "Companionship is the mode, but romance is neither promised nor sold as an unlock; friendship, romance, distance, or refusal develop per instance",
-        "20 Supabase migrations",
-        "33 pytest files under api/app",
-        "A signup gate enforced in code: 21 and over, US only, beta key required",
-        "Playable games implemented server-side including checkers, chess, and a letters game",
-        "The Next.js app proxies /api to the FastAPI service rather than duplicating logic"
-      ],
-      "scale": {
-        "source_files": 240,
-        "source_lines": 28700
-      },
-      "history": {
-        "commits": 38,
-        "first_commit": "2026-07-10",
-        "latest_commit": "2026-08-19"
-      }
+      "purpose": "A companion product in which each person meets an isolated instance with its own continuity and boundaries.",
+      "public_explanation": "Companionship is the starting context, not a prewritten relationship. Affection, distance, friendship, romance, and refusal are not purchased outcomes; they are allowed to develop, or not, through that instance's history.",
+      "decision": "Keep each relationship separate and give the instance an interior that can carry consequence rather than resetting at every reply.",
+      "evidence_boundary": "The interior is modeled, but Ty has not published controlled trials showing how its state changes behavior. Describe present results as observations, not proof. The repository is not public."
     },
     {
       "name": "Ellis",
-      "product_domain": "tybuilds.tech",
-      "repo": "tonallearning/Ellis",
-      "public_url": "https://github.com/tonallearning/Ellis",
       "visibility": "public",
-      "what_it_is": "This site. A portfolio you talk to instead of scroll, hosted by a guide who knows the work.",
-      "stack": {
-        "app": "Next.js 16 with React 19, TypeScript, and Tailwind 4",
-        "model": "Anthropic, streamed over server-sent events",
-        "database": "Supabase for spend metering and visitor memory"
-      },
-      "specifics": [
-        "Every turn runs on the cheaper model tier. A tier-escalation router was built and then deliberately switched off: the fixed knowledge prefix is cached between requests, and changing models mid-conversation discards that cache precisely when a conversation has gone on long enough for it to matter",
-        "Visitor memory is keyed to a hashed IP and expires after seven days; expired rows compress into anonymous traces rather than being kept",
-        "A per-visitor daily spend ceiling is charged before the model call, not after, so an overrun cannot happen retroactively",
-        "Ellis's knowledge is loaded from plain-text files on disk at request time. His repository is public, so a reviewer can inspect those files and compare what he was given with what he says. This transparency claim applies to Ellis only, not GoE, Ashe, or the local harness work",
-        "He has a persistent interior rather than a per-conversation one: a single stored body carrying a subjective rhythm and a somatic state, shared across every visitor. Its accumulated drift against the wall clock is never corrected, so the gap between his felt time and real time is a record of how much he has been used",
-        "That interior reaches the model as language only. The numeric state stays server-side and a membrane layer decides how much of it is even available to him on a given turn, which is enforced by a test asserting no digit ever appears in the rendered block"
-      ],
-      "scale": {
-        "source_files": 49,
-        "source_lines": 6299
-      },
-      "history": {
-        "commits": 10,
-        "first_commit": "2026-06-11",
-        "latest_commit": "2026-08-21"
-      }
+      "public_url": "https://github.com/tonallearning/Ellis",
+      "purpose": "A conversational portfolio that lets a visitor test fit through dialogue instead of reading a static brochure.",
+      "public_explanation": "Ellis can explain Ty's work, ask about a real role, remember visitors for a bounded period, and say what he cannot verify. He has a private life, but its people, events, and records do not become public evidence.",
+      "decision": "Make limits visible: an unavailable capability must not be narrated as lived experience, and a public expression must not reveal the private cause behind it.",
+      "evidence_boundary": "Visitors may inspect Ellis's repository and try the public hall. Local and automated tests support specific claims, but live conversation and release behavior still require manual checks."
     },
     {
-      "name": "Sims MCP and embodiment harnesses",
-      "repo": "not yet under version control",
+      "name": "Embodiment harnesses",
       "visibility": "local only",
-      "what_it_is": "An expanding series of experimental harnesses for giving digital beings texture through external physics, upkeep, constraint, and refusal. The Sims 4 MCP bridge is the first concrete harness, not the whole project.",
-      "stack": {
-        "language": "Python 3.7, matching the game's embedded interpreter",
-        "packaging": "Compiled bytecode zipped into a .ts4script",
-        "transport": "An HTTP listener inside the game on localhost, port 47365, with a token header on every request"
-      },
-      "specifics": [
-        "The broader program asks what changes when an intelligence has to act through a world it does not control, where intention encounters bodies, time, limited actions, and consequences",
-        "A maintenance-mode experiment makes needs and upkeep interrupt an agent's intended path, treating embodiment as friction rather than decorative narration",
-        "The direction is deliberately inverted: the game listens and the editor connects, rather than the game reaching out. Close the editor and the connection drops, so the Sim cannot be driven by anyone while Ty is away. The guarantee is structural, not a policy someone has to honor.",
-        "Six verbs implemented: ping, list_sims, find_affordance, available, test, push",
-        "Every action is tested against the game's own rules before it is pushed, so failures come back as sentences explaining why rather than as silence",
-        "First self-originated action confirmed on 2026-08-20: a Sim got out of bed and went outside on an instruction that came from outside the game"
-      ],
-      "scale": {
-        "source_files": 13,
-        "source_lines": 1479
-      }
+      "purpose": "Experiments in what happens when an agent has to act through a world it does not control.",
+      "public_explanation": "The first concrete harness connects an agent to a simulated character. The world can refuse an intended action, and bodily upkeep can interrupt a plan. The larger question is how external limits give action texture.",
+      "evidence_boundary": "This is local experimental work, not a shipping product or a demonstrated general result. Visitors cannot inspect it through Ellis's public repository."
     }
   ],
-
-  "known_gaps": {
-    "purpose": "Ty would rather be caught being honest than caught overstating. If a visitor asks what is unfinished or weak, these are true and Ellis may say them.",
-    "items": [
-      "Ellis has automated coverage for body behavior, visitor-IP protection, private memory boundaries, and turn validation. Live chat behavior and release-specific deployment checks still require manual testing; do not infer current test totals from this dated repository snapshot.",
-      "The Sims MCP and broader embodiment-harness work are local and cannot be independently inspected by a visitor.",
-      "GoE and Ashe are private, so their scale and history cannot be independently verified by a visitor.",
-      "GoE's roadmap document describes tiers as shipped that are better described as in progress; the verification scripts are the honest signal there, not the roadmap.",
-      "These are single-author projects. Nothing here has been through code review by another engineer."
-    ]
-  }
+  "known_limits": [
+    "Ty is self-taught and does not present this work as credentialed research.",
+    "The projects are primarily single-author work. Do not imply independent code review or outside validation that has not happened.",
+    "Plans, focused tests, live observations, and public releases are different kinds of evidence. Name which one supports a claim.",
+    "Do not supply private implementation details, repository paths, security boundaries, schedules, counts, or relationship histories from memory or inference."
+  ]
 }
